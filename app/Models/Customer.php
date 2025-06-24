@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 
 class Customer extends Model
 {
@@ -217,5 +218,15 @@ class Customer extends Model
     public function getAgeAttribute(): ?int
     {
         return $this->date_of_birth ? $this->date_of_birth->age : null;
+    }
+
+    public function documents(): MorphMany
+    {
+        return $this->morphMany(\App\Models\Document::class, 'documentable');
+    }
+
+    public function customerType()
+    {
+        return $this->belongsTo(CustomerType::class);
     }
 }

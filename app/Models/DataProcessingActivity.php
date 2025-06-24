@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 
 class DataProcessingActivity extends Model
 {
@@ -178,5 +179,10 @@ class DataProcessingActivity extends Model
         }
 
         return true;
+    }
+
+    public function documents(): MorphMany
+    {
+        return $this->morphMany(\App\Models\Document::class, 'documentable');
     }
 }

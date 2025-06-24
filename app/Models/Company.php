@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 
 class Company extends Model
 {
@@ -158,5 +159,20 @@ class Company extends Model
     {
         return $this->gdpr_consent_date &&
                $this->gdpr_consent_date->diffInDays(now()) <= 365; // Consent valid for 1 year
+    }
+
+    public function documents(): MorphMany
+    {
+        return $this->morphMany(\App\Models\Document::class, 'documentable');
+    }
+
+    public function employerType()
+    {
+        return $this->belongsTo(EmployerType::class);
+    }
+
+    public function holding()
+    {
+        return $this->belongsTo(Holding::class);
     }
 }

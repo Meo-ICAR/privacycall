@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 
 class ConsentRecord extends Model
 {
@@ -220,5 +221,10 @@ class ConsentRecord extends Model
         }
 
         return $this->getDaysUntilExpiryAttribute() <= 30 && $this->getDaysUntilExpiryAttribute() > 0;
+    }
+
+    public function documents(): MorphMany
+    {
+        return $this->morphMany(\App\Models\Document::class, 'documentable');
     }
 }

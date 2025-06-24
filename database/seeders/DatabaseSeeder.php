@@ -125,5 +125,37 @@ class DatabaseSeeder extends Seeder
                 ]);
             }
         });
+
+        // Seed document types
+        $docTypes = ['Startup', 'Current', 'Compilance', 'Ispection'];
+        foreach ($docTypes as $type) {
+            \App\Models\DocumentType::firstOrCreate(['name' => $type]);
+        }
+
+        // Seed employer types
+        $employerTypes = ['Startup', 'SME', 'Corporate', 'Nonprofit'];
+        foreach ($employerTypes as $type) {
+            \App\Models\EmployerType::firstOrCreate(['name' => $type]);
+        }
+
+        // Seed customer types
+        $customerTypes = ['Individual', 'Business', 'VIP', 'Partner'];
+        foreach ($customerTypes as $type) {
+            \App\Models\CustomerType::firstOrCreate(['name' => $type]);
+        }
+
+        // Seed holdings
+        $holdings = ['Alpha Group', 'Beta Holdings', 'Gamma Corp'];
+        $holdingIds = [];
+        foreach ($holdings as $name) {
+            $holding = \App\Models\Holding::firstOrCreate(['name' => $name]);
+            $holdingIds[] = $holding->id;
+        }
+
+        // Assign companies to holdings (randomly)
+        foreach (\App\Models\Company::all() as $company) {
+            $company->holding_id = $holdingIds[array_rand($holdingIds)];
+            $company->save();
+        }
     }
 }

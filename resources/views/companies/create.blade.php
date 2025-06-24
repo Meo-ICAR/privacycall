@@ -140,6 +140,22 @@
                                   placeholder="Any additional information about the company"></textarea>
                     </div>
 
+                    <!-- Holding -->
+                    @if(auth()->user() && auth()->user()->hasRole('superadmin'))
+                        <div class="mb-4">
+                            <label for="holding_id" class="block text-sm font-medium text-gray-700">Holding</label>
+                            <select name="holding_id" id="holding_id" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
+                                <option value="">-- None --</option>
+                                @foreach(App\Models\Holding::all() as $holding)
+                                    <option value="{{ $holding->id }}" {{ old('holding_id') == $holding->id ? 'selected' : '' }}>{{ $holding->name }}</option>
+                                @endforeach
+                            </select>
+                            @error('holding_id')
+                                <div class="text-red-600 text-sm mt-1">{{ $message }}</div>
+                            @enderror
+                        </div>
+                    @endif
+
                     <!-- Form Actions -->
                     <div class="flex justify-end space-x-3">
                         <a href="/companies" class="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">

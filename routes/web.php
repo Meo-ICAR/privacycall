@@ -4,6 +4,15 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\CompanyController;
 use App\Http\Controllers\GdprController;
 use App\Http\Controllers\RolePermissionController;
+use App\Http\Controllers\SupplierController;
+use App\Http\Controllers\DocumentController;
+use App\Http\Controllers\DocumentTypeController;
+use App\Http\Controllers\EmployerTypeController;
+use App\Http\Controllers\CustomerTypeController;
+use App\Http\Controllers\HoldingController;
+use App\Http\Controllers\EmployeeController;
+use App\Http\Controllers\CustomerController;
+use App\Http\Controllers\InspectionController;
 
 Route::get('/', function () {
     return view('welcome');
@@ -57,4 +66,59 @@ Route::get('/api-docs', function () {
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/roles-permissions', [RolePermissionController::class, 'index'])->name('roles.permissions.index');
     Route::post('/roles-permissions/assign', [RolePermissionController::class, 'assign'])->name('roles.permissions.assign');
+});
+
+// Supplier management routes
+Route::prefix('suppliers')->middleware(['auth', 'verified'])->group(function () {
+    Route::get('/create', [SupplierController::class, 'create'])->name('suppliers.create');
+    Route::post('/', [SupplierController::class, 'store'])->name('suppliers.store');
+    Route::get('/{supplier}/edit', [SupplierController::class, 'edit'])->name('suppliers.edit');
+    Route::put('/{supplier}', [SupplierController::class, 'update'])->name('suppliers.update');
+    Route::get('/export', [SupplierController::class, 'export'])->name('suppliers.export');
+    Route::post('/import', [SupplierController::class, 'import'])->name('suppliers.import');
+});
+
+// Document upload and delete routes
+Route::middleware(['auth', 'verified'])->group(function () {
+    Route::post('/documents', [DocumentController::class, 'store'])->name('documents.store');
+    Route::delete('/documents/{document}', [DocumentController::class, 'destroy'])->name('documents.destroy');
+});
+
+// Document type management routes (admin/superadmin)
+Route::middleware(['auth', 'verified'])->group(function () {
+    Route::resource('document-types', DocumentTypeController::class)->except(['show']);
+});
+
+// Employer type management routes (admin/superadmin)
+Route::middleware(['auth', 'verified'])->group(function () {
+    Route::resource('employer-types', EmployerTypeController::class)->except(['show']);
+});
+
+// Customer type management routes (admin/superadmin)
+Route::middleware(['auth', 'verified'])->group(function () {
+    Route::resource('customer-types', CustomerTypeController::class)->except(['show']);
+});
+
+// Holding management routes (admin/superadmin)
+Route::middleware(['auth', 'verified'])->group(function () {
+    Route::resource('holdings', HoldingController::class)->except(['show']);
+});
+
+// Employee management routes (admin/superadmin)
+Route::middleware(['auth', 'verified'])->group(function () {
+    Route::get('employees', [EmployeeController::class, 'index'])->name('employees.index');
+    Route::get('employees/export', [EmployeeController::class, 'export'])->name('employees.export');
+    Route::post('employees/import', [EmployeeController::class, 'import'])->name('employees.import');
+});
+
+// Customer management routes (admin/superadmin)
+Route::middleware(['auth', 'verified'])->group(function () {
+    Route::get('customers', [CustomerController::class, 'index'])->name('customers.index');
+    Route::get('customers/export', [CustomerController::class, 'export'])->name('customers.export');
+    Route::post('customers/import', [CustomerController::class, 'import'])->name('customers.import');
+});
+
+// Inspection management routes (admin/superadmin)
+Route::middleware(['auth', 'verified'])->group(function () {
+    Route::resource('inspections', InspectionController::class);
 });

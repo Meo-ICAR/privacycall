@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Edit Company - PrivacyCall</title>
+    <title>Create Supplier - PrivacyCall</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 </head>
@@ -23,7 +23,8 @@
                 <div class="flex items-center space-x-4">
                     <a href="/" class="text-gray-600 hover:text-gray-900">Home</a>
                     <a href="/dashboard" class="text-gray-600 hover:text-gray-900">Dashboard</a>
-                    <a href="/companies" class="text-blue-600 font-medium">Companies</a>
+                    <a href="/companies" class="text-gray-600 hover:text-gray-900">Companies</a>
+                    <a href="/suppliers" class="text-blue-600 font-medium">Suppliers</a>
                     <a href="/gdpr" class="text-gray-600 hover:text-gray-900">GDPR</a>
                     <a href="/api-docs" class="text-gray-600 hover:text-gray-900">API Docs</a>
                 </div>
@@ -36,60 +37,46 @@
         <!-- Header -->
         <div class="mb-8">
             <div class="flex items-center">
-                <a href="/companies" class="text-blue-600 hover:text-blue-800 mr-4">
+                <a href="/suppliers" class="text-blue-600 hover:text-blue-800 mr-4">
                     <i class="fas fa-arrow-left"></i>
                 </a>
                 <div>
-                    <h1 class="text-3xl font-bold text-gray-900">Edit Company</h1>
-                    <p class="mt-2 text-gray-600">Update company details and logo</p>
+                    <h1 class="text-3xl font-bold text-gray-900">Create New Supplier</h1>
+                    <p class="mt-2 text-gray-600">Add a new supplier to your system</p>
                 </div>
             </div>
         </div>
 
-        <!-- Company Edit Form -->
+        <!-- Supplier Form -->
         <div class="bg-white shadow rounded-lg">
             <div class="px-4 py-5 sm:p-6">
-                <form id="companyEditForm" class="space-y-6" enctype="multipart/form-data" method="POST" action="{{ route('companies.update', $company->id) }}">
+                <form id="supplierForm" class="space-y-6" enctype="multipart/form-data" method="POST" action="{{ route('suppliers.store') }}">
                     @csrf
-                    @method('PUT')
                     <!-- Logo Upload -->
                     <div>
-                        <label for="logo" class="block text-sm font-medium text-gray-700">Company Logo</label>
+                        <label for="logo" class="block text-sm font-medium text-gray-700">Supplier Logo</label>
                         <input type="file" name="logo" id="logo" accept="image/*"
                                class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
                         <div class="mt-2">
-                            <img id="logoPreview" src="{{ $company->logo_url ?? '#' }}" alt="Logo Preview" class="h-24 w-24 object-contain rounded border border-gray-200 @if(!$company->logo_url) hidden @endif" />
+                            <img id="logoPreview" src="#" alt="Logo Preview" class="h-24 w-24 object-contain rounded border border-gray-200 hidden" />
                         </div>
                     </div>
-                    <!-- Company Name -->
+                    <!-- Supplier Name -->
                     <div>
-                        <label for="name" class="block text-sm font-medium text-gray-700">Company Name</label>
-                        <input type="text" name="name" id="name" required value="{{ $company->name }}"
+                        <label for="name" class="block text-sm font-medium text-gray-700">Supplier Name</label>
+                        <input type="text" name="name" id="name" required
                                class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                               placeholder="Enter company name">
+                               placeholder="Enter supplier name">
                     </div>
-                    @if(auth()->user() && auth()->user()->hasRole('superadmin'))
-                        <div class="mb-4">
-                            <label for="holding_id" class="block text-sm font-medium text-gray-700">Holding</label>
-                            <select name="holding_id" id="holding_id" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
-                                <option value="">-- None --</option>
-                                @foreach(App\Models\Holding::all() as $holding)
-                                    <option value="{{ $holding->id }}" {{ (old('holding_id', $company->holding_id) == $holding->id) ? 'selected' : '' }}>{{ $holding->name }}</option>
-                                @endforeach
-                            </select>
-                            @error('holding_id')
-                                <div class="text-red-600 text-sm mt-1">{{ $message }}</div>
-                            @enderror
-                        </div>
-                    @endif
+                    <!-- Add other fields as needed -->
                     <!-- Form Actions -->
                     <div class="flex justify-end space-x-3">
-                        <a href="/companies" class="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                        <a href="/suppliers" class="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
                             Cancel
                         </a>
                         <button type="submit" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700">
                             <i class="fas fa-save mr-2"></i>
-                            Update Company
+                            Create Supplier
                         </button>
                     </div>
                 </form>

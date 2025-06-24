@@ -90,6 +90,7 @@ class CompanyController extends Controller
                 'data_controller_contact' => 'nullable|string|max:255',
                 'data_protection_officer' => 'nullable|string|max:255',
                 'logo' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
+                'holding_id' => 'nullable|exists:holdings,id',
             ]);
 
             if ($validator->fails()) {
@@ -103,6 +104,10 @@ class CompanyController extends Controller
             DB::beginTransaction();
 
             $data = $validator->validated();
+            // Only superadmin can set holding_id
+            if (!auth()->user() || !auth()->user()->hasRole('superadmin')) {
+                unset($data['holding_id']);
+            }
 
             // Handle logo upload
             if ($request->hasFile('logo')) {
@@ -204,6 +209,7 @@ class CompanyController extends Controller
                 'data_controller_contact' => 'nullable|string|max:255',
                 'data_protection_officer' => 'nullable|string|max:255',
                 'logo' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
+                'holding_id' => 'nullable|exists:holdings,id',
             ]);
 
             if ($validator->fails()) {
@@ -217,6 +223,10 @@ class CompanyController extends Controller
             DB::beginTransaction();
 
             $data = $validator->validated();
+            // Only superadmin can set holding_id
+            if (!auth()->user() || !auth()->user()->hasRole('superadmin')) {
+                unset($data['holding_id']);
+            }
 
             // Handle logo upload
             if ($request->hasFile('logo')) {
