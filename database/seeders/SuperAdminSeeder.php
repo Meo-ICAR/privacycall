@@ -6,6 +6,7 @@ use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\DB;
+use Spatie\Permission\Models\Role;
 
 class SuperAdminSeeder extends Seeder
 {
@@ -15,12 +16,15 @@ class SuperAdminSeeder extends Seeder
     public function run(): void
     {
         // Check if superadmin already exists
-        $existingSuperAdmin = User::where('role', 'superadmin')->first();
+        $existingSuperAdmin = User::role('superadmin')->first();
 
         if ($existingSuperAdmin) {
             $this->command->info('Superadmin user already exists. Skipping creation.');
             return;
         }
+
+        // Ensure the superadmin role exists
+        Role::firstOrCreate(['name' => 'superadmin', 'guard_name' => 'web']);
 
         DB::beginTransaction();
 
@@ -30,7 +34,6 @@ class SuperAdminSeeder extends Seeder
                 'name' => 'Super Administrator',
                 'email' => 'superadmin@privacycall.com',
                 'password' => Hash::make('SuperAdmin@2024!'),
-                'role' => 'superadmin',
                 'is_active' => true,
 
                 // GDPR Compliance - Superadmin consents to all processing
@@ -44,6 +47,8 @@ class SuperAdminSeeder extends Seeder
             ]);
 
             DB::commit();
+
+            $superAdmin->assignRole('superadmin');
 
             $this->command->info('Superadmin user created successfully!');
             $this->command->info('Email: superadmin@privacycall.com');

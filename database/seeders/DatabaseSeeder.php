@@ -16,6 +16,12 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
+        // Seed default roles
+        $roles = ['superadmin', 'admin', 'user'];
+        foreach ($roles as $role) {
+            Role::firstOrCreate(['name' => $role]);
+        }
+
         // Create superadmin user
         $this->call([
             SuperAdminSeeder::class,
@@ -28,29 +34,20 @@ class DatabaseSeeder extends Seeder
         User::factory()->create([
             'name' => 'Test Admin',
             'email' => 'admin@privacycall.com',
-            'role' => 'admin',
             'password' => bcrypt('Admin@2024!'),
-        ]);
+        ])->assignRole('admin');
 
         User::factory()->create([
             'name' => 'Test Manager',
             'email' => 'manager@privacycall.com',
-            'role' => 'manager',
             'password' => bcrypt('Manager@2024!'),
-        ]);
+        ])->assignRole('manager');
 
         User::factory()->create([
             'name' => 'Test Employee',
             'email' => 'employee@privacycall.com',
-            'role' => 'employee',
             'password' => bcrypt('Employee@2024!'),
-        ]);
-
-        // Seed default roles
-        $roles = ['superadmin', 'admin', 'user'];
-        foreach ($roles as $role) {
-            Role::firstOrCreate(['name' => $role]);
-        }
+        ])->assignRole('employee');
 
         // Seed example permissions
         $permissions = [
@@ -85,7 +82,6 @@ class DatabaseSeeder extends Seeder
             // Seed users for each company
             $admin = \App\Models\User::factory()->create([
                 'company_id' => $company->id,
-                'role' => 'admin',
                 'email' => 'admin_' . $company->id . '@demo.com',
             ]);
             $admin->assignRole('admin');
@@ -98,7 +94,6 @@ class DatabaseSeeder extends Seeder
             foreach ($employees as $employee) {
                 $user = \App\Models\User::factory()->create([
                     'company_id' => $company->id,
-                    'role' => 'user',
                     'email' => 'employee_' . $employee->id . '@demo.com',
                 ]);
                 $user->assignRole('user');
@@ -108,7 +103,6 @@ class DatabaseSeeder extends Seeder
             foreach ($customers as $customer) {
                 $user = \App\Models\User::factory()->create([
                     'company_id' => $company->id,
-                    'role' => 'user',
                     'email' => 'customer_' . $customer->id . '@demo.com',
                 ]);
                 $user->assignRole('user');
@@ -157,5 +151,24 @@ class DatabaseSeeder extends Seeder
             $company->holding_id = $holdingIds[array_rand($holdingIds)];
             $company->save();
         }
+
+        $this->call([
+            CompanySeeder::class,
+            EmployeeSeeder::class,
+            CustomerSeeder::class,
+            SupplierSeeder::class,
+            ConsentRecordSeeder::class,
+            DataProcessingActivitySeeder::class,
+            TrainingSeeder::class,
+            HoldingSeeder::class,
+            CustomerTypeSeeder::class,
+            SupplierTypeSeeder::class,
+            EmployerTypeSeeder::class,
+            DocumentTypeSeeder::class,
+            DocumentSeeder::class,
+            InspectionSeeder::class,
+            SupplierInspectionSeeder::class,
+            UserSeeder::class,
+        ]);
     }
 }

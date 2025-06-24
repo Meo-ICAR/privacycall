@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
+use App\Models\Training;
 
 class TrainingSeeder extends Seeder
 {
@@ -12,6 +13,6 @@ class TrainingSeeder extends Seeder
      */
     public function run(): void
     {
-        //
+        Training::factory(10)->create();
     }
 }

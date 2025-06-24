@@ -21,6 +21,16 @@ return new class extends Migration
             $table->text('two_factor_secret')->nullable();
             $table->text('two_factor_recovery_codes')->nullable();
             $table->string('profile_photo_path', 2048)->nullable();
+            $table->unsignedBigInteger('current_team_id')->nullable();
+            $table->unsignedBigInteger('company_id')->nullable();
+            $table->boolean('is_active')->default(true);
+            $table->dateTime('gdpr_consent_date')->nullable();
+            $table->boolean('data_processing_consent')->default(false);
+            $table->boolean('marketing_consent')->default(false);
+            $table->boolean('third_party_sharing_consent')->default(false);
+            $table->boolean('data_retention_consent')->default(false);
+            $table->boolean('right_to_be_forgotten_requested')->default(false);
+            $table->boolean('data_portability_requested')->default(false);
             $table->timestamps();
         });
     }

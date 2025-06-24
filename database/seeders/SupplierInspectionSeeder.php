@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
+use App\Models\SupplierInspection;
 
 class SupplierInspectionSeeder extends Seeder
 {
@@ -12,6 +13,6 @@ class SupplierInspectionSeeder extends Seeder
      */
     public function run(): void
     {
-        //
+        SupplierInspection::factory(10)->create();
     }
 }

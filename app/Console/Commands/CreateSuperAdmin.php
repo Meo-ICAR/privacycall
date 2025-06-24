@@ -6,6 +6,7 @@ use App\Models\User;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
+use Spatie\Permission\Traits\HasRoles;
 
 class CreateSuperAdmin extends Command
 {
@@ -29,7 +30,7 @@ class CreateSuperAdmin extends Command
     public function handle()
     {
         // Check if superadmin already exists
-        $existingSuperAdmin = User::where('role', 'superadmin')->first();
+        $existingSuperAdmin = User::role('superadmin')->first();
 
         if ($existingSuperAdmin) {
             $this->warn('A superadmin user already exists!');
@@ -79,7 +80,6 @@ class CreateSuperAdmin extends Command
                 'name' => $name,
                 'email' => $email,
                 'password' => Hash::make($password),
-                'role' => 'superadmin',
                 'is_active' => true,
 
                 // GDPR Compliance - Superadmin consents to all processing
@@ -91,6 +91,7 @@ class CreateSuperAdmin extends Command
                 'right_to_be_forgotten_requested' => false,
                 'data_portability_requested' => false,
             ]);
+            $superAdmin->assignRole('superadmin');
 
             $this->info('✅ Superadmin user created successfully!');
             $this->info('Email: ' . $email);
