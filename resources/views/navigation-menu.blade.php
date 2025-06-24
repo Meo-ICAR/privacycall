@@ -8,6 +8,12 @@
                     <a href="{{ route('dashboard') }}">
                         <x-application-mark class="block h-9 w-auto" />
                     </a>
+                    @php
+                        $company = Auth::user()->company ?? null;
+                    @endphp
+                    @if($company && $company->logo_url)
+                        <img src="{{ $company->logo_url }}" alt="Company Logo" class="h-9 w-9 object-contain ml-4 rounded shadow border border-gray-200" />
+                    @endif
                 </div>
 
                 <!-- Navigation Links -->
@@ -15,6 +21,11 @@
                     <x-nav-link href="{{ route('dashboard') }}" :active="request()->routeIs('dashboard')">
                         {{ __('Dashboard') }}
                     </x-nav-link>
+                    @if(auth()->user()->hasRole('admin') || auth()->user()->hasRole('superadmin'))
+                        <x-nav-link href="{{ route('roles.permissions.index') }}" :active="request()->routeIs('roles.permissions.index')">
+                            {{ __('Roles & Permissions') }}
+                        </x-nav-link>
+                    @endif
                 </div>
             </div>
 
@@ -142,6 +153,11 @@
             <x-responsive-nav-link href="{{ route('dashboard') }}" :active="request()->routeIs('dashboard')">
                 {{ __('Dashboard') }}
             </x-responsive-nav-link>
+            @if(auth()->user()->hasRole('admin') || auth()->user()->hasRole('superadmin'))
+                <x-responsive-nav-link href="{{ route('roles.permissions.index') }}" :active="request()->routeIs('roles.permissions.index')">
+                    {{ __('Roles & Permissions') }}
+                </x-responsive-nav-link>
+            @endif
         </div>
 
         <!-- Responsive Settings Options -->

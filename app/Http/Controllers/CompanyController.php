@@ -8,6 +8,8 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
+use Intervention\Image\Facades\Image;
 
 class CompanyController extends Controller
 {
@@ -87,6 +89,7 @@ class CompanyController extends Controller
                 'data_processing_purpose' => 'nullable|string',
                 'data_controller_contact' => 'nullable|string|max:255',
                 'data_protection_officer' => 'nullable|string|max:255',
+                'logo' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
             ]);
 
             if ($validator->fails()) {
@@ -99,7 +102,21 @@ class CompanyController extends Controller
 
             DB::beginTransaction();
 
-            $company = Company::create($validator->validated());
+            $data = $validator->validated();
+
+            // Handle logo upload
+            if ($request->hasFile('logo')) {
+                $image = $request->file('logo');
+                $filename = 'company_logos/' . uniqid('logo_') . '.' . $image->getClientOriginalExtension();
+                $resized = Image::make($image)->resize(256, 256, function ($constraint) {
+                    $constraint->aspectRatio();
+                    $constraint->upsize();
+                })->encode();
+                Storage::disk('public')->put($filename, $resized);
+                $data['logo_url'] = Storage::url($filename);
+            }
+
+            $company = Company::create($data);
 
             // GDPR: Set default consent date if not provided
             if (!$company->gdpr_consent_date) {
@@ -186,6 +203,7 @@ class CompanyController extends Controller
                 'data_processing_purpose' => 'nullable|string',
                 'data_controller_contact' => 'nullable|string|max:255',
                 'data_protection_officer' => 'nullable|string|max:255',
+                'logo' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
             ]);
 
             if ($validator->fails()) {
@@ -198,7 +216,21 @@ class CompanyController extends Controller
 
             DB::beginTransaction();
 
-            $company->update($validator->validated());
+            $data = $validator->validated();
+
+            // Handle logo upload
+            if ($request->hasFile('logo')) {
+                $image = $request->file('logo');
+                $filename = 'company_logos/' . uniqid('logo_') . '.' . $image->getClientOriginalExtension();
+                $resized = Image::make($image)->resize(256, 256, function ($constraint) {
+                    $constraint->aspectRatio();
+                    $constraint->upsize();
+                })->encode();
+                Storage::disk('public')->put($filename, $resized);
+                $data['logo_url'] = Storage::url($filename);
+            }
+
+            $company->update($data);
 
             DB::commit();
 

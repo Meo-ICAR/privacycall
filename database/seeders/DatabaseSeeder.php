@@ -79,5 +79,51 @@ class DatabaseSeeder extends Seeder
             'manage suppliers',
             'manage gdpr',
         ]);
+
+        // Seed demo companies
+        \App\Models\Company::factory(5)->create()->each(function ($company) {
+            // Seed users for each company
+            $admin = \App\Models\User::factory()->create([
+                'company_id' => $company->id,
+                'role' => 'admin',
+                'email' => 'admin_' . $company->id . '@demo.com',
+            ]);
+            $admin->assignRole('admin');
+
+            $employees = \App\Models\Employee::factory(10)->create(['company_id' => $company->id]);
+            $customers = \App\Models\Customer::factory(10)->create(['company_id' => $company->id]);
+            $suppliers = \App\Models\Supplier::factory(5)->create(['company_id' => $company->id]);
+
+            // Seed users for employees
+            foreach ($employees as $employee) {
+                $user = \App\Models\User::factory()->create([
+                    'company_id' => $company->id,
+                    'role' => 'user',
+                    'email' => 'employee_' . $employee->id . '@demo.com',
+                ]);
+                $user->assignRole('user');
+            }
+
+            // Seed users for customers
+            foreach ($customers as $customer) {
+                $user = \App\Models\User::factory()->create([
+                    'company_id' => $company->id,
+                    'role' => 'user',
+                    'email' => 'customer_' . $customer->id . '@demo.com',
+                ]);
+                $user->assignRole('user');
+            }
+
+            // Seed data processing activities
+            $activities = \App\Models\DataProcessingActivity::factory(3)->create(['company_id' => $company->id]);
+
+            // Seed consent records
+            foreach ($customers as $customer) {
+                \App\Models\ConsentRecord::factory()->create([
+                    'company_id' => $company->id,
+                    'customer_id' => $customer->id,
+                ]);
+            }
+        });
     }
 }

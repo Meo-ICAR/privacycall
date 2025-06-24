@@ -49,7 +49,17 @@
         <!-- Company Form -->
         <div class="bg-white shadow rounded-lg">
             <div class="px-4 py-5 sm:p-6">
-                <form id="companyForm" class="space-y-6">
+                <form id="companyForm" class="space-y-6" enctype="multipart/form-data">
+                    <!-- Logo Upload -->
+                    <div>
+                        <label for="logo" class="block text-sm font-medium text-gray-700">Company Logo</label>
+                        <input type="file" name="logo" id="logo" accept="image/*"
+                               class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                        <div class="mt-2">
+                            <img id="logoPreview" src="#" alt="Logo Preview" class="h-24 w-24 object-contain rounded border border-gray-200 hidden" />
+                        </div>
+                    </div>
+
                     <!-- Company Name -->
                     <div>
                         <label for="name" class="block text-sm font-medium text-gray-700">Company Name</label>
@@ -188,6 +198,20 @@
 
             // Redirect to companies list
             window.location.href = '/companies';
+        });
+
+        // Logo preview
+        const logoInput = document.getElementById('logo');
+        const logoPreview = document.getElementById('logoPreview');
+        logoInput.addEventListener('change', function(e) {
+            const [file] = logoInput.files;
+            if (file) {
+                logoPreview.src = URL.createObjectURL(file);
+                logoPreview.classList.remove('hidden');
+            } else {
+                logoPreview.src = '#';
+                logoPreview.classList.add('hidden');
+            }
         });
     </script>
 </body>
