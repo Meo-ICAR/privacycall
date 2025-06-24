@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class Employee extends Model
 {
@@ -169,5 +170,12 @@ class Employee extends Model
     public function documents(): MorphMany
     {
         return $this->morphMany(\App\Models\Document::class, 'documentable');
+    }
+
+    public function trainings(): BelongsToMany
+    {
+        return $this->belongsToMany(\App\Models\Training::class, 'employee_training')
+            ->withPivot('attended', 'completed', 'score', 'notes')
+            ->withTimestamps();
     }
 }

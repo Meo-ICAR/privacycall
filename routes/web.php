@@ -13,6 +13,7 @@ use App\Http\Controllers\HoldingController;
 use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\InspectionController;
+use App\Http\Controllers\SupplierInspectionController;
 
 Route::get('/', function () {
     return view('welcome');
@@ -121,4 +122,15 @@ Route::middleware(['auth', 'verified'])->group(function () {
 // Inspection management routes (admin/superadmin)
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::resource('inspections', InspectionController::class);
+});
+
+// Supplier inspection management routes (admin/superadmin)
+Route::middleware(['auth', 'verified'])->group(function () {
+    Route::resource('supplier-inspections', SupplierInspectionController::class);
+});
+
+// Training management routes (admin/superadmin)
+Route::middleware(['auth', 'verified'])->group(function () {
+    Route::resource('trainings', \App\Http\Controllers\TrainingController::class);
+    Route::resource('employee-training', \App\Http\Controllers\EmployeeTrainingController::class);
 });
