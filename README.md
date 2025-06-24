@@ -1,61 +1,275 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# PrivacyCall - GDPR Compliant Company Management System
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+A comprehensive Laravel-based system for managing companies, employees, customers, and suppliers with full GDPR compliance and data protection features.
 
-## About Laravel
+## 🛡️ GDPR Compliance Features
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+### Data Subject Rights
+- **Right to be Forgotten**: Complete data deletion upon request
+- **Right to Data Portability**: Export personal data in multiple formats (JSON, CSV, XML)
+- **Right to Access**: View all personal data and processing activities
+- **Right to Rectification**: Update and correct personal information
+- **Right to Restrict Processing**: Limit data processing activities
+- **Right to Object**: Object to data processing
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+### Consent Management
+- **Granular Consent**: Separate consent for different processing purposes
+- **Consent History**: Complete audit trail of consent changes
+- **Consent Withdrawal**: Easy consent withdrawal process
+- **Consent Expiry**: Automatic consent expiration tracking
+- **Consent Evidence**: Document consent with screenshots, documents, or recordings
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+### Data Processing Activities
+- **Processing Register**: Comprehensive record of all data processing activities
+- **Legal Basis Tracking**: Document legal basis for each processing activity
+- **Risk Assessment**: Risk level assessment for processing activities
+- **Data Protection Impact Assessment (DPIA)**: Support for DPIA requirements
+- **Third Country Transfers**: Track international data transfers
 
-## Learning Laravel
+## 🏢 Company Management Features
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+### Company Types
+- **Employers**: Companies that employ staff
+- **Customers**: Companies that purchase products/services
+- **Suppliers**: Companies that provide products/services
+- **Partners**: Strategic business partners
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+### Company Information
+- Legal and trading names
+- Registration and VAT numbers
+- Complete address information
+- Contact details and website
+- Industry classification and company size
+- GDPR compliance information
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+## 👥 Employee Management
 
-## Laravel Sponsors
+### Employee Records
+- Personal information (name, email, phone)
+- Employment details (position, department, hire date)
+- Salary and employment type
+- Emergency contact information
+- GDPR consent tracking
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+### Employment Types
+- Full-time
+- Part-time
+- Contract
+- Temporary
 
-### Premium Partners
+## 🛒 Customer Management
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+### Customer Records
+- Personal/business information
+- Contact preferences
+- Purchase history
+- Customer status tracking
+- GDPR consent management
 
-## Contributing
+### Customer Types
+- Individual customers
+- Business customers
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+## 🚚 Supplier Management
 
-## Code of Conduct
+### Supplier Records
+- Company information
+- Contact person details
+- Supply categories and status
+- Financial information
+- GDPR compliance tracking
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+### Supplier Categories
+- Primary suppliers
+- Secondary suppliers
+- Emergency suppliers
 
-## Security Vulnerabilities
+## 🗄️ Database Structure
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+### Core Tables
+- `companies` - Company information and GDPR compliance
+- `employees` - Employee records with consent tracking
+- `customers` - Customer records with privacy preferences
+- `suppliers` - Supplier records with compliance data
+- `users` - User accounts with role-based access
 
-## License
+### GDPR Tables
+- `data_processing_activities` - Processing activity register
+- `consent_records` - Consent history and evidence
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+## 🚀 Installation
+
+### Prerequisites
+- PHP 8.2 or higher
+- Composer
+- MySQL/PostgreSQL
+- Laravel 12.x
+
+### Setup Instructions
+
+1. **Clone the repository**
+   ```bash
+   git clone https://github.com/Meo-ICAR/privacycall.git
+   cd privacycall
+   ```
+
+2. **Install dependencies**
+   ```bash
+   composer install
+   npm install
+   ```
+
+3. **Environment configuration**
+   ```bash
+   cp .env.example .env
+   php artisan key:generate
+   ```
+
+4. **Database configuration**
+   Update your `.env` file with database credentials:
+   ```env
+   DB_CONNECTION=mysql
+   DB_HOST=127.0.0.1
+   DB_PORT=3306
+   DB_DATABASE=privacycall
+   DB_USERNAME=your_username
+   DB_PASSWORD=your_password
+   ```
+
+5. **Run migrations**
+   ```bash
+   php artisan migrate
+   ```
+
+6. **Start the development server**
+   ```bash
+   php artisan serve
+   ```
+
+## 📡 API Endpoints
+
+### Company Management
+```
+GET    /api/v1/companies              - List companies
+POST   /api/v1/companies              - Create company
+GET    /api/v1/companies/{id}         - Get company details
+PUT    /api/v1/companies/{id}         - Update company
+DELETE /api/v1/companies/{id}         - Delete company
+GET    /api/v1/companies/{id}/gdpr-status - Get GDPR status
+```
+
+### GDPR Data Subject Rights
+```
+POST   /api/v1/gdpr/right-to-be-forgotten    - Request data deletion
+POST   /api/v1/gdpr/data-portability         - Request data export
+POST   /api/v1/gdpr/export-data              - Export data in format
+GET    /api/v1/gdpr/data-processing-activities - Get processing activities
+GET    /api/v1/gdpr/consent-history          - Get consent history
+```
+
+## 🔐 Security Features
+
+### Data Protection
+- **Encryption**: Sensitive data encryption at rest
+- **Access Control**: Role-based access control
+- **Audit Logging**: Complete audit trail of data access
+- **Data Minimization**: Only collect necessary data
+- **Purpose Limitation**: Clear processing purposes
+
+### Privacy by Design
+- **Default Privacy**: Privacy-friendly default settings
+- **Privacy Settings**: Granular privacy controls
+- **Data Retention**: Automatic data retention policies
+- **Data Anonymization**: Support for data anonymization
+
+## 📊 GDPR Compliance Dashboard
+
+The system includes comprehensive GDPR compliance monitoring:
+
+### Compliance Metrics
+- Consent validity status
+- Data retention compliance
+- Processing activity tracking
+- Data subject rights requests
+- Breach notification tracking
+
+### Reporting Features
+- GDPR compliance reports
+- Data processing activity reports
+- Consent management reports
+- Data subject rights reports
+
+## 🧪 Testing
+
+### Run Tests
+```bash
+php artisan test
+```
+
+### GDPR Compliance Tests
+```bash
+php artisan test --filter=GdprTest
+```
+
+## 📝 Documentation
+
+### API Documentation
+- Complete API documentation available at `/api/documentation`
+- OpenAPI/Swagger specification
+- Request/response examples
+
+### GDPR Documentation
+- GDPR compliance guide
+- Data processing procedures
+- Consent management procedures
+- Data subject rights procedures
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Add tests for new functionality
+5. Ensure GDPR compliance
+6. Submit a pull request
+
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 🆘 Support
+
+For support and questions:
+- Create an issue on GitHub
+- Contact the development team
+- Check the documentation
+
+## 🔄 Version History
+
+### v1.0.0 (Current)
+- Initial GDPR-compliant company management system
+- Complete data subject rights implementation
+- Consent management system
+- Data processing activity tracking
+- API endpoints for all major functions
+
+## 🏛️ Legal Compliance
+
+This system is designed to help organizations comply with:
+- **GDPR (General Data Protection Regulation)**
+- **CCPA (California Consumer Privacy Act)**
+- **LGPD (Brazilian General Data Protection Law)**
+- **Other international privacy laws**
+
+## ⚠️ Disclaimer
+
+This software is provided as-is for educational and development purposes. Organizations should:
+- Conduct their own legal review
+- Implement appropriate security measures
+- Train staff on GDPR requirements
+- Regularly audit compliance
+- Consult with legal professionals
+
+---
+
+**Built with ❤️ for privacy and data protection**
