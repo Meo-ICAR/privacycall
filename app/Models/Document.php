@@ -30,4 +30,9 @@ class Document extends Model
     {
         return $this->belongsTo(DocumentType::class);
     }
+
+    public function customerInspections()
+    {
+        return $this->belongsToMany(\App\Models\CustomerInspection::class, 'customer_inspection_document')->withTimestamps();
+    }
 }

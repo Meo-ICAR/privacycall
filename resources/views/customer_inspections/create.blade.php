@@ -48,6 +48,55 @@
                 @endforeach
             </div>
         </div>
+        <div class="mb-6">
+            <label class="block font-semibold mb-2">Suppliers</label>
+            <div id="suppliers-list">
+                @foreach($suppliers as $supplier)
+                    <div class="flex items-center mb-2">
+                        <input type="checkbox" name="suppliers[]" value="{{ $supplier->id }}" class="mr-2" checked>
+                        <span class="mr-2">{{ $supplier->name }} ({{ $supplier->supplier_type }})</span>
+                    </div>
+                @endforeach
+            </div>
+        </div>
+        <div class="mb-6">
+            <label class="block font-semibold mb-2">Documents (associate existing)</label>
+            <div id="documents-list">
+                @foreach($documents as $document)
+                    <div class="flex items-center mb-2">
+                        <input type="checkbox" name="documents[]" value="{{ $document->id }}" class="mr-2">
+                        <span class="mr-2">{{ $document->file_name }} ({{ $document->mime_type }})</span>
+                    </div>
+                @endforeach
+            </div>
+        </div>
+        <div class="mb-6">
+            <label class="block font-semibold mb-2">Clone Existing Documents</label>
+            <div id="clone-documents-list">
+                @foreach($documents as $document)
+                    <div class="flex items-center mb-2">
+                        <input type="checkbox" name="clone_documents[]" value="{{ $document->id }}" class="mr-2">
+                        <span class="mr-2">{{ $document->file_name }} ({{ $document->mime_type }})</span>
+                    </div>
+                @endforeach
+            </div>
+        </div>
+        <div class="mb-6">
+            <label class="block font-semibold mb-2">Create and Associate New Documents</label>
+            <div id="new-documents-list">
+                <div class="flex items-center mb-2">
+                    <input type="text" name="new_documents[0][file_name]" placeholder="File Name" class="form-input mr-2">
+                    <input type="text" name="new_documents[0][file_path]" placeholder="File Path" class="form-input mr-2">
+                    <input type="text" name="new_documents[0][mime_type]" placeholder="MIME Type" class="form-input">
+                </div>
+                <div class="flex items-center mb-2">
+                    <input type="text" name="new_documents[1][file_name]" placeholder="File Name" class="form-input mr-2">
+                    <input type="text" name="new_documents[1][file_path]" placeholder="File Path" class="form-input mr-2">
+                    <input type="text" name="new_documents[1][mime_type]" placeholder="MIME Type" class="form-input">
+                </div>
+                {{-- Add JS for dynamic rows in production --}}
+            </div>
+        </div>
         <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded">Create Inspection</button>
     </form>
 </div>

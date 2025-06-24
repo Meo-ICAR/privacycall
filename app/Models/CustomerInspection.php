@@ -24,4 +24,14 @@ class CustomerInspection extends Model
             ->withPivot('position', 'hire_date')
             ->withTimestamps();
     }
+
+    public function suppliers()
+    {
+        return $this->belongsToMany(\App\Models\Supplier::class, 'customer_inspection_supplier')->withTimestamps();
+    }
+
+    public function documents()
+    {
+        return $this->belongsToMany(\App\Models\Document::class, 'customer_inspection_document')->withTimestamps();
+    }
 }

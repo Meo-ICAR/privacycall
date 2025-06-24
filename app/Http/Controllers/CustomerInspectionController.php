@@ -8,6 +8,8 @@ use App\Models\Employee;
 use App\Models\Company;
 use App\Models\Customer;
 use Illuminate\Support\Facades\Auth;
+use App\Models\Supplier;
+use App\Models\Document;
 
 class CustomerInspectionController extends Controller
 {
@@ -28,7 +30,32 @@ class CustomerInspectionController extends Controller
         $company = $user->company;
         $customers = Customer::where('company_id', $company->id)->get();
         $employees = Employee::where('company_id', $company->id)->get();
-        return view('customer_inspections.create', compact('company', 'customers', 'employees'));
+        $suppliers = Supplier::where('company_id', $company->id)
+            ->where('supplier_type', '!=', 'Individual')->get();
+        // Fetch all documents related to the company
+        $companyId = $company->id;
+        $companyDocIds = Document::where('documentable_type', Company::class)
+            ->where('documentable_id', $companyId)
+            ->pluck('id');
+        $customerIds = Customer::where('company_id', $companyId)->pluck('id');
+        $customerDocIds = Document::where('documentable_type', Customer::class)
+            ->whereIn('documentable_id', $customerIds)
+            ->pluck('id');
+        $employeeIds = Employee::where('company_id', $companyId)->pluck('id');
+        $employeeDocIds = Document::where('documentable_type', Employee::class)
+            ->whereIn('documentable_id', $employeeIds)
+            ->pluck('id');
+        $supplierIds = Supplier::where('company_id', $companyId)->pluck('id');
+        $supplierDocIds = Document::where('documentable_type', Supplier::class)
+            ->whereIn('documentable_id', $supplierIds)
+            ->pluck('id');
+        $allDocIds = $companyDocIds
+            ->merge($customerDocIds)
+            ->merge($employeeDocIds)
+            ->merge($supplierDocIds)
+            ->unique();
+        $documents = Document::whereIn('id', $allDocIds)->get();
+        return view('customer_inspections.create', compact('company', 'customers', 'employees', 'suppliers', 'documents'));
     }
 
     /**
@@ -42,10 +69,18 @@ class CustomerInspectionController extends Controller
             'inspection_date' => 'required|date',
             'notes' => 'nullable|string',
             'status' => 'required|string',
-            'employees' => 'array', // array of employee data
+            'employees' => 'array',
             'employees.*.id' => 'required|exists:employees,id',
             'employees.*.position' => 'nullable|string',
             'employees.*.hire_date' => 'nullable|date',
+            'suppliers' => 'array',
+            'suppliers.*' => 'exists:suppliers,id',
+            'documents' => 'array',
+            'documents.*' => 'exists:documents,id',
+            'new_documents' => 'array',
+            'new_documents.*.file_name' => 'required|string',
+            'new_documents.*.file_path' => 'required|string',
+            'new_documents.*.mime_type' => 'required|string',
         ]);
 
         $inspection = CustomerInspection::create([
@@ -56,7 +91,7 @@ class CustomerInspectionController extends Controller
             'status' => $validated['status'],
         ]);
 
-        // Prepare attach data for employees
+        // Employees
         $attachData = [];
         if (!empty($validated['employees'])) {
             foreach ($validated['employees'] as $emp) {
@@ -68,7 +103,42 @@ class CustomerInspectionController extends Controller
         }
         $inspection->employees()->sync($attachData);
 
-        return response()->json(['message' => 'Customer inspection created', 'inspection' => $inspection->load('employees')], 201);
+        // Suppliers
+        if (!empty($validated['suppliers'])) {
+            $inspection->suppliers()->sync($validated['suppliers']);
+        }
+
+        // Documents (existing)
+        if (!empty($validated['documents'])) {
+            $inspection->documents()->sync($validated['documents']);
+        }
+
+        // New documents
+        if (!empty($validated['new_documents'])) {
+            foreach ($validated['new_documents'] as $docData) {
+                $doc = Document::create([
+                    'file_name' => $docData['file_name'],
+                    'file_path' => $docData['file_path'],
+                    'mime_type' => $docData['mime_type'],
+                    'uploaded_by' => $request->user()->id,
+                ]);
+                $inspection->documents()->attach($doc->id);
+            }
+        }
+
+        // Clone documents
+        if (!empty($request->input('clone_documents'))) {
+            foreach ($request->input('clone_documents') as $docId) {
+                $original = Document::find($docId);
+                if ($original) {
+                    $cloned = $original->replicate();
+                    $cloned->save();
+                    $inspection->documents()->attach($cloned->id);
+                }
+            }
+        }
+
+        return response()->json(['message' => 'Customer inspection created', 'inspection' => $inspection->load(['employees', 'suppliers', 'documents'])], 201);
     }
 
     /**

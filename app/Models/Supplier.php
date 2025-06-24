@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class Supplier extends Model
 {
@@ -237,5 +238,10 @@ class Supplier extends Model
     public function documents(): MorphMany
     {
         return $this->morphMany(\App\Models\Document::class, 'documentable');
+    }
+
+    public function customerInspections(): BelongsToMany
+    {
+        return $this->belongsToMany(\App\Models\CustomerInspection::class, 'customer_inspection_supplier')->withTimestamps();
     }
 }

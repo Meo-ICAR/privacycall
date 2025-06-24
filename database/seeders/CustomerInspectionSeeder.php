@@ -10,6 +10,8 @@ use App\Models\Company;
 use App\Models\Holding;
 use App\Models\Customer;
 use Illuminate\Support\Arr;
+use App\Models\Supplier;
+use App\Models\Document;
 
 class CustomerInspectionSeeder extends Seeder
 {
@@ -20,7 +22,54 @@ class CustomerInspectionSeeder extends Seeder
     {
         // Get a random company and customer
         $company = Company::inRandomOrder()->first();
+        if (!$company) {
+            $company = Company::factory()->create();
+        }
+
         $customer = Customer::where('company_id', $company->id)->inRandomOrder()->first();
+        if (!$customer) {
+            $customer = Customer::factory()->create(['company_id' => $company->id]);
+        }
+
+        // Ensure at least one employee exists
+        $employees = Employee::where('company_id', $company->id)->get();
+        if ($employees->isEmpty()) {
+            $employees = Employee::factory()->count(3)->create(['company_id' => $company->id]);
+        }
+
+        // Ensure at least one eligible supplier exists
+        $suppliers = Supplier::where('company_id', $company->id)
+            ->where('supplier_type', '!=', 'Individual')->get();
+        if ($suppliers->isEmpty()) {
+            $suppliers = Supplier::factory()->count(2)->create([
+                'company_id' => $company->id,
+                'supplier_type' => 'goods', // or 'services', 'both'
+            ]);
+        }
+
+        // Fetch all documents related to the company
+        $companyId = $company->id;
+        $companyDocIds = Document::where('documentable_type', Company::class)
+            ->where('documentable_id', $companyId)
+            ->pluck('id');
+        $customerIds = Customer::where('company_id', $companyId)->pluck('id');
+        $customerDocIds = Document::where('documentable_type', Customer::class)
+            ->whereIn('documentable_id', $customerIds)
+            ->pluck('id');
+        $employeeIds = Employee::where('company_id', $companyId)->pluck('id');
+        $employeeDocIds = Document::where('documentable_type', Employee::class)
+            ->whereIn('documentable_id', $employeeIds)
+            ->pluck('id');
+        $supplierIds = Supplier::where('company_id', $companyId)->pluck('id');
+        $supplierDocIds = Document::where('documentable_type', Supplier::class)
+            ->whereIn('documentable_id', $supplierIds)
+            ->pluck('id');
+        $allDocIds = $companyDocIds
+            ->merge($customerDocIds)
+            ->merge($employeeDocIds)
+            ->merge($supplierDocIds)
+            ->unique();
+        $documents = Document::whereIn('id', $allDocIds)->get();
 
         // Create a customer inspection
         $inspection = CustomerInspection::create([
