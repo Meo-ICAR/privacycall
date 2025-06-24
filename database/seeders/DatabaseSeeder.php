@@ -17,7 +17,7 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         // Seed default roles
-        $roles = ['superadmin', 'admin', 'user'];
+        $roles = ['superadmin', 'admin', 'user', 'manager', 'employee'];
         foreach ($roles as $role) {
             Role::firstOrCreate(['name' => $role]);
         }
@@ -168,6 +168,7 @@ class DatabaseSeeder extends Seeder
             DocumentSeeder::class,
             InspectionSeeder::class,
             SupplierInspectionSeeder::class,
+            CustomerInspectionSeeder::class,
             UserSeeder::class,
         ]);
     }

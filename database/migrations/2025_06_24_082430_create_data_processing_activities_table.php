@@ -14,9 +14,11 @@ return new class extends Migration
         Schema::create('data_processing_activities', function (Blueprint $table) {
             $table->id();
             $table->foreignId('company_id')->constrained('companies')->onDelete('cascade');
-            $table->string('processable_type');
-            $table->unsignedBigInteger('processable_id');
+            $table->string('processable_type')->nullable();
+            $table->unsignedBigInteger('processable_id')->nullable();
             $table->string('activity_name');
+            $table->text('description')->nullable();
+            $table->string('purpose')->nullable();
             $table->text('activity_description')->nullable();
             $table->string('processing_purpose')->nullable();
             $table->string('legal_basis')->nullable();

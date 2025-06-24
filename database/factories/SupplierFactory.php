@@ -4,6 +4,7 @@ namespace Database\Factories;
 
 use App\Models\Supplier;
 use Illuminate\Database\Eloquent\Factories\Factory;
+use App\Models\Company;
 
 class SupplierFactory extends Factory
 {
@@ -16,7 +17,7 @@ class SupplierFactory extends Factory
             'contact_name' => $this->faker->name(),
             'email' => $this->faker->unique()->companyEmail(),
             'phone' => $this->faker->phoneNumber(),
-            'company_id' => null, // Set in seeder
+            'company_id' => Company::inRandomOrder()->first()?->id ?? Company::factory(),
         ];
     }
 }

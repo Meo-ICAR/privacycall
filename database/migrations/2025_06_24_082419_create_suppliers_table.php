@@ -16,6 +16,7 @@ return new class extends Migration
             $table->foreignId('company_id')->constrained('companies')->onDelete('cascade');
             $table->string('supplier_number')->nullable();
             $table->string('name');
+            $table->string('contact_name')->nullable();
             $table->string('legal_name')->nullable();
             $table->string('registration_number')->nullable();
             $table->string('vat_number')->nullable();

@@ -4,6 +4,7 @@ namespace Database\Factories;
 
 use App\Models\Employee;
 use Illuminate\Database\Eloquent\Factories\Factory;
+use App\Models\Company;
 
 class EmployeeFactory extends Factory
 {
@@ -19,7 +20,7 @@ class EmployeeFactory extends Factory
             'phone' => $this->faker->phoneNumber(),
             'position' => $this->faker->jobTitle(),
             'department' => $this->faker->word(),
-            'company_id' => null, // Set in seeder
+            'company_id' => Company::inRandomOrder()->first()?->id ?? Company::factory(),
             'hire_date' => $this->faker->dateTimeBetween('-10 years', 'now'),
         ];
     }

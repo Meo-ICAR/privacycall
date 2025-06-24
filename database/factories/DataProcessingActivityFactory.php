@@ -4,6 +4,7 @@ namespace Database\Factories;
 
 use App\Models\DataProcessingActivity;
 use Illuminate\Database\Eloquent\Factories\Factory;
+use App\Models\Company;
 
 class DataProcessingActivityFactory extends Factory
 {
@@ -16,7 +17,7 @@ class DataProcessingActivityFactory extends Factory
             'description' => $this->faker->paragraph(),
             'purpose' => $this->faker->sentence(),
             'legal_basis' => $this->faker->randomElement(['consent', 'contract', 'legal obligation', 'vital interests', 'public task', 'legitimate interests']),
-            'company_id' => null, // Set in seeder
+            'company_id' => Company::inRandomOrder()->first()?->id ?? Company::factory(),
         ];
     }
 }

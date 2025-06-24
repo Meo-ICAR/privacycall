@@ -13,9 +13,12 @@ return new class extends Migration
     {
         Schema::create('consent_records', function (Blueprint $table) {
             $table->id();
+            $table->unsignedBigInteger('customer_id')->nullable();
+            $table->boolean('consent_given')->default(false);
+            $table->string('purpose')->nullable();
             $table->foreignId('company_id')->constrained('companies')->onDelete('cascade');
-            $table->string('consentable_type');
-            $table->unsignedBigInteger('consentable_id');
+            $table->string('consentable_type')->nullable();
+            $table->unsignedBigInteger('consentable_id')->nullable();
             $table->string('consent_type')->nullable();
             $table->string('consent_status')->nullable();
             $table->string('consent_method')->nullable();
