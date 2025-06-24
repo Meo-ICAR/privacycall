@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\CompanyController;
 use App\Http\Controllers\GdprController;
+use App\Http\Controllers\RolePermissionController;
 
 Route::get('/', function () {
     return view('welcome');
@@ -51,3 +52,9 @@ Route::prefix('gdpr')->group(function () {
 Route::get('/api-docs', function () {
     return view('api.documentation');
 })->name('api.docs');
+
+// Roles and Permissions management (admin access)
+Route::middleware(['auth', 'verified'])->group(function () {
+    Route::get('/roles-permissions', [RolePermissionController::class, 'index'])->name('roles.permissions.index');
+    Route::post('/roles-permissions/assign', [RolePermissionController::class, 'assign'])->name('roles.permissions.assign');
+});

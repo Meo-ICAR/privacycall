@@ -2,10 +2,12 @@
 
 namespace Database\Factories;
 
-use App\Models\Company;
+use App\Models\Team;
+use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
+use Laravel\Jetstream\Features;
 
 /**
  * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\User>
@@ -24,28 +26,16 @@ class UserFactory extends Factory
      */
     public function definition(): array
     {
-        $roles = ['admin', 'manager', 'employee', 'customer'];
-
         return [
-            'company_id' => Company::factory(),
             'name' => fake()->name(),
             'email' => fake()->unique()->safeEmail(),
             'email_verified_at' => now(),
             'password' => static::$password ??= Hash::make('password'),
+            'two_factor_secret' => null,
+            'two_factor_recovery_codes' => null,
             'remember_token' => Str::random(10),
-            'role' => fake()->randomElement($roles),
-            'is_active' => fake()->boolean(80), // 80% chance of being active
-
-            // GDPR Compliance Fields
-            'gdpr_consent_date' => fake()->optional()->dateTimeBetween('-1 year', 'now'),
-            'data_processing_consent' => fake()->boolean(70),
-            'marketing_consent' => fake()->boolean(50),
-            'third_party_sharing_consent' => fake()->boolean(40),
-            'data_retention_consent' => fake()->boolean(60),
-            'right_to_be_forgotten_requested' => fake()->boolean(5), // Low probability
-            'right_to_be_forgotten_date' => fake()->optional()->dateTimeBetween('-1 year', 'now'),
-            'data_portability_requested' => fake()->boolean(3), // Low probability
-            'data_portability_date' => fake()->optional()->dateTimeBetween('-1 year', 'now'),
+            'profile_photo_path' => null,
+            'current_team_id' => null,
         ];
     }
 
@@ -60,112 +50,23 @@ class UserFactory extends Factory
     }
 
     /**
-     * Indicate that the user is a superadmin.
+     * Indicate that the user should have a personal team.
      */
-    public function superadmin(): static
+    public function withPersonalTeam(?callable $callback = null): static
     {
-        return $this->state(fn (array $attributes) => [
-            'role' => 'superadmin',
-            'is_active' => true,
-            'gdpr_consent_date' => now(),
-            'data_processing_consent' => true,
-            'marketing_consent' => true,
-            'third_party_sharing_consent' => true,
-            'data_retention_consent' => true,
-        ]);
-    }
+        if (! Features::hasTeamFeatures()) {
+            return $this->state([]);
+        }
 
-    /**
-     * Indicate that the user is an admin.
-     */
-    public function admin(): static
-    {
-        return $this->state(fn (array $attributes) => [
-            'role' => 'admin',
-            'is_active' => true,
-            'gdpr_consent_date' => now(),
-            'data_processing_consent' => true,
-        ]);
-    }
-
-    /**
-     * Indicate that the user is a manager.
-     */
-    public function manager(): static
-    {
-        return $this->state(fn (array $attributes) => [
-            'role' => 'manager',
-            'is_active' => true,
-            'gdpr_consent_date' => now(),
-            'data_processing_consent' => true,
-        ]);
-    }
-
-    /**
-     * Indicate that the user is an employee.
-     */
-    public function employee(): static
-    {
-        return $this->state(fn (array $attributes) => [
-            'role' => 'employee',
-            'is_active' => true,
-            'gdpr_consent_date' => now(),
-            'data_processing_consent' => true,
-        ]);
-    }
-
-    /**
-     * Indicate that the user is a customer.
-     */
-    public function customer(): static
-    {
-        return $this->state(fn (array $attributes) => [
-            'role' => 'customer',
-            'is_active' => true,
-            'gdpr_consent_date' => now(),
-            'data_processing_consent' => true,
-        ]);
-    }
-
-    /**
-     * Indicate that the user has valid GDPR consent.
-     */
-    public function withValidGdprConsent(): static
-    {
-        return $this->state(fn (array $attributes) => [
-            'gdpr_consent_date' => fake()->dateTimeBetween('-6 months', 'now'),
-            'data_processing_consent' => true,
-        ]);
-    }
-
-    /**
-     * Indicate that the user has expired GDPR consent.
-     */
-    public function withExpiredGdprConsent(): static
-    {
-        return $this->state(fn (array $attributes) => [
-            'gdpr_consent_date' => fake()->dateTimeBetween('-2 years', '-1 year'),
-            'data_processing_consent' => false,
-        ]);
-    }
-
-    /**
-     * Indicate that the user is active.
-     */
-    public function active(): static
-    {
-        return $this->state(fn (array $attributes) => [
-            'is_active' => true,
-        ]);
-    }
-
-    /**
-     * Indicate that the user is inactive.
-     */
-    public function inactive(): static
-    {
-        return $this->state(fn (array $attributes) => [
-            'is_active' => false,
-        ]);
+        return $this->has(
+            Team::factory()
+                ->state(fn (array $attributes, User $user) => [
+                    'name' => $user->name.'\'s Team',
+                    'user_id' => $user->id,
+                    'personal_team' => true,
+                ])
+                ->when(is_callable($callback), $callback),
+            'ownedTeams'
+        );
     }
 }

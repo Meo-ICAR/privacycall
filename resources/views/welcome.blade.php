@@ -21,7 +21,7 @@
                     </div>
                 </div>
                 <div class="flex items-center space-x-4">
-                    <a href="/" class="text-blue-600 font-medium">Home</a>
+                    <a href="/" class="text-blue-600 font-medium">Dashboard</a>
                     <a href="/dashboard" class="text-gray-600 hover:text-gray-900">Dashboard</a>
                     <a href="/companies" class="text-gray-600 hover:text-gray-900">Companies</a>
                     <a href="/gdpr" class="text-gray-600 hover:text-gray-900">GDPR</a>
