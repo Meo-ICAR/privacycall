@@ -18,6 +18,21 @@
         @livewireStyles
     </head>
     <body class="font-sans antialiased">
+        @if(session('impersonate_original_id'))
+            <div class="bg-yellow-200 border-b border-yellow-400 text-yellow-900 px-4 py-3 flex items-center justify-between">
+                <div>
+                    <i class="fas fa-user-secret mr-2"></i>
+                    <strong>Impersonation Mode:</strong> You are impersonating another user.
+                </div>
+                <form method="POST" action="{{ route('impersonate.stop') }}">
+                    @csrf
+                    <button type="submit" class="inline-flex items-center px-3 py-1 border border-yellow-400 text-xs font-medium rounded-md text-yellow-900 bg-yellow-100 hover:bg-yellow-300">
+                        <i class="fas fa-sign-out-alt mr-1"></i> Stop Impersonating
+                    </button>
+                </form>
+            </div>
+        @endif
+
         <x-banner />
 
         <div class="min-h-screen bg-gray-100">

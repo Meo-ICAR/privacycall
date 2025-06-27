@@ -24,6 +24,10 @@
             <div class="flex justify-between items-center mb-6">
                 <h2 class="text-lg font-medium text-gray-900">All Suppliers</h2>
                 <div class="flex space-x-3">
+                    <a href="{{ route('supplier-mail-merge.index') }}" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-purple-600 hover:bg-purple-700">
+                        <i class="fas fa-envelope-open-text mr-2"></i>
+                        Mail Merge
+                    </a>
                     <a href="{{ route('suppliers.export') }}" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700">
                         <i class="fas fa-download mr-2"></i>
                         Export to Excel

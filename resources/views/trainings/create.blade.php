@@ -26,7 +26,7 @@
 
                 <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
                     <div>
-                        <label for="title" class="block text-sm font-medium text-gray-700">Training Title</label>
+                        <label for="title" class="block text-sm font-medium text-gray-700">Training Title *</label>
                         <input type="text" id="title" name="title" value="{{ old('title') }}" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500" required>
                         @error('title')
                             <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
@@ -34,14 +34,12 @@
                     </div>
 
                     <div>
-                        <label for="type" class="block text-sm font-medium text-gray-700">Training Type</label>
+                        <label for="type" class="block text-sm font-medium text-gray-700">Training Type *</label>
                         <select id="type" name="type" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500" required>
                             <option value="">Select training type</option>
-                            <option value="safety" {{ old('type') == 'safety' ? 'selected' : '' }}>Safety</option>
-                            <option value="compliance" {{ old('type') == 'compliance' ? 'selected' : '' }}>Compliance</option>
-                            <option value="technical" {{ old('type') == 'technical' ? 'selected' : '' }}>Technical</option>
-                            <option value="soft_skills" {{ old('type') == 'soft_skills' ? 'selected' : '' }}>Soft Skills</option>
-                            <option value="certification" {{ old('type') == 'certification' ? 'selected' : '' }}>Certification</option>
+                            <option value="online" {{ old('type') == 'online' ? 'selected' : '' }}>Online</option>
+                            <option value="in_person" {{ old('type') == 'in_person' ? 'selected' : '' }}>In Person</option>
+                            <option value="hybrid" {{ old('type') == 'hybrid' ? 'selected' : '' }}>Hybrid</option>
                         </select>
                         @error('type')
                             <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
@@ -50,16 +48,32 @@
 
                     <div>
                         <label for="date" class="block text-sm font-medium text-gray-700">Training Date</label>
-                        <input type="date" id="date" name="date" value="{{ old('date') }}" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500" required>
+                        <input type="date" id="date" name="date" value="{{ old('date') }}" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
                         @error('date')
                             <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                         @enderror
                     </div>
 
                     <div>
+                        <label for="duration" class="block text-sm font-medium text-gray-700">Duration</label>
+                        <input type="text" id="duration" name="duration" value="{{ old('duration') }}" placeholder="e.g., 2 hours, 1 day" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                        @error('duration')
+                            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                        @enderror
+                    </div>
+
+                    <div>
                         <label for="provider" class="block text-sm font-medium text-gray-700">Training Provider</label>
-                        <input type="text" id="provider" name="provider" value="{{ old('provider') }}" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500" required>
+                        <input type="text" id="provider" name="provider" value="{{ old('provider') }}" placeholder="e.g., Training Institute, Internal" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
                         @error('provider')
+                            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                        @enderror
+                    </div>
+
+                    <div>
+                        <label for="location" class="block text-sm font-medium text-gray-700">Location</label>
+                        <input type="text" id="location" name="location" value="{{ old('location') }}" placeholder="e.g., Conference Room A, Zoom Meeting" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                        @error('location')
                             <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                         @enderror
                     </div>
@@ -79,18 +93,23 @@
                         @enderror
                     </div>
 
-                    <div>
-                        <label for="duration" class="block text-sm font-medium text-gray-700">Duration (hours)</label>
-                        <input type="number" id="duration" name="duration" value="{{ old('duration') }}" min="0" step="0.5" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
-                        @error('duration')
+                    <div class="flex items-center">
+                        <input type="checkbox" id="is_active" name="is_active" value="1" {{ old('is_active') ? 'checked' : '' }} class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                        <label for="is_active" class="ml-2 block text-sm text-gray-900">Active Training</label>
+                    </div>
+
+                    <div class="sm:col-span-2">
+                        <label for="description" class="block text-sm font-medium text-gray-700">Description</label>
+                        <textarea id="description" name="description" rows="3" placeholder="Provide a detailed description of the training content and objectives" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">{{ old('description') }}</textarea>
+                        @error('description')
                             <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                         @enderror
                     </div>
 
                     <div class="sm:col-span-2">
-                        <label for="description" class="block text-sm font-medium text-gray-700">Description (Optional)</label>
-                        <textarea id="description" name="description" rows="3" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">{{ old('description') }}</textarea>
-                        @error('description')
+                        <label for="notes" class="block text-sm font-medium text-gray-700">Additional Notes</label>
+                        <textarea id="notes" name="notes" rows="3" placeholder="Any additional notes or special requirements" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">{{ old('notes') }}</textarea>
+                        @error('notes')
                             <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                         @enderror
                     </div>
@@ -98,9 +117,11 @@
 
                 <div class="mt-6 flex justify-end space-x-3">
                     <a href="{{ route('trainings.index') }}" class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                        <i class="fas fa-times mr-2"></i>
                         Cancel
                     </a>
                     <button type="submit" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700">
+                        <i class="fas fa-save mr-2"></i>
                         Create Training
                     </button>
                 </div>

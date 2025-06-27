@@ -221,6 +221,38 @@
                 </div>
             </div>
 
+            <!-- Company Admins (Impersonation) -->
+            <div class="bg-white shadow rounded-lg">
+                <div class="px-4 py-5 sm:p-6">
+                    <h3 class="text-lg font-medium text-gray-900 mb-4">Company Admins</h3>
+                    @php
+                        $admins = $company->users->filter(fn($u) => $u->hasRole('admin'));
+                    @endphp
+                    @if($admins->count())
+                        <ul class="divide-y divide-gray-200">
+                            @foreach($admins as $admin)
+                                <li class="py-2 flex items-center justify-between">
+                                    <div>
+                                        <span class="font-medium text-gray-900">{{ $admin->name }}</span>
+                                        <span class="block text-xs text-gray-500">{{ $admin->email }}</span>
+                                    </div>
+                                    @if(auth()->user()->hasRole('superadmin'))
+                                    <form method="POST" action="{{ route('impersonate.start', $admin) }}" onsubmit="return confirm('Impersonate this admin?');">
+                                        @csrf
+                                        <button type="submit" class="inline-flex items-center px-3 py-1 border border-blue-300 text-xs font-medium rounded-md text-blue-700 bg-blue-50 hover:bg-blue-100">
+                                            <i class="fas fa-user-secret mr-1"></i> Impersonate
+                                        </button>
+                                    </form>
+                                    @endif
+                                </li>
+                            @endforeach
+                        </ul>
+                    @else
+                        <p class="text-gray-500">No admin users found for this company.</p>
+                    @endif
+                </div>
+            </div>
+
             <!-- Actions -->
             <div class="bg-white shadow rounded-lg">
                 <div class="px-4 py-5 sm:p-6">

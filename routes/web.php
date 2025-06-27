@@ -14,6 +14,8 @@ use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\InspectionController;
 use App\Http\Controllers\SupplierInspectionController;
+use App\Http\Controllers\ImpersonationController;
+use App\Http\Controllers\SupplierMailMergeController;
 
 Route::get('/', function () {
     return view('welcome');
@@ -163,4 +165,17 @@ Route::middleware(['auth', 'verified'])->group(function () {
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::resource('trainings', \App\Http\Controllers\TrainingController::class);
     Route::resource('employee-training', \App\Http\Controllers\EmployeeTrainingController::class);
+});
+
+// Impersonation routes (superadmin only)
+Route::middleware(['auth', 'verified'])->group(function () {
+    Route::post('/impersonate/{user}', [\App\Http\Controllers\ImpersonationController::class, 'start'])->name('impersonate.start');
+    Route::post('/impersonate/stop', [\App\Http\Controllers\ImpersonationController::class, 'stop'])->name('impersonate.stop');
+});
+
+// Supplier mail merge routes
+Route::middleware(['auth', 'verified'])->group(function () {
+    Route::get('/supplier-mail-merge', [\App\Http\Controllers\SupplierMailMergeController::class, 'index'])->name('supplier-mail-merge.index');
+    Route::post('/supplier-mail-merge/preview', [\App\Http\Controllers\SupplierMailMergeController::class, 'preview'])->name('supplier-mail-merge.preview');
+    Route::post('/supplier-mail-merge/send', [\App\Http\Controllers\SupplierMailMergeController::class, 'send'])->name('supplier-mail-merge.send');
 });
