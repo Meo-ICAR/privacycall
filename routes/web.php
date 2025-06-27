@@ -26,13 +26,13 @@ Route::get('/dashboard', function () {
 
 // Company management routes
 Route::prefix('companies')->group(function () {
-    Route::get('/', function () {
-        return view('companies.index');
-    })->name('companies.index');
+    Route::get('/', [\App\Http\Controllers\CompanyController::class, 'index'])->name('companies.index');
 
     Route::get('/create', function () {
         return view('companies.create');
     })->name('companies.create');
+
+    Route::post('/', [\App\Http\Controllers\CompanyController::class, 'store'])->name('companies.store');
 
     Route::get('/{id}', function ($id) {
         return view('companies.show', compact('id'));
@@ -74,8 +74,10 @@ Route::prefix('suppliers')->middleware(['auth', 'verified'])->group(function () 
     Route::get('/', [SupplierController::class, 'index'])->name('suppliers.index');
     Route::get('/create', [SupplierController::class, 'create'])->name('suppliers.create');
     Route::post('/', [SupplierController::class, 'store'])->name('suppliers.store');
+    Route::get('/{supplier}', [SupplierController::class, 'show'])->name('suppliers.show');
     Route::get('/{supplier}/edit', [SupplierController::class, 'edit'])->name('suppliers.edit');
     Route::put('/{supplier}', [SupplierController::class, 'update'])->name('suppliers.update');
+    Route::delete('/{supplier}', [SupplierController::class, 'destroy'])->name('suppliers.destroy');
     Route::get('/export', [SupplierController::class, 'export'])->name('suppliers.export');
     Route::post('/import', [SupplierController::class, 'import'])->name('suppliers.import');
 });

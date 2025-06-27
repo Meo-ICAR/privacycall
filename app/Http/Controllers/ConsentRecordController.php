@@ -36,7 +36,6 @@ class ConsentRecordController extends Controller
             abort(403, 'Only superadmin can create consent records.');
         }
         $validated = $request->validate([
-            'company_id' => 'required|exists:companies,id',
             'customer_id' => 'required|exists:customers,id',
             'consent_type' => 'required|string|max:255',
             'consent_status' => 'required|string|max:255',
@@ -44,9 +43,8 @@ class ConsentRecordController extends Controller
             'expiry_date' => 'nullable|date|after:consent_date',
             'notes' => 'nullable|string',
         ]);
-
+        $validated['company_id'] = auth()->user()->company_id;
         ConsentRecord::create($validated);
-
         return redirect()->route('consent-records.index')
             ->with('success', 'Consent record created successfully.');
     }
@@ -67,7 +65,7 @@ class ConsentRecordController extends Controller
         if (!auth()->user() || !auth()->user()->hasRole('superadmin')) {
             abort(403, 'Only superadmin can edit consent records.');
         }
-        return view('consent_records.edit', compact('consentRecord'));
+        return view('consent_records.edit', ['record' => $consentRecord]);
     }
 
     /**
@@ -79,7 +77,6 @@ class ConsentRecordController extends Controller
             abort(403, 'Only superadmin can update consent records.');
         }
         $validated = $request->validate([
-            'company_id' => 'required|exists:companies,id',
             'customer_id' => 'required|exists:customers,id',
             'consent_type' => 'required|string|max:255',
             'consent_status' => 'required|string|max:255',
@@ -87,9 +84,8 @@ class ConsentRecordController extends Controller
             'expiry_date' => 'nullable|date|after:consent_date',
             'notes' => 'nullable|string',
         ]);
-
+        $validated['company_id'] = auth()->user()->company_id;
         $consentRecord->update($validated);
-
         return redirect()->route('consent-records.index')
             ->with('success', 'Consent record updated successfully.');
     }

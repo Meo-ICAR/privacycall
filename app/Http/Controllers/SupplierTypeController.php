@@ -7,17 +7,6 @@ use Illuminate\Http\Request;
 
 class SupplierTypeController extends Controller
 {
-    public function __construct()
-    {
-        $this->middleware('auth');
-        $this->middleware(function ($request, $next) {
-            if (!auth()->user() || !auth()->user()->hasRole('superadmin')) {
-                abort(403, 'Only superadmin can access supplier types.');
-            }
-            return $next($request);
-        })->except(['index']);
-    }
-
     /**
      * Display a listing of the resource.
      */
@@ -60,9 +49,9 @@ class SupplierTypeController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(string $id)
+    public function show(SupplierType $supplierType)
     {
-        //
+        return view('supplier_types.show', compact('supplierType'));
     }
 
     /**

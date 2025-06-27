@@ -16,97 +16,63 @@ class CompanyController extends Controller
     /**
      * Display a listing of companies.
      */
-    public function index(Request $request): JsonResponse
+    public function index(Request $request)
     {
-        try {
-            $query = Company::query();
-
-            // Apply filters
-            if ($request->has('type')) {
-                $query->ofType($request->type);
-            }
-
-            if ($request->has('active')) {
-                $query->active();
-            }
-
-            if ($request->has('search')) {
-                $search = $request->search;
-                $query->where(function ($q) use ($search) {
-                    $q->where('name', 'like', "%{$search}%")
-                      ->orWhere('legal_name', 'like', "%{$search}%")
-                      ->orWhere('email', 'like', "%{$search}%");
-                });
-            }
-
-            // GDPR: Only return active companies with valid consent
-            $query->where('is_active', true);
-
-            $companies = $query->paginate($request->get('per_page', 15));
-
-            return response()->json([
-                'success' => true,
-                'data' => $companies,
-                'message' => 'Companies retrieved successfully'
-            ]);
-
-        } catch (\Exception $e) {
-            Log::error('Error retrieving companies: ' . $e->getMessage());
-            return response()->json([
-                'success' => false,
-                'message' => 'Error retrieving companies'
-            ], 500);
-        }
+        $companies = \App\Models\Company::with('holding')->orderBy('name')->get();
+        return view('companies.index', compact('companies'));
     }
 
     /**
      * Store a newly created company.
      */
-    public function store(Request $request): JsonResponse
+    public function store(Request $request)
     {
         try {
             $validator = Validator::make($request->all(), [
                 'name' => 'required|string|max:255',
-                'legal_name' => 'nullable|string|max:255',
-                'registration_number' => 'nullable|string|max:100|unique:companies',
-                'vat_number' => 'nullable|string|max:100|unique:companies',
-                'address_line_1' => 'required|string|max:255',
-                'address_line_2' => 'nullable|string|max:255',
-                'city' => 'required|string|max:100',
-                'state' => 'nullable|string|max:100',
-                'postal_code' => 'required|string|max:20',
-                'country' => 'required|string|max:100',
-                'phone' => 'nullable|string|max:20',
+                'type' => 'required|in:employer,customer,supplier,partner',
                 'email' => 'nullable|email|max:255',
-                'website' => 'nullable|url|max:255',
-                'company_type' => 'required|in:employer,customer,supplier,partner',
-                'industry' => 'nullable|string|max:100',
-                'size' => 'required|in:small,medium,large',
-
-                // GDPR Compliance Fields
-                'gdpr_consent_date' => 'nullable|date',
-                'data_retention_period' => 'nullable|integer|min:1',
-                'data_processing_purpose' => 'nullable|string',
-                'data_controller_contact' => 'nullable|string|max:255',
-                'data_protection_officer' => 'nullable|string|max:255',
+                'phone' => 'nullable|string|max:20',
+                'address' => 'nullable|string',
+                'notes' => 'nullable|string',
+                'gdpr_compliant' => 'nullable|boolean',
+                'data_retention_policy' => 'nullable|string',
                 'logo' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
                 'holding_id' => 'nullable|exists:holdings,id',
             ]);
 
             if ($validator->fails()) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Validation failed',
-                    'errors' => $validator->errors()
-                ], 422);
+                return back()->withErrors($validator)->withInput();
             }
 
             DB::beginTransaction();
 
             $data = $validator->validated();
+
+            // Map form fields to database fields
+            $companyData = [
+                'name' => $data['name'],
+                'company_type' => $data['type'],
+                'email' => $data['email'] ?? null,
+                'phone' => $data['phone'] ?? null,
+                'address_line_1' => $data['address'] ?? null,
+                'notes' => $data['notes'] ?? null,
+                'is_active' => true,
+                'size' => 'medium', // Default value
+                'country' => 'Unknown', // Default value
+                'city' => 'Unknown', // Default value
+                'postal_code' => '00000', // Default value
+            ];
+
+            // Handle GDPR compliance
+            if (isset($data['gdpr_compliant']) && $data['gdpr_compliant']) {
+                $companyData['gdpr_consent_date'] = now();
+                $companyData['data_retention_period'] = $this->parseRetentionPolicy($data['data_retention_policy'] ?? '7 years');
+            }
+
             // Only superadmin can set holding_id
-            if (!auth()->user() || !auth()->user()->hasRole('superadmin')) {
-                unset($data['holding_id']);
+            if (auth()->user() && auth()->user()->hasRole('superadmin') && isset($data['holding_id'])) {
+                $companyData['holding_id'] = $data['holding_id'];
             }
 
             // Handle logo upload
@@ -118,34 +84,33 @@ class CompanyController extends Controller
                     $constraint->upsize();
                 })->encode();
                 Storage::disk('public')->put($filename, $resized);
-                $data['logo_url'] = Storage::url($filename);
+                $companyData['logo_url'] = Storage::url($filename);
             }
 
-            $company = Company::create($data);
-
-            // GDPR: Set default consent date if not provided
-            if (!$company->gdpr_consent_date) {
-                $company->update(['gdpr_consent_date' => now()]);
-            }
+            $company = Company::create($companyData);
 
             DB::commit();
 
             Log::info('Company created: ' . $company->id);
 
-            return response()->json([
-                'success' => true,
-                'data' => $company,
-                'message' => 'Company created successfully'
-            ], 201);
+            return redirect()->route('companies.index')->with('success', 'Company created successfully!');
 
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('Error creating company: ' . $e->getMessage());
-            return response()->json([
-                'success' => false,
-                'message' => 'Error creating company'
-            ], 500);
+            return back()->with('error', 'Error creating company: ' . $e->getMessage())->withInput();
         }
+    }
+
+    /**
+     * Parse retention policy string to number of years
+     */
+    private function parseRetentionPolicy($policy)
+    {
+        if (preg_match('/(\d+)\s*year/', $policy, $matches)) {
+            return (int) $matches[1];
+        }
+        return 7; // Default to 7 years
     }
 
     /**

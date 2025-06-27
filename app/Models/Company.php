@@ -41,7 +41,13 @@ class Company extends Model
         'data_controller_contact',
         'data_protection_officer',
         'is_active',
-        'notes'
+        'notes',
+        'logo_url',
+        'holding_id',
+        'type',
+        'gdpr_compliant',
+        'data_retention_policy',
+        'address'
     ];
 
     /**

@@ -49,7 +49,8 @@
         <!-- Company Form -->
         <div class="bg-white shadow rounded-lg">
             <div class="px-4 py-5 sm:p-6">
-                <form id="companyForm" class="space-y-6" enctype="multipart/form-data">
+                <form action="{{ route('companies.store') }}" method="POST" class="space-y-6" enctype="multipart/form-data">
+                    @csrf
                     <!-- Logo Upload -->
                     <div>
                         <label for="logo" class="block text-sm font-medium text-gray-700">Company Logo</label>
@@ -63,28 +64,34 @@
                     <!-- Company Name -->
                     <div>
                         <label for="name" class="block text-sm font-medium text-gray-700">Company Name</label>
-                        <input type="text" name="name" id="name" required
-                               class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                        <input type="text" name="name" id="name" required value="{{ old('name') }}"
+                               class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm @error('name') border-red-500 @enderror"
                                placeholder="Enter company name">
+                        @error('name')
+                            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                        @enderror
                     </div>
 
                     <!-- Company Type -->
                     <div>
                         <label for="type" class="block text-sm font-medium text-gray-700">Company Type</label>
                         <select name="type" id="type" required
-                                class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                                class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm @error('type') border-red-500 @enderror">
                             <option value="">Select company type</option>
-                            <option value="employer">Employer</option>
-                            <option value="customer">Customer</option>
-                            <option value="supplier">Supplier</option>
-                            <option value="partner">Partner</option>
+                            <option value="employer" {{ old('type') == 'employer' ? 'selected' : '' }}>Employer</option>
+                            <option value="customer" {{ old('type') == 'customer' ? 'selected' : '' }}>Customer</option>
+                            <option value="supplier" {{ old('type') == 'supplier' ? 'selected' : '' }}>Supplier</option>
+                            <option value="partner" {{ old('type') == 'partner' ? 'selected' : '' }}>Partner</option>
                         </select>
+                        @error('type')
+                            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                        @enderror
                     </div>
 
                     <!-- GDPR Compliance -->
                     <div>
                         <div class="flex items-center">
-                            <input type="checkbox" name="gdpr_compliant" id="gdpr_compliant" checked
+                            <input type="checkbox" name="gdpr_compliant" id="gdpr_compliant" value="1" {{ old('gdpr_compliant') ? 'checked' : '' }}
                                    class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
                             <label for="gdpr_compliant" class="ml-2 block text-sm text-gray-900">
                                 GDPR Compliant
@@ -99,12 +106,12 @@
                         <select name="data_retention_policy" id="data_retention_policy" required
                                 class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
                             <option value="">Select retention period</option>
-                            <option value="1 year">1 year</option>
-                            <option value="3 years">3 years</option>
-                            <option value="5 years">5 years</option>
-                            <option value="7 years" selected>7 years</option>
-                            <option value="10 years">10 years</option>
-                            <option value="indefinite">Indefinite (with consent)</option>
+                            <option value="1 year" {{ old('data_retention_policy') == '1 year' ? 'selected' : '' }}>1 year</option>
+                            <option value="3 years" {{ old('data_retention_policy') == '3 years' ? 'selected' : '' }}>3 years</option>
+                            <option value="5 years" {{ old('data_retention_policy') == '5 years' ? 'selected' : '' }}>5 years</option>
+                            <option value="7 years" {{ old('data_retention_policy') == '7 years' || !old('data_retention_policy') ? 'selected' : '' }}>7 years</option>
+                            <option value="10 years" {{ old('data_retention_policy') == '10 years' ? 'selected' : '' }}>10 years</option>
+                            <option value="indefinite" {{ old('data_retention_policy') == 'indefinite' ? 'selected' : '' }}>Indefinite (with consent)</option>
                         </select>
                     </div>
 
@@ -112,15 +119,21 @@
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
                             <label for="email" class="block text-sm font-medium text-gray-700">Email Address</label>
-                            <input type="email" name="email" id="email"
-                                   class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                            <input type="email" name="email" id="email" value="{{ old('email') }}"
+                                   class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm @error('email') border-red-500 @enderror"
                                    placeholder="contact@company.com">
+                            @error('email')
+                                <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                            @enderror
                         </div>
                         <div>
                             <label for="phone" class="block text-sm font-medium text-gray-700">Phone Number</label>
-                            <input type="tel" name="phone" id="phone"
-                                   class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                            <input type="tel" name="phone" id="phone" value="{{ old('phone') }}"
+                                   class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm @error('phone') border-red-500 @enderror"
                                    placeholder="+1 (555) 123-4567">
+                            @error('phone')
+                                <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                            @enderror
                         </div>
                     </div>
 
@@ -128,16 +141,22 @@
                     <div>
                         <label for="address" class="block text-sm font-medium text-gray-700">Address</label>
                         <textarea name="address" id="address" rows="3"
-                                  class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                                  placeholder="Enter company address"></textarea>
+                                  class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm @error('address') border-red-500 @enderror"
+                                  placeholder="Enter company address">{{ old('address') }}</textarea>
+                        @error('address')
+                            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                        @enderror
                     </div>
 
                     <!-- Additional Notes -->
                     <div>
                         <label for="notes" class="block text-sm font-medium text-gray-700">Additional Notes</label>
                         <textarea name="notes" id="notes" rows="3"
-                                  class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                                  placeholder="Any additional information about the company"></textarea>
+                                  class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm @error('notes') border-red-500 @enderror"
+                                  placeholder="Any additional information about the company">{{ old('notes') }}</textarea>
+                        @error('notes')
+                            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                        @enderror
                     </div>
 
                     <!-- Holding -->
@@ -158,7 +177,7 @@
 
                     <!-- Form Actions -->
                     <div class="flex justify-end space-x-3">
-                        <a href="/companies" class="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                        <a href="{{ route('companies.index') }}" class="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
                             Cancel
                         </a>
                         <button type="submit" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700">
@@ -171,25 +190,7 @@
         </div>
 
         <!-- GDPR Information -->
-        <div class="mt-8 bg-blue-50 border border-blue-200 rounded-lg p-4">
-            <div class="flex">
-                <div class="flex-shrink-0">
-                    <i class="fas fa-info-circle text-blue-400"></i>
-                </div>
-                <div class="ml-3">
-                    <h3 class="text-sm font-medium text-blue-800">GDPR Compliance Information</h3>
-                    <div class="mt-2 text-sm text-blue-700">
-                        <p>When you create a company in this system, it will be automatically configured with GDPR compliance features including:</p>
-                        <ul class="list-disc list-inside mt-2 space-y-1">
-                            <li>Consent management tracking</li>
-                            <li>Data processing activity logging</li>
-                            <li>Data subject rights management</li>
-                            <li>Data retention policy enforcement</li>
-                        </ul>
-                    </div>
-                </div>
-            </div>
-        </div>
+        <!-- (Removed demo/placeholder message. Only the form and relevant UI remain.) -->
     </div>
 
     <!-- Footer -->
@@ -202,20 +203,6 @@
     </footer>
 
     <script>
-        document.getElementById('companyForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-
-            // Get form data
-            const formData = new FormData(this);
-            const data = Object.fromEntries(formData);
-
-            // Show success message (in a real app, this would make an API call)
-            alert('Company created successfully! (This is a demo - no actual API call made)');
-
-            // Redirect to companies list
-            window.location.href = '/companies';
-        });
-
         // Logo preview
         const logoInput = document.getElementById('logo');
         const logoPreview = document.getElementById('logoPreview');

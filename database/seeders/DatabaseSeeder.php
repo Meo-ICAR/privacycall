@@ -27,25 +27,30 @@ class DatabaseSeeder extends Seeder
             SuperAdminSeeder::class,
         ]);
 
-        // Create sample companies for testing
-        Company::factory()->count(5)->create();
+        // Seed holdings and companies with proper relationships
+        $this->call([
+            CompanyWithHoldingSeeder::class,
+        ]);
 
         // Create additional test users
-        User::factory()->create([
+        User::firstOrCreate([
+            'email' => 'admin@privacycall.com'
+        ], [
             'name' => 'Test Admin',
-            'email' => 'admin@privacycall.com',
             'password' => bcrypt('Admin@2024!'),
         ])->assignRole('admin');
 
-        User::factory()->create([
+        User::firstOrCreate([
+            'email' => 'manager@privacycall.com'
+        ], [
             'name' => 'Test Manager',
-            'email' => 'manager@privacycall.com',
             'password' => bcrypt('Manager@2024!'),
         ])->assignRole('manager');
 
-        User::factory()->create([
+        User::firstOrCreate([
+            'email' => 'employee@privacycall.com'
+        ], [
             'name' => 'Test Employee',
-            'email' => 'employee@privacycall.com',
             'password' => bcrypt('Employee@2024!'),
         ])->assignRole('employee');
 
@@ -77,8 +82,8 @@ class DatabaseSeeder extends Seeder
             'manage gdpr',
         ]);
 
-        // Seed demo companies
-        \App\Models\Company::factory(5)->create()->each(function ($company) {
+        // Seed demo data for existing companies
+        \App\Models\Company::all()->each(function ($company) {
             // Seed users for each company
             $admin = \App\Models\User::factory()->create([
                 'company_id' => $company->id,
@@ -138,29 +143,13 @@ class DatabaseSeeder extends Seeder
             \App\Models\CustomerType::firstOrCreate(['name' => $type]);
         }
 
-        // Seed holdings
-        $holdings = ['Alpha Group', 'Beta Holdings', 'Gamma Corp'];
-        $holdingIds = [];
-        foreach ($holdings as $name) {
-            $holding = \App\Models\Holding::firstOrCreate(['name' => $name]);
-            $holdingIds[] = $holding->id;
-        }
-
-        // Assign companies to holdings (randomly)
-        foreach (\App\Models\Company::all() as $company) {
-            $company->holding_id = $holdingIds[array_rand($holdingIds)];
-            $company->save();
-        }
-
         $this->call([
-            CompanySeeder::class,
             EmployeeSeeder::class,
             CustomerSeeder::class,
             SupplierSeeder::class,
             ConsentRecordSeeder::class,
             DataProcessingActivitySeeder::class,
             TrainingSeeder::class,
-            HoldingSeeder::class,
             CustomerTypeSeeder::class,
             SupplierTypeSeeder::class,
             EmployerTypeSeeder::class,

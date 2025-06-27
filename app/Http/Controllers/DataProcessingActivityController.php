@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\DataProcessingActivity;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class DataProcessingActivityController extends Controller
 {
@@ -12,8 +13,9 @@ class DataProcessingActivityController extends Controller
      */
     public function index()
     {
-        $dataProcessingActivities = DataProcessingActivity::all();
-        return view('data_processing_activities.index', compact('dataProcessingActivities'));
+        $user = Auth::user();
+        $activities = DataProcessingActivity::where('company_id', $user->company_id)->with('company')->get();
+        return view('data_processing_activities.index', compact('activities'));
     }
 
     /**
@@ -35,18 +37,19 @@ class DataProcessingActivityController extends Controller
         if (!auth()->user() || !auth()->user()->hasRole('superadmin')) {
             abort(403, 'Only superadmin can create data processing activities.');
         }
+        $user = Auth::user();
         $validated = $request->validate([
-            'company_id' => 'required|exists:companies,id',
             'activity_name' => 'required|string|max:255',
-            'purpose' => 'required|string',
+            'processing_purpose' => 'required|string',
             'legal_basis' => 'required|string|max:255',
             'data_categories' => 'required|string',
-            'recipients' => 'nullable|string',
+            'data_recipients' => 'nullable|string',
             'retention_period' => 'required|string|max:255',
             'security_measures' => 'nullable|string',
-            'status' => 'required|string|max:255',
+            'is_active' => 'boolean',
         ]);
 
+        $validated['company_id'] = $user->company_id;
         DataProcessingActivity::create($validated);
 
         return redirect()->route('data-processing-activities.index')
@@ -58,6 +61,10 @@ class DataProcessingActivityController extends Controller
      */
     public function show(DataProcessingActivity $dataProcessingActivity)
     {
+        $user = Auth::user();
+        if ($dataProcessingActivity->company_id !== $user->company_id) {
+            abort(403, 'Access denied.');
+        }
         return view('data_processing_activities.show', compact('dataProcessingActivity'));
     }
 
@@ -68,6 +75,10 @@ class DataProcessingActivityController extends Controller
     {
         if (!auth()->user() || !auth()->user()->hasRole('superadmin')) {
             abort(403, 'Only superadmin can edit data processing activities.');
+        }
+        $user = Auth::user();
+        if ($dataProcessingActivity->company_id !== $user->company_id) {
+            abort(403, 'Access denied.');
         }
         return view('data_processing_activities.edit', compact('dataProcessingActivity'));
     }
@@ -80,18 +91,23 @@ class DataProcessingActivityController extends Controller
         if (!auth()->user() || !auth()->user()->hasRole('superadmin')) {
             abort(403, 'Only superadmin can update data processing activities.');
         }
+        $user = Auth::user();
+        if ($dataProcessingActivity->company_id !== $user->company_id) {
+            abort(403, 'Access denied.');
+        }
+
         $validated = $request->validate([
-            'company_id' => 'required|exists:companies,id',
             'activity_name' => 'required|string|max:255',
-            'purpose' => 'required|string',
+            'processing_purpose' => 'required|string',
             'legal_basis' => 'required|string|max:255',
             'data_categories' => 'required|string',
-            'recipients' => 'nullable|string',
+            'data_recipients' => 'nullable|string',
             'retention_period' => 'required|string|max:255',
             'security_measures' => 'nullable|string',
-            'status' => 'required|string|max:255',
+            'is_active' => 'boolean',
         ]);
 
+        $validated['company_id'] = $user->company_id;
         $dataProcessingActivity->update($validated);
 
         return redirect()->route('data-processing-activities.index')
@@ -106,6 +122,11 @@ class DataProcessingActivityController extends Controller
         if (!auth()->user() || !auth()->user()->hasRole('superadmin')) {
             abort(403, 'Only superadmin can delete data processing activities.');
         }
+        $user = Auth::user();
+        if ($dataProcessingActivity->company_id !== $user->company_id) {
+            abort(403, 'Access denied.');
+        }
+
         $dataProcessingActivity->delete();
 
         return redirect()->route('data-processing-activities.index')
