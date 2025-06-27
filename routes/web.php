@@ -71,6 +71,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
 // Supplier management routes
 Route::prefix('suppliers')->middleware(['auth', 'verified'])->group(function () {
+    Route::get('/', [SupplierController::class, 'index'])->name('suppliers.index');
     Route::get('/create', [SupplierController::class, 'create'])->name('suppliers.create');
     Route::post('/', [SupplierController::class, 'store'])->name('suppliers.store');
     Route::get('/{supplier}/edit', [SupplierController::class, 'edit'])->name('suppliers.edit');
@@ -127,6 +128,21 @@ Route::middleware(['auth', 'verified'])->group(function () {
 // Supplier inspection management routes (admin/superadmin)
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::resource('supplier-inspections', SupplierInspectionController::class);
+});
+
+// Consent records management routes (admin/superadmin)
+Route::middleware(['auth', 'verified'])->group(function () {
+    Route::resource('consent-records', \App\Http\Controllers\ConsentRecordController::class);
+});
+
+// Data processing activities management routes (admin/superadmin)
+Route::middleware(['auth', 'verified'])->group(function () {
+    Route::resource('data-processing-activities', \App\Http\Controllers\DataProcessingActivityController::class);
+});
+
+// Supplier types management routes (admin/superadmin)
+Route::middleware(['auth', 'verified'])->group(function () {
+    Route::resource('supplier-types', \App\Http\Controllers\SupplierTypeController::class)->except(['show']);
 });
 
 // Training management routes (admin/superadmin)

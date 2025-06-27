@@ -7,16 +7,6 @@ use Illuminate\Http\Request;
 
 class HoldingController extends Controller
 {
-    public function __construct()
-    {
-        $this->middleware(function ($request, $next) {
-            if (!auth()->user() || !auth()->user()->hasRole('superadmin')) {
-                abort(403, 'Only superadmin can access holdings.');
-            }
-            return $next($request);
-        });
-    }
-
     public function index()
     {
         $holdings = Holding::all();
@@ -25,11 +15,17 @@ class HoldingController extends Controller
 
     public function create()
     {
+        if (!auth()->user() || !auth()->user()->hasRole('superadmin')) {
+            abort(403, 'Only superadmin can create holdings.');
+        }
         return view('holdings.create');
     }
 
     public function store(Request $request)
     {
+        if (!auth()->user() || !auth()->user()->hasRole('superadmin')) {
+            abort(403, 'Only superadmin can create holdings.');
+        }
         $request->validate([
             'name' => 'required|string|max:255|unique:holdings,name',
         ]);
@@ -39,11 +35,17 @@ class HoldingController extends Controller
 
     public function edit(Holding $holding)
     {
+        if (!auth()->user() || !auth()->user()->hasRole('superadmin')) {
+            abort(403, 'Only superadmin can edit holdings.');
+        }
         return view('holdings.edit', compact('holding'));
     }
 
     public function update(Request $request, Holding $holding)
     {
+        if (!auth()->user() || !auth()->user()->hasRole('superadmin')) {
+            abort(403, 'Only superadmin can update holdings.');
+        }
         $request->validate([
             'name' => 'required|string|max:255|unique:holdings,name,' . $holding->id,
         ]);
@@ -53,6 +55,9 @@ class HoldingController extends Controller
 
     public function destroy(Holding $holding)
     {
+        if (!auth()->user() || !auth()->user()->hasRole('superadmin')) {
+            abort(403, 'Only superadmin can delete holdings.');
+        }
         $holding->delete();
         return redirect()->route('holdings.index')->with('success', 'Holding deleted.');
     }
