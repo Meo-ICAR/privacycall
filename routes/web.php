@@ -105,7 +105,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
 // Holding management routes (admin/superadmin)
 Route::middleware(['auth', 'verified'])->group(function () {
-    Route::resource('holdings', HoldingController::class)->except(['show']);
+    Route::resource('holdings', HoldingController::class);
 });
 
 // Employee management routes (admin/superadmin)

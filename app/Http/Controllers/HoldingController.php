@@ -33,6 +33,16 @@ class HoldingController extends Controller
         return redirect()->route('holdings.index')->with('success', 'Holding created.');
     }
 
+    public function show(Holding $holding)
+    {
+        // Load companies associated with this holding
+        $holding->load(['companies' => function($query) {
+            $query->orderBy('name');
+        }]);
+
+        return view('holdings.show', compact('holding'));
+    }
+
     public function edit(Holding $holding)
     {
         if (!auth()->user() || !auth()->user()->hasRole('superadmin')) {

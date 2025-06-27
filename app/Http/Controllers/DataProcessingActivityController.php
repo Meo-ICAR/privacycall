@@ -23,10 +23,15 @@ class DataProcessingActivityController extends Controller
      */
     public function create()
     {
-        if (!auth()->user() || !auth()->user()->hasRole('superadmin')) {
-            abort(403, 'Only superadmin can create data processing activities.');
+        $user = Auth::user();
+        $company = $user->company;
+
+        if (!$company) {
+            return redirect()->route('data-processing-activities.index')
+                ->with('error', 'You must be assigned to a company to create data processing activities.');
         }
-        return view('data_processing_activities.create');
+
+        return view('data_processing_activities.create', compact('company'));
     }
 
     /**
@@ -34,22 +39,30 @@ class DataProcessingActivityController extends Controller
      */
     public function store(Request $request)
     {
-        if (!auth()->user() || !auth()->user()->hasRole('superadmin')) {
-            abort(403, 'Only superadmin can create data processing activities.');
-        }
         $user = Auth::user();
+
+        if (!$user->company) {
+            return redirect()->route('data-processing-activities.index')
+                ->with('error', 'You must be assigned to a company to create data processing activities.');
+        }
+
         $validated = $request->validate([
             'activity_name' => 'required|string|max:255',
-            'processing_purpose' => 'required|string',
+            'activity_description' => 'nullable|string',
+            'processing_purpose' => 'required|string|max:255',
             'legal_basis' => 'required|string|max:255',
-            'data_categories' => 'required|string',
-            'data_recipients' => 'nullable|string',
+            'data_categories' => 'required|string|max:255',
+            'data_subjects' => 'nullable|string|max:255',
+            'data_recipients' => 'nullable|string|max:255',
             'retention_period' => 'required|string|max:255',
             'security_measures' => 'nullable|string',
+            'notes' => 'nullable|string',
             'is_active' => 'boolean',
         ]);
 
         $validated['company_id'] = $user->company_id;
+        $validated['is_active'] = $request->has('is_active');
+
         DataProcessingActivity::create($validated);
 
         return redirect()->route('data-processing-activities.index')

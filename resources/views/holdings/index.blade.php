@@ -3,8 +3,20 @@
 @section('content')
 <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
     <div class="mb-6">
-        <h1 class="text-3xl font-bold text-gray-900">Holdings</h1>
-        <p class="mt-2 text-gray-600">Manage company holdings and create companies</p>
+        <div class="flex items-center justify-between">
+            <div>
+                <h1 class="text-3xl font-bold text-gray-900">Holdings</h1>
+                <p class="mt-2 text-gray-600">Manage company holdings and create companies</p>
+            </div>
+            <div class="flex space-x-3">
+                @if(auth()->user()->hasRole('superadmin'))
+                    <a href="{{ route('holdings.create') }}" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700">
+                        <i class="fas fa-plus mr-2"></i>
+                        Add New Holding
+                    </a>
+                @endif
+            </div>
+        </div>
     </div>
 
     @if(session('success'))
@@ -23,12 +35,6 @@
         <div class="px-4 py-5 sm:p-6">
             <div class="flex justify-between items-center mb-4">
                 <h2 class="text-lg font-medium text-gray-900">All Holdings</h2>
-                @if(auth()->user()->hasRole('superadmin'))
-                    <a href="{{ route('holdings.create') }}" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700">
-                        <i class="fas fa-plus mr-2"></i>
-                        Add New Holding
-                    </a>
-                @endif
             </div>
 
             @if($holdings->count() > 0)
@@ -74,8 +80,9 @@
                                     @if(auth()->user()->hasRole('superadmin'))
                                     <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                         <div class="flex space-x-2">
-                                            <a href="{{ route('companies.create', ['holding_id' => $holding->id]) }}" class="text-green-600 hover:text-green-900" title="Create Company">
-                                                <i class="fas fa-plus-circle"></i>
+                                            <a href="{{ route('companies.create', ['holding_id' => $holding->id]) }}" class="inline-flex items-center px-3 py-1 border border-green-300 text-xs font-medium rounded-md text-green-700 bg-green-50 hover:bg-green-100" title="Create Company for this Holding">
+                                                <i class="fas fa-plus-circle mr-1"></i>
+                                                Add Company
                                             </a>
                                             <a href="{{ route('holdings.show', $holding) }}" class="text-blue-600 hover:text-blue-900" title="View Details">
                                                 <i class="fas fa-eye"></i>

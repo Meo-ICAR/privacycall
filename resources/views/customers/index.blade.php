@@ -80,7 +80,7 @@
             <form action="{{ route('customers.import') }}" method="POST" enctype="multipart/form-data" class="flex items-center space-x-4">
                 @csrf
                 <div class="flex-1">
-                    <input type="file" name="file" accept=".xlsx,.xls" required
+                    <input type="file" name="file" accept=".xlsx,.xls" required 
                            class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
                 </div>
                 <button type="submit" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700">
@@ -109,7 +109,7 @@
         <div class="px-4 py-5 sm:px-6">
             <h3 class="text-lg leading-6 font-medium text-gray-900">Customer List</h3>
         </div>
-
+        
         @if($customers->count() > 0)
             <div class="overflow-x-auto">
                 <table class="min-w-full divide-y divide-gray-200">
