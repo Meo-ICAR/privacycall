@@ -1,108 +1,108 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="container">
-    <div class="mb-4">
-        <h1>Upload Document</h1>
+<div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+    <div class="mb-6">
+        <h1 class="text-3xl font-bold text-gray-900">Upload Document</h1>
+        <p class="mt-2 text-gray-600">Add a new document to your library</p>
     </div>
 
-    @if($errors->any())
-        <div class="alert alert-danger">
-            <ul>
-                @foreach($errors->all() as $error)
-                    <li>{{ $error }}</li>
-                @endforeach
-            </ul>
+    @if(session('success'))
+        <div class="mb-4 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded" role="alert">
+            {{ session('success') }}
         </div>
     @endif
 
-    <div class="card">
-        <div class="card-body">
-            <form action="{{ route('documents.store') }}" method="POST" enctype="multipart/form-data">
+    @if(session('error'))
+        <div class="mb-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded" role="alert">
+            {{ session('error') }}
+        </div>
+    @endif
+
+    <div class="bg-white shadow rounded-lg">
+        <div class="px-4 py-5 sm:p-6">
+            <form method="POST" action="{{ route('documents.store') }}" enctype="multipart/form-data">
                 @csrf
 
-                <div class="mb-3">
-                    <label for="document_type_id" class="form-label">Document Type</label>
-                    <select name="document_type_id" id="document_type_id" class="form-control @error('document_type_id') is-invalid @enderror" required>
-                        <option value="">Select Document Type</option>
-                        @foreach($documentTypes as $type)
-                            <option value="{{ $type->id }}" {{ old('document_type_id') == $type->id ? 'selected' : '' }}>
-                                {{ $type->name }}
-                            </option>
-                        @endforeach
-                    </select>
-                    @error('document_type_id')
-                        <div class="invalid-feedback">{{ $message }}</div>
-                    @enderror
+                <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
+                    <div>
+                        <label for="title" class="block text-sm font-medium text-gray-700">Document Title</label>
+                        <input type="text" id="title" name="title" value="{{ old('title') }}" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500" required>
+                        @error('title')
+                            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                        @enderror
+                    </div>
+
+                    <div>
+                        <label for="document_type_id" class="block text-sm font-medium text-gray-700">Document Type</label>
+                        <select id="document_type_id" name="document_type_id" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500" required>
+                            <option value="">Select document type</option>
+                            @foreach($documentTypes as $type)
+                                <option value="{{ $type->id }}" {{ old('document_type_id') == $type->id ? 'selected' : '' }}>
+                                    {{ $type->name }}
+                                </option>
+                            @endforeach
+                        </select>
+                        @error('document_type_id')
+                            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                        @enderror
+                    </div>
+
+                    <div class="sm:col-span-2">
+                        <label for="description" class="block text-sm font-medium text-gray-700">Description (Optional)</label>
+                        <textarea id="description" name="description" rows="3" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">{{ old('description') }}</textarea>
+                        @error('description')
+                            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                        @enderror
+                    </div>
+
+                    <div class="sm:col-span-2">
+                        <label for="file" class="block text-sm font-medium text-gray-700">File</label>
+                        <div class="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md">
+                            <div class="space-y-1 text-center">
+                                <i class="fas fa-cloud-upload-alt text-gray-400 text-3xl mb-2"></i>
+                                <div class="flex text-sm text-gray-600">
+                                    <label for="file" class="relative cursor-pointer bg-white rounded-md font-medium text-blue-600 hover:text-blue-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-blue-500">
+                                        <span>Upload a file</span>
+                                        <input id="file" name="file" type="file" class="sr-only" required>
+                                    </label>
+                                    <p class="pl-1">or drag and drop</p>
+                                </div>
+                                <p class="text-xs text-gray-500">PDF, DOC, DOCX, XLS, XLSX up to 10MB</p>
+                            </div>
+                        </div>
+                        @error('file')
+                            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                        @enderror
+                    </div>
+
+                    <div>
+                        <label for="tags" class="block text-sm font-medium text-gray-700">Tags (Optional)</label>
+                        <input type="text" id="tags" name="tags" value="{{ old('tags') }}" placeholder="Enter tags separated by commas" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                        @error('tags')
+                            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                        @enderror
+                    </div>
+
+                    <div>
+                        <label for="expiry_date" class="block text-sm font-medium text-gray-700">Expiry Date (Optional)</label>
+                        <input type="date" id="expiry_date" name="expiry_date" value="{{ old('expiry_date') }}" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                        @error('expiry_date')
+                            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                        @enderror
+                    </div>
                 </div>
 
-                <div class="mb-3">
-                    <label for="file" class="form-label">File</label>
-                    <input type="file" name="file" id="file" class="form-control @error('file') is-invalid @enderror" required>
-                    @error('file')
-                        <div class="invalid-feedback">{{ $message }}</div>
-                    @enderror
-                </div>
-
-                <div class="mb-3">
-                    <label for="documentable_type" class="form-label">Related To</label>
-                    <select name="documentable_type" id="documentable_type" class="form-control @error('documentable_type') is-invalid @enderror">
-                        <option value="">Select Type</option>
-                        <option value="App\Models\Company" {{ old('documentable_type') == 'App\Models\Company' ? 'selected' : '' }}>Company</option>
-                        <option value="App\Models\Employee" {{ old('documentable_type') == 'App\Models\Employee' ? 'selected' : '' }}>Employee</option>
-                        <option value="App\Models\Customer" {{ old('documentable_type') == 'App\Models\Customer' ? 'selected' : '' }}>Customer</option>
-                        <option value="App\Models\Supplier" {{ old('documentable_type') == 'App\Models\Supplier' ? 'selected' : '' }}>Supplier</option>
-                    </select>
-                    @error('documentable_type')
-                        <div class="invalid-feedback">{{ $message }}</div>
-                    @enderror
-                </div>
-
-                <div class="mb-3">
-                    <label for="documentable_id" class="form-label">Select Item</label>
-                    <select name="documentable_id" id="documentable_id" class="form-control @error('documentable_id') is-invalid @enderror">
-                        <option value="">Select Item</option>
-                    </select>
-                    @error('documentable_id')
-                        <div class="invalid-feedback">{{ $message }}</div>
-                    @enderror
-                </div>
-
-                <div class="mb-3">
-                    <label for="description" class="form-label">Description</label>
-                    <textarea name="description" id="description" rows="3" class="form-control @error('description') is-invalid @enderror">{{ old('description') }}</textarea>
-                    @error('description')
-                        <div class="invalid-feedback">{{ $message }}</div>
-                    @enderror
-                </div>
-
-                <div class="d-flex justify-content-between">
-                    <a href="{{ route('documents.index') }}" class="btn btn-secondary">Cancel</a>
-                    <button type="submit" class="btn btn-primary">Upload Document</button>
+                <div class="mt-6 flex justify-end space-x-3">
+                    <a href="{{ route('documents.index') }}" class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                        Cancel
+                    </a>
+                    <button type="submit" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700">
+                        Upload Document
+                    </button>
                 </div>
             </form>
         </div>
     </div>
 </div>
-
-<script>
-document.getElementById('documentable_type').addEventListener('change', function() {
-    const type = this.value;
-    const idSelect = document.getElementById('documentable_id');
-    idSelect.innerHTML = '<option value="">Select Item</option>';
-
-    if (type) {
-        fetch(`/api/${type.split('\\').pop().toLowerCase()}s`)
-            .then(response => response.json())
-            .then(data => {
-                data.forEach(item => {
-                    const option = document.createElement('option');
-                    option.value = item.id;
-                    option.textContent = item.name || item.id;
-                    idSelect.appendChild(option);
-                });
-            });
-    }
-});
-</script>
 @endsection

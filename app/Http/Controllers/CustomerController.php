@@ -7,6 +7,7 @@ use App\Imports\CustomersImport;
 use Illuminate\Http\Request;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Models\Customer;
+use App\Models\CustomerType;
 use Illuminate\Support\Facades\Auth;
 
 class CustomerController extends Controller
@@ -14,15 +15,42 @@ class CustomerController extends Controller
     public function index()
     {
         $user = Auth::user();
-        $customers = Customer::where('company_id', $user->company_id)->get();
-        return view('customers.index', compact('customers'));
+        $customers = Customer::with(['company', 'customerType'])
+            ->where('company_id', $user->company_id)
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        // Get statistics
+        $totalCustomers = $customers->count();
+        $activeCustomers = $customers->where('is_active', true)->count();
+        $inactiveCustomers = $customers->where('is_active', false)->count();
+
+        return view('customers.index', compact('customers', 'totalCustomers', 'activeCustomers', 'inactiveCustomers'));
     }
 
-    public function create()
+    public function create(Request $request)
     {
         $user = Auth::user();
+
+        // Get company_id from query parameter if provided
+        $company_id = $request->query('company_id');
+        $selectedCompany = null;
+
+        if ($company_id) {
+            $selectedCompany = \App\Models\Company::find($company_id);
+            if (!$selectedCompany) {
+                return redirect()->route('customers.create')->with('error', 'Selected company not found.');
+            }
+            // Check if user has access to this company
+            if ($selectedCompany->id !== $user->company_id) {
+                abort(403, 'You can only create customers for your own company.');
+            }
+        }
+
         $companies = collect([$user->company]); // Only user's company
-        return view('customers.create', compact('companies'));
+        $customerTypes = CustomerType::orderBy('name')->get();
+
+        return view('customers.create', compact('companies', 'selectedCompany', 'customerTypes'));
     }
 
     public function store(Request $request)
@@ -33,11 +61,22 @@ class CustomerController extends Controller
             'last_name' => 'required|string|max:255',
             'email' => 'nullable|email|max:255',
             'phone' => 'nullable|string|max:20',
-            'address' => 'nullable|string',
+            'customer_type_id' => 'nullable|exists:customer_types,id',
+            'address_line_1' => 'nullable|string|max:255',
+            'address_line_2' => 'nullable|string|max:255',
+            'city' => 'nullable|string|max:255',
+            'state' => 'nullable|string|max:255',
+            'postal_code' => 'nullable|string|max:20',
+            'country' => 'nullable|string|max:255',
+            'date_of_birth' => 'nullable|date',
+            'customer_number' => 'nullable|string|max:255',
+            'is_active' => 'boolean',
             'notes' => 'nullable|string',
         ]);
 
         $validated['company_id'] = $user->company_id;
+        $validated['is_active'] = $request->has('is_active');
+
         Customer::create($validated);
 
         return redirect()->route('customers.index')->with('success', 'Customer created successfully.');
@@ -49,6 +88,8 @@ class CustomerController extends Controller
         if ($customer->company_id !== $user->company_id) {
             abort(403, 'Access denied.');
         }
+
+        $customer->load(['company', 'customerType']);
         return view('customers.show', compact('customer'));
     }
 
@@ -58,8 +99,11 @@ class CustomerController extends Controller
         if ($customer->company_id !== $user->company_id) {
             abort(403, 'Access denied.');
         }
+
         $companies = collect([$user->company]); // Only user's company
-        return view('customers.edit', compact('customer', 'companies'));
+        $customerTypes = CustomerType::orderBy('name')->get();
+
+        return view('customers.edit', compact('customer', 'companies', 'customerTypes'));
     }
 
     public function update(Request $request, Customer $customer)
@@ -74,14 +118,25 @@ class CustomerController extends Controller
             'last_name' => 'required|string|max:255',
             'email' => 'nullable|email|max:255',
             'phone' => 'nullable|string|max:20',
-            'address' => 'nullable|string',
+            'customer_type_id' => 'nullable|exists:customer_types,id',
+            'address_line_1' => 'nullable|string|max:255',
+            'address_line_2' => 'nullable|string|max:255',
+            'city' => 'nullable|string|max:255',
+            'state' => 'nullable|string|max:255',
+            'postal_code' => 'nullable|string|max:20',
+            'country' => 'nullable|string|max:255',
+            'date_of_birth' => 'nullable|date',
+            'customer_number' => 'nullable|string|max:255',
+            'is_active' => 'boolean',
             'notes' => 'nullable|string',
         ]);
 
         $validated['company_id'] = $user->company_id;
+        $validated['is_active'] = $request->has('is_active');
+
         $customer->update($validated);
 
-        return redirect()->route('customers.index')->with('success', 'Customer updated successfully.');
+        return redirect()->route('customers.show', $customer)->with('success', 'Customer updated successfully.');
     }
 
     public function destroy(Customer $customer)

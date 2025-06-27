@@ -1,65 +1,94 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="container">
-    <div class="mb-4">
-        <h1>Data Processing Activities</h1>
-        <a href="{{ route('data-processing-activities.create') }}" class="btn btn-primary mb-3">Create Activity</a>
+<div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+    <div class="mb-6">
+        <h1 class="text-3xl font-bold text-gray-900">Data Processing Activities</h1>
+        <p class="mt-2 text-gray-600">Manage and monitor data processing activities for GDPR compliance</p>
     </div>
 
-    <!-- Success/Error Messages -->
     @if(session('success'))
-        <div class="alert alert-success" role="alert">
+        <div class="mb-4 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded" role="alert">
             {{ session('success') }}
         </div>
     @endif
 
     @if(session('error'))
-        <div class="alert alert-danger" role="alert">
+        <div class="mb-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded" role="alert">
             {{ session('error') }}
         </div>
     @endif
 
-    @if($activities->count() > 0)
-        <table class="table">
-            <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>Company</th>
-                    <th>Name</th>
-                    <th>Purpose</th>
-                    <th>Legal Basis</th>
-                    <th>Status</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach($activities as $activity)
-                    <tr>
-                        <td>{{ $activity->id }}</td>
-                        <td>{{ $activity->company->name ?? '-' }}</td>
-                        <td>{{ $activity->activity_name }}</td>
-                        <td>{{ $activity->processing_purpose }}</td>
-                        <td>{{ $activity->legal_basis }}</td>
-                        <td>{{ $activity->is_active ? 'Active' : 'Inactive' }}</td>
-                        <td>
-                            <a href="{{ route('data-processing-activities.show', $activity) }}" class="btn btn-info btn-sm">View</a>
-                            <a href="{{ route('data-processing-activities.edit', $activity) }}" class="btn btn-warning btn-sm">Edit</a>
-                            <form action="{{ route('data-processing-activities.destroy', $activity) }}" method="POST" style="display:inline-block">
-                                @csrf
-                                @method('DELETE')
-                                <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure?')">Delete</button>
-                            </form>
-                        </td>
-                    </tr>
-                @endforeach
-            </tbody>
-        </table>
-    @else
-        <div class="text-center py-4">
-            <p>No data processing activities found.</p>
-            <a href="{{ route('data-processing-activities.create') }}" class="btn btn-primary">Create First Activity</a>
+    <div class="bg-white shadow rounded-lg">
+        <div class="px-4 py-5 sm:p-6">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg leading-6 font-medium text-gray-900">Processing Activities</h3>
+                <a href="{{ route('data-processing-activities.create') }}" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700">
+                    <i class="fas fa-plus mr-2"></i>
+                    Create Activity
+                </a>
+            </div>
+
+            @if(isset($activities) && $activities->count() > 0)
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Activity Name</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Company</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Purpose</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Legal Basis</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200">
+                            @foreach($activities as $activity)
+                                <tr>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                        {{ $activity->activity_name }}
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                        {{ $activity->company->name ?? 'Unknown' }}
+                                    </td>
+                                    <td class="px-6 py-4 text-sm text-gray-900">
+                                        <div class="max-w-xs truncate" title="{{ $activity->processing_purpose }}">
+                                            {{ Str::limit($activity->processing_purpose, 50) }}
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                        {{ $activity->legal_basis }}
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ $activity->is_active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800' }}">
+                                            {{ $activity->is_active ? 'Active' : 'Inactive' }}
+                                        </span>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                        <a href="{{ route('data-processing-activities.show', $activity) }}" class="text-blue-600 hover:text-blue-900 mr-3">View</a>
+                                        <a href="{{ route('data-processing-activities.edit', $activity) }}" class="text-yellow-600 hover:text-yellow-900 mr-3">Edit</a>
+                                        <form action="{{ route('data-processing-activities.destroy', $activity) }}" method="POST" class="inline">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="text-red-600 hover:text-red-900" onclick="return confirm('Are you sure?')">Delete</button>
+                                        </form>
+                                    </td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            @else
+                <div class="text-center py-12">
+                    <i class="fas fa-database text-gray-400 text-4xl mb-4"></i>
+                    <p class="text-gray-500 mb-4">No data processing activities found.</p>
+                    <a href="{{ route('data-processing-activities.create') }}" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700">
+                        <i class="fas fa-plus mr-2"></i>
+                        Create First Activity
+                    </a>
+                </div>
+            @endif
         </div>
-    @endif
+    </div>
 </div>
 @endsection

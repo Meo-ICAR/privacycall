@@ -18,11 +18,27 @@ class EmployeeController extends Controller
         return view('employees.index', compact('employees'));
     }
 
-    public function create()
+    public function create(Request $request)
     {
         $user = Auth::user();
+
+        // Get company_id from query parameter if provided
+        $company_id = $request->query('company_id');
+        $selectedCompany = null;
+
+        if ($company_id) {
+            $selectedCompany = \App\Models\Company::find($company_id);
+            if (!$selectedCompany) {
+                return redirect()->route('employees.create')->with('error', 'Selected company not found.');
+            }
+            // Check if user has access to this company
+            if ($selectedCompany->id !== $user->company_id) {
+                abort(403, 'You can only create employees for your own company.');
+            }
+        }
+
         $companies = collect([$user->company]); // Only user's company
-        return view('employees.create', compact('companies'));
+        return view('employees.create', compact('companies', 'selectedCompany'));
     }
 
     public function store(Request $request)
@@ -34,11 +50,17 @@ class EmployeeController extends Controller
             'email' => 'nullable|email|max:255',
             'phone' => 'nullable|string|max:20',
             'position' => 'required|string|max:255',
+            'department' => 'nullable|string|max:255',
             'hire_date' => 'nullable|date',
+            'salary' => 'nullable|numeric|min:0',
+            'address' => 'nullable|string',
             'notes' => 'nullable|string',
+            'is_active' => 'boolean',
         ]);
 
         $validated['company_id'] = $user->company_id;
+        $validated['is_active'] = $request->has('is_active');
+
         Employee::create($validated);
 
         return redirect()->route('employees.index')->with('success', 'Employee created successfully.');
@@ -76,14 +98,20 @@ class EmployeeController extends Controller
             'email' => 'nullable|email|max:255',
             'phone' => 'nullable|string|max:20',
             'position' => 'required|string|max:255',
+            'department' => 'nullable|string|max:255',
             'hire_date' => 'nullable|date',
+            'salary' => 'nullable|numeric|min:0',
+            'address' => 'nullable|string',
             'notes' => 'nullable|string',
+            'is_active' => 'boolean',
         ]);
 
         $validated['company_id'] = $user->company_id;
+        $validated['is_active'] = $request->has('is_active');
+
         $employee->update($validated);
 
-        return redirect()->route('employees.index')->with('success', 'Employee updated successfully.');
+        return redirect()->route('employees.show', $employee)->with('success', 'Employee updated successfully.');
     }
 
     public function destroy(Employee $employee)

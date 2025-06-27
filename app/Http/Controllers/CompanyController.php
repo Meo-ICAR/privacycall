@@ -23,6 +23,36 @@ class CompanyController extends Controller
     }
 
     /**
+     * Show the form for creating a new company.
+     */
+    public function create(Request $request)
+    {
+        // Check if user has permission to create companies
+        if (!auth()->check() || (!auth()->user()->hasRole('admin') && !auth()->user()->hasRole('superadmin'))) {
+            abort(403, 'You do not have permission to create companies.');
+        }
+
+        // Get holding_id from query parameter if provided
+        $holding_id = $request->query('holding_id');
+        $selectedHolding = null;
+
+        if ($holding_id) {
+            $selectedHolding = \App\Models\Holding::find($holding_id);
+            if (!$selectedHolding) {
+                return redirect()->route('companies.create')->with('error', 'Selected holding not found.');
+            }
+        }
+
+        // Load holdings for the dropdown (only for superadmin)
+        $holdings = null;
+        if (auth()->user()->hasRole('superadmin')) {
+            $holdings = \App\Models\Holding::orderBy('name')->get();
+        }
+
+        return view('companies.create', compact('holdings', 'selectedHolding'));
+    }
+
+    /**
      * Store a newly created company.
      */
     public function store(Request $request)
@@ -116,56 +146,77 @@ class CompanyController extends Controller
     /**
      * Display the specified company.
      */
-    public function show(Company $company): JsonResponse
+    public function show(Company $company)
     {
-        try {
-            // GDPR: Check if company has valid consent
-            if (!$company->hasValidGdprConsent()) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Company data access requires valid GDPR consent'
-                ], 403);
-            }
-
-            return response()->json([
-                'success' => true,
-                'data' => $company->load(['employees', 'customers', 'suppliers']),
-                'message' => 'Company retrieved successfully'
-            ]);
-
-        } catch (\Exception $e) {
-            Log::error('Error retrieving company: ' . $e->getMessage());
-            return response()->json([
-                'success' => false,
-                'message' => 'Error retrieving company'
-            ], 500);
+        // Check if user has access to this company
+        if (auth()->check() && auth()->user()->company_id && auth()->user()->company_id !== $company->id) {
+            abort(403, 'You can only view your own company.');
         }
+
+        // Load relationships
+        $company->load(['holding', 'employees', 'customers', 'suppliers']);
+
+        return view('companies.show', compact('company'));
+    }
+
+    /**
+     * Show the form for editing the specified company.
+     */
+    public function edit(Company $company)
+    {
+        // Check if user has access to this company
+        if (auth()->check() && auth()->user()->company_id && auth()->user()->company_id !== $company->id) {
+            abort(403, 'You can only edit your own company.');
+        }
+
+        // Check if user has permission to edit
+        if (!auth()->check() || (!auth()->user()->hasRole('admin') && !auth()->user()->hasRole('superadmin'))) {
+            abort(403, 'You do not have permission to edit companies.');
+        }
+
+        // Load holdings for the dropdown (only for superadmin)
+        $holdings = null;
+        if (auth()->user()->hasRole('superadmin')) {
+            $holdings = \App\Models\Holding::orderBy('name')->get();
+        }
+
+        return view('companies.edit', compact('company', 'holdings'));
     }
 
     /**
      * Update the specified company.
      */
-    public function update(Request $request, Company $company): JsonResponse
+    public function update(Request $request, Company $company)
     {
+        // Check if user has access to this company
+        if (auth()->check() && auth()->user()->company_id && auth()->user()->company_id !== $company->id) {
+            abort(403, 'You can only update your own company.');
+        }
+
+        // Check if user has permission to edit
+        if (!auth()->check() || (!auth()->user()->hasRole('admin') && !auth()->user()->hasRole('superadmin'))) {
+            abort(403, 'You do not have permission to edit companies.');
+        }
+
         try {
             $validator = Validator::make($request->all(), [
-                'name' => 'sometimes|required|string|max:255',
+                'name' => 'required|string|max:255',
                 'legal_name' => 'nullable|string|max:255',
                 'registration_number' => 'nullable|string|max:100|unique:companies,registration_number,' . $company->id,
                 'vat_number' => 'nullable|string|max:100|unique:companies,vat_number,' . $company->id,
-                'address_line_1' => 'sometimes|required|string|max:255',
+                'address_line_1' => 'nullable|string|max:255',
                 'address_line_2' => 'nullable|string|max:255',
-                'city' => 'sometimes|required|string|max:100',
+                'city' => 'nullable|string|max:100',
                 'state' => 'nullable|string|max:100',
-                'postal_code' => 'sometimes|required|string|max:20',
-                'country' => 'sometimes|required|string|max:100',
+                'postal_code' => 'nullable|string|max:20',
+                'country' => 'nullable|string|max:100',
                 'phone' => 'nullable|string|max:20',
                 'email' => 'nullable|email|max:255',
                 'website' => 'nullable|url|max:255',
-                'company_type' => 'sometimes|required|in:employer,customer,supplier,partner',
+                'company_type' => 'nullable|in:employer,customer,supplier,partner',
                 'industry' => 'nullable|string|max:100',
-                'size' => 'sometimes|required|in:small,medium,large',
-                'is_active' => 'sometimes|boolean',
+                'size' => 'nullable|in:small,medium,large',
+                'is_active' => 'nullable|boolean',
 
                 // GDPR Compliance Fields
                 'gdpr_consent_date' => 'nullable|date',
@@ -178,16 +229,13 @@ class CompanyController extends Controller
             ]);
 
             if ($validator->fails()) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Validation failed',
-                    'errors' => $validator->errors()
-                ], 422);
+                return back()->withErrors($validator)->withInput();
             }
 
             DB::beginTransaction();
 
             $data = $validator->validated();
+
             // Only superadmin can set holding_id
             if (!auth()->user() || !auth()->user()->hasRole('superadmin')) {
                 unset($data['holding_id']);
@@ -211,19 +259,12 @@ class CompanyController extends Controller
 
             Log::info('Company updated: ' . $company->id);
 
-            return response()->json([
-                'success' => true,
-                'data' => $company,
-                'message' => 'Company updated successfully'
-            ]);
+            return redirect()->route('companies.show', $company)->with('success', 'Company updated successfully!');
 
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('Error updating company: ' . $e->getMessage());
-            return response()->json([
-                'success' => false,
-                'message' => 'Error updating company'
-            ], 500);
+            return back()->with('error', 'Error updating company: ' . $e->getMessage())->withInput();
         }
     }
 

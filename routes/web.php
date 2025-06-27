@@ -28,15 +28,15 @@ Route::get('/dashboard', function () {
 Route::prefix('companies')->group(function () {
     Route::get('/', [\App\Http\Controllers\CompanyController::class, 'index'])->name('companies.index');
 
-    Route::get('/create', function () {
-        return view('companies.create');
-    })->name('companies.create');
+    Route::get('/create', [\App\Http\Controllers\CompanyController::class, 'create'])->name('companies.create');
 
     Route::post('/', [\App\Http\Controllers\CompanyController::class, 'store'])->name('companies.store');
 
-    Route::get('/{id}', function ($id) {
-        return view('companies.show', compact('id'));
-    })->name('companies.show');
+    Route::get('/{company}', [\App\Http\Controllers\CompanyController::class, 'show'])->name('companies.show');
+
+    Route::get('/{company}/edit', [\App\Http\Controllers\CompanyController::class, 'edit'])->name('companies.edit');
+
+    Route::put('/{company}', [\App\Http\Controllers\CompanyController::class, 'update'])->name('companies.update');
 });
 
 // GDPR management routes
@@ -111,6 +111,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
 // Employee management routes (admin/superadmin)
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('employees', [EmployeeController::class, 'index'])->name('employees.index');
+    Route::get('employees/create', [EmployeeController::class, 'create'])->name('employees.create');
+    Route::post('employees', [EmployeeController::class, 'store'])->name('employees.store');
+    Route::get('employees/{employee}', [EmployeeController::class, 'show'])->name('employees.show');
+    Route::get('employees/{employee}/edit', [EmployeeController::class, 'edit'])->name('employees.edit');
+    Route::put('employees/{employee}', [EmployeeController::class, 'update'])->name('employees.update');
+    Route::delete('employees/{employee}', [EmployeeController::class, 'destroy'])->name('employees.destroy');
     Route::get('employees/export', [EmployeeController::class, 'export'])->name('employees.export');
     Route::post('employees/import', [EmployeeController::class, 'import'])->name('employees.import');
 });
@@ -118,6 +124,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
 // Customer management routes (admin/superadmin)
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('customers', [CustomerController::class, 'index'])->name('customers.index');
+    Route::get('customers/create', [CustomerController::class, 'create'])->name('customers.create');
+    Route::post('customers', [CustomerController::class, 'store'])->name('customers.store');
+    Route::get('customers/{customer}', [CustomerController::class, 'show'])->name('customers.show');
+    Route::get('customers/{customer}/edit', [CustomerController::class, 'edit'])->name('customers.edit');
+    Route::put('customers/{customer}', [CustomerController::class, 'update'])->name('customers.update');
+    Route::delete('customers/{customer}', [CustomerController::class, 'destroy'])->name('customers.destroy');
     Route::get('customers/export', [CustomerController::class, 'export'])->name('customers.export');
     Route::post('customers/import', [CustomerController::class, 'import'])->name('customers.import');
 });

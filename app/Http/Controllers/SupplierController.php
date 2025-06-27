@@ -23,12 +23,28 @@ class SupplierController extends Controller
         return view('suppliers.index', compact('suppliers'));
     }
 
-    public function create()
+    public function create(Request $request)
     {
         $user = Auth::user();
+
+        // Get company_id from query parameter if provided
+        $company_id = $request->query('company_id');
+        $selectedCompany = null;
+
+        if ($company_id) {
+            $selectedCompany = \App\Models\Company::find($company_id);
+            if (!$selectedCompany) {
+                return redirect()->route('suppliers.create')->with('error', 'Selected company not found.');
+            }
+            // Check if user has access to this company
+            if ($selectedCompany->id !== $user->company_id) {
+                abort(403, 'You can only create suppliers for your own company.');
+            }
+        }
+
         $companies = collect([$user->company]); // Only user's company
         $supplierTypes = \App\Models\SupplierType::all();
-        return view('suppliers.create', compact('companies', 'supplierTypes'));
+        return view('suppliers.create', compact('companies', 'supplierTypes', 'selectedCompany'));
     }
 
     public function store(Request $request)
