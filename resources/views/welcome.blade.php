@@ -21,11 +21,21 @@
                     </div>
                 </div>
                 <div class="flex items-center space-x-4">
-                    <a href="/" class="text-blue-600 font-medium">Dashboard</a>
-                    <a href="/dashboard" class="text-gray-600 hover:text-gray-900">Dashboard</a>
-                    <a href="/companies" class="text-gray-600 hover:text-gray-900">Companies</a>
-                    <a href="/gdpr" class="text-gray-600 hover:text-gray-900">GDPR</a>
-                    <a href="/api-docs" class="text-gray-600 hover:text-gray-900">API Docs</a>
+                    @auth
+                        <a href="{{ route('dashboard') }}" class="text-gray-600 hover:text-gray-900">Dashboard</a>
+                        @role('superadmin')
+                            <a href="{{ route('companies.index') }}" class="text-gray-600 hover:text-gray-900">Companies</a>
+                        @endrole
+                        <a href="/gdpr" class="text-gray-600 hover:text-gray-900">GDPR</a>
+                        <a href="/api-docs" class="text-gray-600 hover:text-gray-900">API Docs</a>
+                        <form method="POST" action="{{ route('logout') }}" class="inline">
+                            @csrf
+                            <button type="submit" class="text-gray-600 hover:text-gray-900">Logout</button>
+                        </form>
+                    @else
+                        <a href="{{ route('login') }}" class="text-gray-600 hover:text-gray-900">Login</a>
+                        <a href="/api-docs" class="text-gray-600 hover:text-gray-900">API Docs</a>
+                    @endauth
                 </div>
             </div>
         </div>
@@ -42,12 +52,21 @@
                     GDPR Compliant Company Management System for Call Centers
                 </p>
                 <div class="mt-5 max-w-md mx-auto sm:flex sm:justify-center md:mt-8">
-                    <div class="rounded-md shadow">
-                        <a href="/dashboard" class="w-full flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded-md text-blue-600 bg-white hover:bg-gray-50 md:py-4 md:text-lg md:px-10">
-                            <i class="fas fa-tachometer-alt mr-2"></i>
-                            Go to Dashboard
-                        </a>
-                    </div>
+                    @auth
+                        <div class="rounded-md shadow">
+                            <a href="{{ route('dashboard') }}" class="w-full flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded-md text-blue-600 bg-white hover:bg-gray-50 md:py-4 md:text-lg md:px-10">
+                                <i class="fas fa-tachometer-alt mr-2"></i>
+                                Go to Dashboard
+                            </a>
+                        </div>
+                    @else
+                        <div class="rounded-md shadow">
+                            <a href="{{ route('login') }}" class="w-full flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded-md text-blue-600 bg-white hover:bg-gray-50 md:py-4 md:text-lg md:px-10">
+                                <i class="fas fa-sign-in-alt mr-2"></i>
+                                Login
+                            </a>
+                        </div>
+                    @endauth
                     <div class="mt-3 rounded-md shadow sm:mt-0 sm:ml-3">
                         <a href="/api-docs" class="w-full flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded-md text-white bg-blue-500 hover:bg-blue-600 md:py-4 md:text-lg md:px-10">
                             <i class="fas fa-code mr-2"></i>

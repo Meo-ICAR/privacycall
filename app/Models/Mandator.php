@@ -8,9 +8,16 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-class Representative extends Model
+class Mandator extends Model
 {
     use HasFactory, SoftDeletes;
+
+    /**
+     * The table associated with the model.
+     *
+     * @var string
+     */
+    protected $table = 'mandators';
 
     /**
      * The attributes that are mass assignable.
@@ -61,7 +68,7 @@ class Representative extends Model
     ];
 
     /**
-     * Get the company that owns the representative.
+     * Get the company that owns the mandator.
      */
     public function company(): BelongsTo
     {
@@ -69,23 +76,23 @@ class Representative extends Model
     }
 
     /**
-     * Get the original representative (if this is a clone).
+     * Get the original mandator (if this is a clone).
      */
     public function original(): BelongsTo
     {
-        return $this->belongsTo(Representative::class, 'original_id');
+        return $this->belongsTo(Mandator::class, 'original_id');
     }
 
     /**
-     * Get all clones of this representative.
+     * Get all clones of this mandator.
      */
     public function clones(): HasMany
     {
-        return $this->hasMany(Representative::class, 'original_id');
+        return $this->hasMany(Mandator::class, 'original_id');
     }
 
     /**
-     * Check if this representative is a clone.
+     * Check if this mandator is a clone.
      */
     public function isClone(): bool
     {
@@ -93,7 +100,7 @@ class Representative extends Model
     }
 
     /**
-     * Check if this representative has clones.
+     * Check if this mandator has clones.
      */
     public function hasClones(): bool
     {
@@ -101,17 +108,17 @@ class Representative extends Model
     }
 
     /**
-     * Get the root representative (original or self if not a clone).
+     * Get the root mandator (original or self if not a clone).
      */
-    public function getRootRepresentative(): Representative
+    public function getRootMandator(): Mandator
     {
         return $this->original_id ? $this->original : $this;
     }
 
     /**
-     * Clone this representative to another company.
+     * Clone this mandator to another company.
      */
-    public function cloneToCompany(int $targetCompanyId, array $overrides = []): Representative
+    public function cloneToCompany(int $targetCompanyId, array $overrides = []): Mandator
     {
         $cloneData = $this->toArray();
 
@@ -128,27 +135,27 @@ class Representative extends Model
         // Ensure email is unique by adding a suffix if needed
         $originalEmail = $cloneData['email'];
         $counter = 1;
-        while (Representative::where('email', $cloneData['email'])->exists()) {
+        while (Mandator::where('email', $cloneData['email'])->exists()) {
             $cloneData['email'] = $originalEmail . '_clone_' . $counter;
             $counter++;
         }
 
-        return Representative::create($cloneData);
+        return Mandator::create($cloneData);
     }
 
     /**
-     * Get all related representatives (original + clones).
+     * Get all related mandators (original + clones).
      */
     public function getAllRelated(): \Illuminate\Database\Eloquent\Collection
     {
-        $root = $this->getRootRepresentative();
-        return Representative::where('id', $root->id)
+        $root = $this->getRootMandator();
+        return Mandator::where('id', $root->id)
             ->orWhere('original_id', $root->id)
             ->get();
     }
 
     /**
-     * Get the full name of the representative.
+     * Get the full name of the mandator.
      */
     public function getFullNameAttribute(): string
     {
@@ -156,7 +163,7 @@ class Representative extends Model
     }
 
     /**
-     * Scope a query to only include active representatives.
+     * Scope a query to only include active mandators.
      */
     public function scopeActive($query)
     {
@@ -172,7 +179,7 @@ class Representative extends Model
     }
 
     /**
-     * Scope a query to only include original representatives (not clones).
+     * Scope a query to only include original mandators (not clones).
      */
     public function scopeOriginals($query)
     {
@@ -180,7 +187,7 @@ class Representative extends Model
     }
 
     /**
-     * Scope a query to only include cloned representatives.
+     * Scope a query to only include cloned mandators.
      */
     public function scopeClones($query)
     {
@@ -188,7 +195,7 @@ class Representative extends Model
     }
 
     /**
-     * Check if representative is subscribed to a specific disclosure type.
+     * Check if mandator is subscribed to a specific disclosure type.
      */
     public function isSubscribedTo($disclosureType): bool
     {

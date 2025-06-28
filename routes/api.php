@@ -4,7 +4,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\CompanyController;
 use App\Http\Controllers\GdprController;
-use App\Http\Controllers\RepresentativeController;
+use App\Http\Controllers\MandatorController;
 
 /*
 |--------------------------------------------------------------------------
@@ -34,22 +34,22 @@ Route::prefix('v1')->group(function () {
         Route::get('/{company}/gdpr-status', [CompanyController::class, 'gdprStatus']);
     });
 
-    // Representative Management Routes
-    Route::prefix('representatives')->group(function () {
-        Route::get('/', [RepresentativeController::class, 'index']);
-        Route::post('/', [RepresentativeController::class, 'store']);
-        Route::get('/{representative}', [RepresentativeController::class, 'show']);
-        Route::put('/{representative}', [RepresentativeController::class, 'update']);
-        Route::delete('/{representative}', [RepresentativeController::class, 'destroy']);
+    // Mandator Management Routes
+    Route::prefix('mandators')->group(function () {
+        Route::get('/', [MandatorController::class, 'index']);
+        Route::post('/', [MandatorController::class, 'store']);
+        Route::get('/{mandator}', [MandatorController::class, 'show']);
+        Route::put('/{mandator}', [MandatorController::class, 'update']);
+        Route::delete('/{mandator}', [MandatorController::class, 'destroy']);
 
         // Disclosure subscription management
-        Route::post('/{representative}/add-disclosure-subscription', [RepresentativeController::class, 'addDisclosureSubscription']);
-        Route::post('/{representative}/remove-disclosure-subscription', [RepresentativeController::class, 'removeDisclosureSubscription']);
-        Route::post('/{representative}/update-last-disclosure-date', [RepresentativeController::class, 'updateLastDisclosureDate']);
+        Route::post('/{mandator}/add-disclosure-subscription', [MandatorController::class, 'addDisclosureSubscription']);
+        Route::post('/{mandator}/remove-disclosure-subscription', [MandatorController::class, 'removeDisclosureSubscription']);
+        Route::post('/{mandator}/update-last-disclosure-date', [MandatorController::class, 'updateLastDisclosureDate']);
 
         // Company-specific routes
-        Route::get('/company/{company}', [RepresentativeController::class, 'getByCompany']);
-        Route::get('/disclosure-summary', [RepresentativeController::class, 'getDisclosureSummary']);
+        Route::get('/company/{company}', [MandatorController::class, 'getByCompany']);
+        Route::get('/disclosure-summary', [MandatorController::class, 'getDisclosureSummary']);
     });
 
     // GDPR Data Subject Rights Routes

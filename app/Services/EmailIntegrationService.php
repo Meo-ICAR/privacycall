@@ -404,17 +404,32 @@ class EmailIntegrationService
      */
     public function getEmailStats(Company $company): array
     {
-        $emails = $company->emails();
+        try {
+            $emails = $company->emails();
 
-        return [
-            'total' => $emails->count(),
-            'unread' => $emails->where('status', 'unread')->count(),
-            'read' => $emails->where('status', 'read')->count(),
-            'replied' => $emails->where('status', 'replied')->count(),
-            'gdpr_related' => $emails->where('is_gdpr_related', true)->count(),
-            'high_priority' => $emails->where('priority', 'high')->count(),
-            'urgent_priority' => $emails->where('priority', 'urgent')->count(),
-        ];
+            return [
+                'total' => $emails->count(),
+                'unread' => $emails->where('status', 'unread')->count(),
+                'read' => $emails->where('status', 'read')->count(),
+                'replied' => $emails->where('status', 'replied')->count(),
+                'gdpr_related' => $emails->where('is_gdpr_related', true)->count(),
+                'high_priority' => $emails->where('priority', 'high')->count(),
+                'urgent_priority' => $emails->where('priority', 'urgent')->count(),
+            ];
+        } catch (\Exception $e) {
+            Log::error("Error getting email stats for company {$company->id}: " . $e->getMessage());
+
+            // Fallback to direct query
+            return [
+                'total' => CompanyEmail::where('company_id', $company->id)->count(),
+                'unread' => CompanyEmail::where('company_id', $company->id)->where('status', 'unread')->count(),
+                'read' => CompanyEmail::where('company_id', $company->id)->where('status', 'read')->count(),
+                'replied' => CompanyEmail::where('company_id', $company->id)->where('status', 'replied')->count(),
+                'gdpr_related' => CompanyEmail::where('company_id', $company->id)->where('is_gdpr_related', true)->count(),
+                'high_priority' => CompanyEmail::where('company_id', $company->id)->where('priority', 'high')->count(),
+                'urgent_priority' => CompanyEmail::where('company_id', $company->id)->where('priority', 'urgent')->count(),
+            ];
+        }
     }
 
     /**

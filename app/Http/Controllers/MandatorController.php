@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Representative;
+use App\Models\Mandator;
 use App\Models\Company;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
@@ -11,14 +11,14 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Auth;
 
-class RepresentativeController extends Controller
+class MandatorController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
     public function index(Request $request)
     {
-        $query = Representative::with('company');
+        $query = Mandator::with('company');
 
         // Filter by company
         if ($request->has('company_id')) {
@@ -49,19 +49,19 @@ class RepresentativeController extends Controller
             });
         }
 
-        $representatives = $query->paginate($request->get('per_page', 15));
+        $mandators = $query->paginate($request->get('per_page', 15));
         $companies = Company::active()->get();
 
         // Return JSON for API requests, view for web requests
         if ($request->expectsJson()) {
             return response()->json([
                 'success' => true,
-                'data' => $representatives,
-                'message' => 'Representatives retrieved successfully'
+                'data' => $mandators,
+                'message' => 'Mandators retrieved successfully'
             ]);
         }
 
-        return view('representatives.index', compact('representatives', 'companies'));
+        return view('mandators.index', compact('mandators', 'companies'));
     }
 
     /**
@@ -75,7 +75,7 @@ class RepresentativeController extends Controller
             $company = Company::findOrFail($companyId);
         }
         $companies = $company ? null : Company::active()->get();
-        return view('representatives.create', compact('companies', 'company'));
+        return view('mandators.create', compact('companies', 'company'));
     }
 
     /**
@@ -87,7 +87,7 @@ class RepresentativeController extends Controller
             'company_id' => 'required|exists:companies,id',
             'first_name' => 'required|string|max:255',
             'last_name' => 'nullable|string|max:255',
-            'email' => 'required|email|unique:representatives,email',
+            'email' => 'required|email|unique:mandators,email',
             'phone' => 'nullable|string|max:20',
             'position' => 'nullable|string|max:255',
             'department' => 'nullable|string|max:255',
@@ -118,56 +118,56 @@ class RepresentativeController extends Controller
         // Handle logo upload
         if ($request->hasFile('logo')) {
             $logo = $request->file('logo');
-            $filename = 'representative_logos/' . uniqid('logo_') . '.' . $logo->getClientOriginalExtension();
+            $filename = 'mandator_logos/' . uniqid('logo_') . '.' . $logo->getClientOriginalExtension();
             Storage::disk('public')->put($filename, file_get_contents($logo));
             $data['logo_url'] = Storage::url($filename);
         }
 
-        $representative = Representative::create($data);
+        $mandator = Mandator::create($data);
 
         if ($request->expectsJson()) {
             return response()->json([
                 'success' => true,
-                'data' => $representative->load('company'),
-                'message' => 'Representative created successfully'
+                'data' => $mandator->load('company'),
+                'message' => 'Mandator created successfully'
             ], 201);
         }
 
-        return redirect()->route('representatives.index')
-            ->with('success', 'Representative created successfully.');
+        return redirect()->route('mandators.index')
+            ->with('success', 'Mandator created successfully.');
     }
 
     /**
      * Display the specified resource.
      */
-    public function show(Representative $representative, Request $request)
+    public function show(Mandator $mandator, Request $request)
     {
-        $representative->load(['company', 'original', 'clones.company']);
+        $mandator->load(['company', 'original', 'clones.company']);
 
         if ($request->expectsJson()) {
             return response()->json([
                 'success' => true,
-                'data' => $representative,
-                'message' => 'Representative retrieved successfully'
+                'data' => $mandator,
+                'message' => 'Mandator retrieved successfully'
             ]);
         }
 
-        return view('representatives.show', compact('representative'));
+        return view('mandators.show', compact('mandator'));
     }
 
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(Representative $representative)
+    public function edit(Mandator $mandator)
     {
-        $company = $representative->company;
-        return view('representatives.edit', compact('representative', 'company'));
+        $company = $mandator->company;
+        return view('mandators.edit', compact('mandator', 'company'));
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, Representative $representative)
+    public function update(Request $request, Mandator $mandator)
     {
         $validator = Validator::make($request->all(), [
             'company_id' => 'sometimes|required|exists:companies,id',
@@ -177,7 +177,7 @@ class RepresentativeController extends Controller
                 'sometimes',
                 'required',
                 'email',
-                Rule::unique('representatives')->ignore($representative->id)
+                Rule::unique('mandators')->ignore($mandator->id)
             ],
             'phone' => 'nullable|string|max:20',
             'position' => 'nullable|string|max:255',
@@ -209,77 +209,77 @@ class RepresentativeController extends Controller
         // Handle logo upload
         if ($request->hasFile('logo')) {
             // Delete old logo if exists
-            if ($representative->logo_url && !str_contains($representative->logo_url, 'ui-avatars.com')) {
-                $oldLogoPath = str_replace('/storage/', '', $representative->logo_url);
+            if ($mandator->logo_url && !str_contains($mandator->logo_url, 'ui-avatars.com')) {
+                $oldLogoPath = str_replace('/storage/', '', $mandator->logo_url);
                 Storage::disk('public')->delete($oldLogoPath);
             }
 
             $logo = $request->file('logo');
-            $filename = 'representative_logos/' . uniqid('logo_') . '.' . $logo->getClientOriginalExtension();
+            $filename = 'mandator_logos/' . uniqid('logo_') . '.' . $logo->getClientOriginalExtension();
             Storage::disk('public')->put($filename, file_get_contents($logo));
             $data['logo_url'] = Storage::url($filename);
         }
 
-        $representative->update($data);
+        $mandator->update($data);
 
         if ($request->expectsJson()) {
             return response()->json([
                 'success' => true,
-                'data' => $representative->load('company'),
-                'message' => 'Representative updated successfully'
+                'data' => $mandator->load('company'),
+                'message' => 'Mandator updated successfully'
             ]);
         }
 
-        return redirect()->route('representatives.index')
-            ->with('success', 'Representative updated successfully.');
+        return redirect()->route('mandators.index')
+            ->with('success', 'Mandator updated successfully.');
     }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Representative $representative, Request $request)
+    public function destroy(Mandator $mandator, Request $request)
     {
         // Delete logo file if exists
-        if ($representative->logo_url && !str_contains($representative->logo_url, 'ui-avatars.com')) {
-            $logoPath = str_replace('/storage/', '', $representative->logo_url);
+        if ($mandator->logo_url && !str_contains($mandator->logo_url, 'ui-avatars.com')) {
+            $logoPath = str_replace('/storage/', '', $mandator->logo_url);
             Storage::disk('public')->delete($logoPath);
         }
 
-        $representative->delete();
+        $mandator->delete();
 
         if ($request->expectsJson()) {
             return response()->json([
                 'success' => true,
-                'message' => 'Representative deleted successfully'
+                'message' => 'Mandator deleted successfully'
             ]);
         }
 
-        return redirect()->route('representatives.index')
-            ->with('success', 'Representative deleted successfully.');
+        return redirect()->route('mandators.index')
+            ->with('success', 'Mandator deleted successfully.');
     }
 
     /**
-     * Show the form for cloning a representative to another company.
+     * Show the form for cloning a mandator to another company.
      */
-    public function showCloneForm(Representative $representative)
+    public function showCloneForm(Mandator $mandator)
     {
         // Check if user is superadmin
         if (Auth::user()->role !== 'superadmin') {
-            abort(403, 'Only superadmins can clone representatives.');
+            abort(403, 'Only superadmins can clone mandators.');
         }
 
-        $companies = Company::where('id', '!=', $representative->company_id)->active()->get();
-        return view('representatives.clone', compact('representative', 'companies'));
+        $companies = Company::where('id', '!=', $mandator->company_id)->active()->get();
+        return view('mandators.clone', compact('mandator', 'companies'));
     }
 
     /**
-     * Clone a representative to another company.
+     * Clone a mandator to another company.
      */
-    public function clone(Request $request, Representative $representative)
+    public function clone(Request $request, Mandator $mandator)
     {
         // Check if user is superadmin
         if (Auth::user()->role !== 'superadmin') {
-            abort(403, 'Only superadmins can clone representatives.');
+            abort(403, 'Only superadmins can clone mandators.');
         }
 
         $validator = Validator::make($request->all(), [
@@ -302,27 +302,27 @@ class RepresentativeController extends Controller
             $overrides = $validator->validated();
             unset($overrides['target_company_id']);
 
-            $clonedRepresentative = $representative->cloneToCompany(
+            $clonedMandator = $mandator->cloneToCompany(
                 $request->target_company_id,
                 $overrides
             );
 
-            return redirect()->route('representatives.show', $clonedRepresentative)
-                ->with('success', 'Representative cloned successfully to ' . $clonedRepresentative->company->name);
+            return redirect()->route('mandators.show', $clonedMandator)
+                ->with('success', 'Mandator cloned successfully to ' . $clonedMandator->company->name);
 
         } catch (\Exception $e) {
-            return back()->withErrors(['error' => 'Failed to clone representative: ' . $e->getMessage()]);
+            return back()->withErrors(['error' => 'Failed to clone mandator: ' . $e->getMessage()]);
         }
     }
 
     /**
-     * Clone a representative to multiple companies.
+     * Clone a mandator to multiple companies.
      */
-    public function cloneToMultiple(Request $request, Representative $representative)
+    public function cloneToMultiple(Request $request, Mandator $mandator)
     {
         // Check if user is superadmin
         if (Auth::user()->role !== 'superadmin') {
-            abort(403, 'Only superadmins can clone representatives.');
+            abort(403, 'Only superadmins can clone mandators.');
         }
 
         $validator = Validator::make($request->all(), [
@@ -340,35 +340,35 @@ class RepresentativeController extends Controller
         }
 
         try {
-            $clonedRepresentatives = [];
+            $clonedMandators = [];
             $overrides = $request->input('overrides', []);
 
             foreach ($request->target_company_ids as $companyId) {
-                if ($companyId != $representative->company_id) {
-                    $clonedRepresentatives[] = $representative->cloneToCompany($companyId, $overrides);
+                if ($companyId != $mandator->company_id) {
+                    $clonedMandators[] = $mandator->cloneToCompany($companyId, $overrides);
                 }
             }
 
             return response()->json([
                 'success' => true,
-                'data' => $clonedRepresentatives,
-                'message' => 'Representative cloned to ' . count($clonedRepresentatives) . ' companies successfully'
+                'data' => $clonedMandators,
+                'message' => 'Mandator cloned to ' . count($clonedMandators) . ' companies successfully'
             ]);
 
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to clone representative: ' . $e->getMessage()
+                'message' => 'Failed to clone mandator: ' . $e->getMessage()
             ], 500);
         }
     }
 
     /**
-     * Get all clones of a representative.
+     * Get all clones of a mandator.
      */
-    public function getClones(Representative $representative, Request $request)
+    public function getClones(Mandator $mandator, Request $request)
     {
-        $clones = $representative->clones()->with('company')->get();
+        $clones = $mandator->clones()->with('company')->get();
 
         if ($request->expectsJson()) {
             return response()->json([
@@ -378,31 +378,31 @@ class RepresentativeController extends Controller
             ]);
         }
 
-        return view('representatives.clones', compact('representative', 'clones'));
+        return view('mandators.clones', compact('mandator', 'clones'));
     }
 
     /**
-     * Get all related representatives (original + clones).
+     * Get all related mandators (original + clones).
      */
-    public function getRelated(Representative $representative, Request $request)
+    public function getRelated(Mandator $mandator, Request $request)
     {
-        $related = $representative->getAllRelated()->load('company');
+        $related = $mandator->getAllRelated()->load('company');
 
         if ($request->expectsJson()) {
             return response()->json([
                 'success' => true,
                 'data' => $related,
-                'message' => 'Related representatives retrieved successfully'
+                'message' => 'Related mandators retrieved successfully'
             ]);
         }
 
-        return view('representatives.related', compact('representative', 'related'));
+        return view('mandators.related', compact('mandator', 'related'));
     }
 
     /**
      * Add a disclosure subscription.
      */
-    public function addDisclosureSubscription(Request $request, Representative $representative): JsonResponse
+    public function addDisclosureSubscription(Request $request, Mandator $mandator): JsonResponse
     {
         $validator = Validator::make($request->all(), [
             'disclosure_type' => 'required|string|max:255',
@@ -418,14 +418,14 @@ class RepresentativeController extends Controller
 
         $disclosureType = $request->disclosure_type;
 
-        if ($representative->isSubscribedTo($disclosureType)) {
+        if ($mandator->isSubscribedTo($disclosureType)) {
             return response()->json([
                 'success' => false,
-                'message' => 'Representative is already subscribed to this disclosure type'
+                'message' => 'Mandator is already subscribed to this disclosure type'
             ], 400);
         }
 
-        $representative->addDisclosureSubscription($disclosureType);
+        $mandator->addDisclosureSubscription($disclosureType);
 
         return response()->json([
             'success' => true,
@@ -436,7 +436,7 @@ class RepresentativeController extends Controller
     /**
      * Remove a disclosure subscription.
      */
-    public function removeDisclosureSubscription(Request $request, Representative $representative): JsonResponse
+    public function removeDisclosureSubscription(Request $request, Mandator $mandator): JsonResponse
     {
         $validator = Validator::make($request->all(), [
             'disclosure_type' => 'required|string|max:255',
@@ -452,14 +452,14 @@ class RepresentativeController extends Controller
 
         $disclosureType = $request->disclosure_type;
 
-        if (!$representative->isSubscribedTo($disclosureType)) {
+        if (!$mandator->isSubscribedTo($disclosureType)) {
             return response()->json([
                 'success' => false,
-                'message' => 'Representative is not subscribed to this disclosure type'
+                'message' => 'Mandator is not subscribed to this disclosure type'
             ], 400);
         }
 
-        $representative->removeDisclosureSubscription($disclosureType);
+        $mandator->removeDisclosureSubscription($disclosureType);
 
         return response()->json([
             'success' => true,
@@ -472,24 +472,24 @@ class RepresentativeController extends Controller
      */
     public function getDisclosureSummary(Request $request): JsonResponse
     {
-        $query = Representative::query();
+        $query = Mandator::query();
 
         if ($request->has('company_id')) {
             $query->where('company_id', $request->company_id);
         }
 
-        $representatives = $query->get();
+        $mandators = $query->get();
 
         $summary = [
-            'total_representatives' => $representatives->count(),
-            'active_representatives' => $representatives->where('is_active', true)->count(),
-            'total_subscriptions' => $representatives->sum(function ($rep) {
+            'total_mandators' => $mandators->count(),
+            'active_mandators' => $mandators->where('is_active', true)->count(),
+            'total_subscriptions' => $mandators->sum(function ($rep) {
                 return count($rep->disclosure_subscriptions ?? []);
             }),
-            'subscription_types' => $representatives->flatMap(function ($rep) {
+            'subscription_types' => $mandators->flatMap(function ($rep) {
                 return $rep->disclosure_subscriptions ?? [];
             })->unique()->values(),
-            'representatives_with_subscriptions' => $representatives->filter(function ($rep) {
+            'mandators_with_subscriptions' => $mandators->filter(function ($rep) {
                 return !empty($rep->disclosure_subscriptions);
             })->count(),
         ];

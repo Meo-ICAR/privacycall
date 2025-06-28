@@ -4,10 +4,10 @@ namespace Database\Seeders;
 
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
-use App\Models\Representative;
+use App\Models\Mandator;
 use App\Models\Company;
 
-class RepresentativeSeeder extends Seeder
+class MandatorSeeder extends Seeder
 {
     /**
      * Run the database seeds.
@@ -30,7 +30,7 @@ class RepresentativeSeeder extends Seeder
             ]);
         }
 
-        $representatives = [
+        $mandators = [
             [
                 'company_id' => $company->id,
                 'first_name' => 'John',
@@ -93,10 +93,10 @@ class RepresentativeSeeder extends Seeder
             ],
         ];
 
-        foreach ($representatives as $representativeData) {
-            Representative::create($representativeData);
+        foreach ($mandators as $mandatorData) {
+            Mandator::create($mandatorData);
         }
 
-        $this->command->info('Representatives seeded successfully!');
+        $this->command->info('Mandators seeded successfully!');
     }
 }

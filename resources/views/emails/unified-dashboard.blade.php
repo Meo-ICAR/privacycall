@@ -5,20 +5,81 @@
 @section('content')
 <div class="container mx-auto px-4 py-8">
     <div class="max-w-7xl mx-auto">
+        <!-- Superadmin Impersonation Banner -->
+        @if(auth()->user()->hasRole('superadmin') && !session('impersonate_original_id') && isset($company))
+            @php
+                $companyAdmin = \App\Models\User::where('company_id', $company->id)
+                    ->whereHas('roles', function ($query) {
+                        $query->where('name', 'admin');
+                    })
+                    ->first();
+            @endphp
+            @if($companyAdmin)
+                <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center">
+                            <i class="fas fa-user-secret text-blue-600 mr-3"></i>
+                            <div>
+                                <h3 class="text-sm font-medium text-blue-900">View as Company Admin</h3>
+                                <p class="text-sm text-blue-700">
+                                    You can impersonate as <strong>{{ $companyAdmin->name }}</strong> to view emails from {{ $company->name }}'s perspective.
+                                </p>
+                            </div>
+                        </div>
+                        <form method="POST" action="{{ route('emails.impersonate', $company) }}" class="ml-4">
+                            @csrf
+                            <button type="submit" class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                                <i class="fas fa-user-secret mr-2"></i>
+                                Impersonate as Admin
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            @endif
+        @endif
+
         <div class="mb-8 flex items-center justify-between">
             <div>
                 <h1 class="text-3xl font-bold text-gray-900">Unified Email Dashboard</h1>
-                <p class="text-gray-600 mt-2">Manage all incoming and outgoing emails for <span class="font-semibold">{{ $company->name }}</span></p>
+                @if(isset($company))
+                    <p class="text-gray-600 mt-2">Manage all incoming and outgoing emails for <span class="font-semibold">{{ $company->name }}</span></p>
+                @else
+                    <p class="text-gray-600 mt-2">Overview of all emails across all companies</p>
+                @endif
             </div>
             <div class="flex space-x-3">
                 <button onclick="openSendEmailModal()" class="btn btn-primary">
                     <i class="fas fa-plus mr-2"></i>Send New Email
                 </button>
-                <a href="{{ route('companies.show', $company) }}" class="btn btn-secondary">
-                    <i class="fas fa-arrow-left mr-2"></i>Back to Company
-                </a>
+                @if(isset($company))
+                    <a href="{{ route('companies.show', $company) }}" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left mr-2"></i>Back to Company
+                    </a>
+                @else
+                    <a href="{{ route('dashboard') }}" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left mr-2"></i>Back to Dashboard
+                    </a>
+                @endif
             </div>
         </div>
+
+        <!-- Company Selection for Superadmin -->
+        @if(!isset($company) && isset($companies) && $companies->count() > 0)
+            <div class="bg-white shadow rounded-lg mb-6">
+                <div class="p-6">
+                    <h3 class="text-lg font-medium text-gray-900 mb-4">Select Company to View Specific Emails</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        @foreach($companies as $companyOption)
+                            <a href="{{ route('emails.dashboard', $companyOption) }}"
+                               class="block p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
+                                <div class="font-medium text-gray-900">{{ $companyOption->name }}</div>
+                                <div class="text-sm text-gray-500">{{ $companyOption->emails_count }} emails</div>
+                            </a>
+                        @endforeach
+                    </div>
+                </div>
+            </div>
+        @endif
 
         <!-- Email Statistics -->
         <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
@@ -60,6 +121,9 @@
                                         </div>
                                         <div class="text-xs text-gray-500 mt-1">
                                             From: {{ $email->from_email }} | {{ $email->received_at->diffForHumans() }}
+                                            @if(!isset($company) && $email->company)
+                                                | {{ $email->company->name }}
+                                            @endif
                                         </div>
                                         <div class="text-xs mt-1">
                                             <span class="inline-block px-2 py-0.5 rounded-full text-xs font-medium {{ $email->is_gdpr_related ? 'bg-yellow-100 text-yellow-800' : 'bg-gray-100 text-gray-800' }}">
@@ -101,6 +165,9 @@
                                         </div>
                                         <div class="text-xs text-gray-500 mt-1">
                                             To: {{ $email->recipient_email }} | {{ $email->created_at->diffForHumans() }}
+                                            @if(!isset($company) && $email->company)
+                                                | {{ $email->company->name }}
+                                            @endif
                                         </div>
                                         <div class="text-xs mt-1">
                                             <span class="inline-block px-2 py-0.5 rounded-full text-xs font-medium {{ $email->status === 'failed' ? 'bg-red-100 text-red-800' : ($email->status === 'delivered' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800') }}">
@@ -122,6 +189,7 @@
         </div>
 
         <!-- Quick Mail Merge -->
+        @if($templates->count() > 0 && $suppliers->count() > 0)
         <div class="bg-white shadow rounded-lg mt-10">
             <div class="p-6 border-b border-gray-200">
                 <h2 class="text-xl font-semibold text-gray-900">Quick Mail Merge</h2>
@@ -134,7 +202,12 @@
                         <label for="supplier_ids" class="block text-sm font-medium text-gray-700 mb-2">Suppliers</label>
                         <select id="supplier_ids" name="supplier_ids[]" class="form-select w-full" multiple required>
                             @foreach($suppliers as $supplier)
-                                <option value="{{ $supplier->id }}">{{ $supplier->name }} ({{ $supplier->email }})</option>
+                                <option value="{{ $supplier->id }}">
+                                    {{ $supplier->name }} ({{ $supplier->email }})
+                                    @if(!isset($company) && $supplier->company)
+                                        - {{ $supplier->company->name }}
+                                    @endif
+                                </option>
                             @endforeach
                         </select>
                     </div>
@@ -143,7 +216,12 @@
                         <select id="template_id" name="template_id" class="form-select w-full" required>
                             <option value="">Select a template...</option>
                             @foreach($templates as $template)
-                                <option value="{{ $template->id }}">{{ $template->name }}</option>
+                                <option value="{{ $template->id }}">
+                                    {{ $template->name }}
+                                    @if(!isset($company) && $template->company)
+                                        - {{ $template->company->name }}
+                                    @endif
+                                </option>
                             @endforeach
                         </select>
                     </div>
@@ -159,6 +237,7 @@
                 </div>
             </form>
         </div>
+        @endif
     </div>
 </div>
 

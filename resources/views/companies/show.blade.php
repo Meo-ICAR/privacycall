@@ -299,11 +299,11 @@
                         </a>
                         @endif
 
-                        <!-- Add Representative -->
+                        <!-- Add Mandator -->
                         @if(auth()->check() && (auth()->user()->hasRole('admin') || auth()->user()->hasRole('superadmin')))
-                        <a href="{{ route('representatives.create', ['company_id' => $company->id]) }}" class="w-full inline-flex items-center justify-center px-4 py-2 border border-purple-300 text-sm font-medium rounded-md text-purple-700 bg-white hover:bg-purple-50">
-                            <i class="fas fa-user-shield mr-2"></i>
-                            Add Representative
+                        <a href="{{ route('mandators.create', ['company_id' => $company->id]) }}" class="w-full inline-flex items-center justify-center px-4 py-2 border border-purple-300 text-sm font-medium rounded-md text-purple-700 bg-white hover:bg-purple-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500">
+                            <i class="fas fa-plus mr-2"></i>
+                            Add Mandator
                         </a>
                         @endif
 

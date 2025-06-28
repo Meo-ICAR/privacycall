@@ -12,6 +12,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Storage;
+use App\Models\User;
 
 class UnifiedEmailController extends Controller
 {
@@ -28,8 +29,18 @@ class UnifiedEmailController extends Controller
     public function dashboard(Company $company = null)
     {
         $user = Auth::user();
-        $company = $company ?? $user->company;
 
+        // If no company is specified, try to get user's company
+        if (!$company) {
+            $company = $user->company;
+        }
+
+        // If user is superadmin and has no company, show aggregated stats
+        if (!$company && $user->hasRole('superadmin')) {
+            return $this->showSuperadminDashboard();
+        }
+
+        // If user has no company and is not superadmin, redirect with error
         if (!$company) {
             return redirect()->route('dashboard')->with('error', 'No company associated with your account.');
         }
@@ -64,6 +75,63 @@ class UnifiedEmailController extends Controller
 
         return view('emails.unified-dashboard', compact(
             'company',
+            'stats',
+            'recentIncoming',
+            'recentOutgoing',
+            'templates',
+            'suppliers'
+        ));
+    }
+
+    /**
+     * Show superadmin dashboard with aggregated stats from all companies.
+     */
+    protected function showSuperadminDashboard()
+    {
+        // Get all companies with emails
+        $companies = Company::whereHas('emails')->withCount('emails')->orderBy('emails_count', 'desc')->limit(10)->get();
+
+        // Get aggregated stats
+        $totalEmails = CompanyEmail::count();
+        $totalUnread = CompanyEmail::where('status', 'unread')->count();
+        $totalGdprRelated = CompanyEmail::where('is_gdpr_related', true)->count();
+        $totalHighPriority = CompanyEmail::whereIn('priority', ['high', 'urgent'])->count();
+
+        $stats = [
+            'total' => $totalEmails,
+            'unread' => $totalUnread,
+            'gdpr_related' => $totalGdprRelated,
+            'high_priority' => $totalHighPriority,
+        ];
+
+        // Get recent emails from all companies
+        $recentIncoming = CompanyEmail::with('company')
+            ->orderBy('received_at', 'desc')
+            ->limit(5)
+            ->get();
+
+        $recentOutgoing = EmailLog::with('company')
+            ->orderBy('created_at', 'desc')
+            ->limit(5)
+            ->get();
+
+        // Get all active email templates
+        $templates = EmailTemplate::where('is_active', true)
+            ->with('company')
+            ->orderBy('name')
+            ->limit(10)
+            ->get();
+
+        // Get suppliers from companies with emails
+        $suppliers = Supplier::whereHas('company.emails')
+            ->whereNotNull('email')
+            ->with('company')
+            ->orderBy('name')
+            ->limit(10)
+            ->get();
+
+        return view('emails.unified-dashboard', compact(
+            'companies',
             'stats',
             'recentIncoming',
             'recentOutgoing',
@@ -154,6 +222,37 @@ class UnifiedEmailController extends Controller
         $user = Auth::user();
         $company = $company ?? $user->company;
 
+        // If superadmin is viewing an email and no company is specified,
+        // try to get company from the email itself
+        if (!$company && $user->hasRole('superadmin')) {
+            if ($type === 'incoming') {
+                $email = CompanyEmail::findOrFail($id);
+                $company = $email->company;
+            } else {
+                $email = EmailLog::findOrFail($id);
+                $company = $email->company;
+            }
+        }
+
+        // If still no company, redirect with error
+        if (!$company) {
+            return redirect()->route('dashboard')->with('error', 'No company associated with this email.');
+        }
+
+        // For superadmins, check if they want to impersonate the company admin
+        if ($user->hasRole('superadmin') && !session('impersonate_original_id')) {
+            $companyAdmin = $this->getCompanyAdmin($company);
+            if ($companyAdmin) {
+                // Store the email viewing context for potential impersonation
+                session([
+                    'email_viewing_company_id' => $company->id,
+                    'email_viewing_admin_id' => $companyAdmin->id,
+                    'email_viewing_admin_name' => $companyAdmin->name,
+                    'email_viewing_return_url' => request()->url()
+                ]);
+            }
+        }
+
         if ($type === 'incoming') {
             $email = CompanyEmail::where('company_id', $company->id)->findOrFail($id);
         } else {
@@ -161,6 +260,57 @@ class UnifiedEmailController extends Controller
         }
 
         return view('emails.unified-show', compact('email', 'type', 'company'));
+    }
+
+    /**
+     * Get the admin user for a company.
+     */
+    protected function getCompanyAdmin(Company $company)
+    {
+        return User::where('company_id', $company->id)
+            ->whereHas('roles', function ($query) {
+                $query->where('name', 'admin');
+            })
+            ->first();
+    }
+
+    /**
+     * Impersonate as company admin when viewing emails (superadmin only).
+     */
+    public function impersonateForEmail(Company $company)
+    {
+        $user = Auth::user();
+
+        if (!$user->hasRole('superadmin')) {
+            abort(403, 'Only superadmin can impersonate.');
+        }
+
+        $companyAdmin = $this->getCompanyAdmin($company);
+
+        if (!$companyAdmin) {
+            return back()->with('error', 'No admin found for this company.');
+        }
+
+        if ($companyAdmin->hasRole('superadmin')) {
+            return back()->with('error', 'Cannot impersonate another superadmin.');
+        }
+
+        // Store original user and start impersonation
+        session(['impersonate_original_id' => $user->id]);
+        Auth::login($companyAdmin);
+
+        // Get the return URL from session or default to unified email index
+        $returnUrl = session('email_viewing_return_url', route('emails.index', $company));
+
+        // Clear the email viewing session data
+        session()->forget([
+            'email_viewing_company_id',
+            'email_viewing_admin_id',
+            'email_viewing_admin_name',
+            'email_viewing_return_url'
+        ]);
+
+        return redirect($returnUrl)->with('success', 'Now impersonating ' . $companyAdmin->name . ' to view emails as company admin.');
     }
 
     /**
@@ -425,7 +575,20 @@ class UnifiedEmailController extends Controller
      */
     protected function getEmailStats(Company $company): array
     {
-        $incomingStats = $this->emailService->getEmailStats($company);
+        try {
+            $incomingStats = $this->emailService->getEmailStats($company);
+        } catch (\Exception $e) {
+            // Fallback to direct database queries if service fails
+            $incomingStats = [
+                'total' => CompanyEmail::where('company_id', $company->id)->count(),
+                'unread' => CompanyEmail::where('company_id', $company->id)->where('status', 'unread')->count(),
+                'read' => CompanyEmail::where('company_id', $company->id)->where('status', 'read')->count(),
+                'replied' => CompanyEmail::where('company_id', $company->id)->where('status', 'replied')->count(),
+                'gdpr_related' => CompanyEmail::where('company_id', $company->id)->where('is_gdpr_related', true)->count(),
+                'high_priority' => CompanyEmail::where('company_id', $company->id)->where('priority', 'high')->count(),
+                'urgent_priority' => CompanyEmail::where('company_id', $company->id)->where('priority', 'urgent')->count(),
+            ];
+        }
 
         $outgoingStats = [
             'total' => EmailLog::where('company_id', $company->id)->count(),
@@ -440,10 +603,10 @@ class UnifiedEmailController extends Controller
         return [
             'incoming' => $incomingStats,
             'outgoing' => $outgoingStats,
-            'total' => $incomingStats['total'] + $outgoingStats['total'],
-            'unread' => $incomingStats['unread'],
-            'gdpr_related' => $incomingStats['gdpr_related'],
-            'high_priority' => $incomingStats['high_priority'] + $incomingStats['urgent_priority'],
+            'total' => ($incomingStats['total'] ?? 0) + $outgoingStats['total'],
+            'unread' => $incomingStats['unread'] ?? 0,
+            'gdpr_related' => $incomingStats['gdpr_related'] ?? 0,
+            'high_priority' => ($incomingStats['high_priority'] ?? 0) + ($incomingStats['urgent_priority'] ?? 0),
         ];
     }
 

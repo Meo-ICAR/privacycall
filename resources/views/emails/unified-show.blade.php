@@ -5,6 +5,30 @@
 @section('content')
 <div class="container mx-auto px-4 py-8">
     <div class="max-w-4xl mx-auto">
+        <!-- Superadmin Impersonation Banner -->
+        @if(auth()->user()->hasRole('superadmin') && !session('impersonate_original_id') && session('email_viewing_admin_id'))
+            <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center">
+                        <i class="fas fa-user-secret text-blue-600 mr-3"></i>
+                        <div>
+                            <h3 class="text-sm font-medium text-blue-900">View as Company Admin</h3>
+                            <p class="text-sm text-blue-700">
+                                You can impersonate as <strong>{{ session('email_viewing_admin_name') }}</strong> to view emails from the company's perspective.
+                            </p>
+                        </div>
+                    </div>
+                    <form method="POST" action="{{ route('emails.impersonate', $company) }}" class="ml-4">
+                        @csrf
+                        <button type="submit" class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                            <i class="fas fa-user-secret mr-2"></i>
+                            Impersonate as Admin
+                        </button>
+                    </form>
+                </div>
+            </div>
+        @endif
+
         <div class="mb-6 flex items-center justify-between">
             <div>
                 <h1 class="text-2xl font-bold text-gray-900">

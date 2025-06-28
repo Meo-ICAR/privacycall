@@ -12,8 +12,8 @@ class SupplierTypeController extends Controller
      */
     public function index()
     {
-        $supplierTypes = SupplierType::all();
-        return view('supplier_types.index', compact('supplierTypes'));
+        $types = SupplierType::all();
+        return view('supplier_types.index', compact('types'));
     }
 
     /**

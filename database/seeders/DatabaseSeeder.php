@@ -147,6 +147,7 @@ class DatabaseSeeder extends Seeder
             EmployeeSeeder::class,
             CustomerSeeder::class,
             SupplierSeeder::class,
+            MandatorSeeder::class,
             ConsentRecordSeeder::class,
             DataProcessingActivitySeeder::class,
             TrainingSeeder::class,

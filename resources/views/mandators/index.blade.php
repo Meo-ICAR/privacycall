@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Representatives - PrivacyCall</title>
+    <title>Mandators - PrivacyCall</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 </head>
@@ -24,7 +24,7 @@
                     <a href="/" class="text-gray-600 hover:text-gray-900">Home</a>
                     <a href="/dashboard" class="text-gray-600 hover:text-gray-900">Dashboard</a>
                     <a href="/companies" class="text-gray-600 hover:text-gray-900">Companies</a>
-                    <a href="/representatives" class="text-blue-600 font-medium">Representatives</a>
+                    <a href="/mandators" class="text-blue-600 font-medium">Mandators</a>
                     <a href="/gdpr" class="text-gray-600 hover:text-gray-900">GDPR</a>
                 </div>
             </div>
@@ -36,18 +36,18 @@
         <!-- Header -->
         <div class="flex justify-between items-center mb-6">
             <div>
-                <h1 class="text-3xl font-bold text-gray-900">Representatives</h1>
-                <p class="text-gray-600 mt-2">Manage company representatives and their disclosure subscriptions</p>
+                <h1 class="text-3xl font-bold text-gray-900">Mandators</h1>
+                <p class="text-gray-600 mt-2">Manage company mandators and their disclosure subscriptions</p>
             </div>
-            <a href="{{ route('representatives.create') }}" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center">
+            <a href="{{ route('mandators.create') }}" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center">
                 <i class="fas fa-plus mr-2"></i>
-                Add Representative
+                Add Mandator
             </a>
         </div>
 
         <!-- Filters -->
         <div class="bg-white rounded-lg shadow p-6 mb-6">
-            <form method="GET" action="{{ route('representatives.index') }}" class="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <form method="GET" action="{{ route('mandators.index') }}" class="grid grid-cols-1 md:grid-cols-4 gap-4">
                 <div>
                     <label for="company_id" class="block text-sm font-medium text-gray-700 mb-1">Company</label>
                     <select name="company_id" id="company_id" class="w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
@@ -78,7 +78,7 @@
                         <i class="fas fa-search mr-2"></i>Filter
                     </button>
                     @if(request()->hasAny(['company_id', 'is_active', 'search']))
-                        <a href="{{ route('representatives.index') }}" class="ml-2 bg-gray-300 hover:bg-gray-400 text-gray-700 px-4 py-2 rounded-md">
+                        <a href="{{ route('mandators.index') }}" class="ml-2 bg-gray-300 hover:bg-gray-400 text-gray-700 px-4 py-2 rounded-md">
                             Clear
                         </a>
                     @endif
@@ -93,14 +93,14 @@
             </div>
         @endif
 
-        <!-- Representatives Table -->
+        <!-- Mandators Table -->
         <div class="bg-white rounded-lg shadow overflow-hidden">
             <div class="overflow-x-auto">
                 <table class="min-w-full divide-y divide-gray-200">
                     <thead class="bg-gray-50">
                         <tr>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Representative
+                                Mandator
                             </th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                 Position
@@ -120,70 +120,70 @@
                         </tr>
                     </thead>
                     <tbody class="bg-white divide-y divide-gray-200">
-                        @forelse($representatives as $representative)
+                        @forelse($mandators as $mandator)
                             <tr class="hover:bg-gray-50">
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     <div class="flex items-center">
                                         <div class="flex-shrink-0 h-10 w-10">
                                             <img class="h-10 w-10 rounded-full object-cover"
-                                                 src="{{ $representative->logo_url }}"
-                                                 alt="{{ $representative->full_name }}">
+                                                 src="{{ $mandator->logo_url }}"
+                                                 alt="{{ $mandator->full_name }}">
                                         </div>
                                         <div class="ml-4">
                                             <div class="text-sm font-medium text-gray-900">
-                                                {{ $representative->full_name }}
-                                                @if($representative->isClone())
+                                                {{ $mandator->full_name }}
+                                                @if($mandator->isClone())
                                                     <span class="ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-yellow-100 text-yellow-800">
                                                         <i class="fas fa-copy mr-1"></i>Clone
                                                     </span>
                                                 @endif
                                             </div>
-                                            <div class="text-sm text-gray-500">{{ $representative->email }}</div>
+                                            <div class="text-sm text-gray-500">{{ $mandator->email }}</div>
                                         </div>
                                     </div>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap">
-                                    <div class="text-sm text-gray-900">{{ $representative->position ?? 'N/A' }}</div>
-                                    <div class="text-sm text-gray-500">{{ $representative->department ?? 'N/A' }}</div>
+                                    <div class="text-sm text-gray-900">{{ $mandator->position ?? 'N/A' }}</div>
+                                    <div class="text-sm text-gray-500">{{ $mandator->department ?? 'N/A' }}</div>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap">
-                                    <div class="text-sm text-gray-900">{{ $representative->company->name }}</div>
-                                    @if($representative->isClone())
+                                    <div class="text-sm text-gray-900">{{ $mandator->company->name }}</div>
+                                    @if($mandator->isClone())
                                         <div class="text-xs text-gray-500">
-                                            Cloned from: {{ $representative->original->full_name }}
+                                            Cloned from: {{ $mandator->original->full_name }}
                                         </div>
                                     @endif
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full
-                                        {{ $representative->is_active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800' }}">
-                                        {{ $representative->is_active ? 'Active' : 'Inactive' }}
+                                        {{ $mandator->is_active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800' }}">
+                                        {{ $mandator->is_active ? 'Active' : 'Inactive' }}
                                     </span>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                    {{ $representative->disclosure_subscriptions ? count($representative->disclosure_subscriptions) : 0 }} subscriptions
+                                    {{ $mandator->disclosure_subscriptions ? count($mandator->disclosure_subscriptions) : 0 }} subscriptions
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                     <div class="flex items-center justify-end space-x-2">
                                         @if(Auth::user()->role === 'superadmin')
-                                            <a href="{{ route('representatives.clone-form', $representative) }}"
+                                            <a href="{{ route('mandators.clone-form', $mandator) }}"
                                                class="text-green-600 hover:text-green-900"
                                                title="Clone to another company">
                                                 <i class="fas fa-copy"></i>
                                             </a>
                                         @endif
-                                        <a href="{{ route('representatives.show', $representative) }}"
+                                        <a href="{{ route('mandators.show', $mandator) }}"
                                            class="text-blue-600 hover:text-blue-900">
                                             View
                                         </a>
-                                        <a href="{{ route('representatives.edit', $representative) }}"
+                                        <a href="{{ route('mandators.edit', $mandator) }}"
                                            class="text-indigo-600 hover:text-indigo-900">
                                             Edit
                                         </a>
-                                        <form action="{{ route('representatives.destroy', $representative) }}"
+                                        <form action="{{ route('mandators.destroy', $mandator) }}"
                                               method="POST"
                                               class="inline"
-                                              onsubmit="return confirm('Are you sure you want to delete this representative?')">
+                                              onsubmit="return confirm('Are you sure you want to delete this mandator?')">
                                             @csrf
                                             @method('DELETE')
                                             <button type="submit"
@@ -197,21 +197,24 @@
                         @empty
                             <tr>
                                 <td colspan="6" class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
-                                    No representatives found.
+                                    No mandators found.
+                                    <a href="{{ route('mandators.create') }}" class="text-blue-600 hover:text-blue-800 mt-2">
+                                        Add your first mandator
+                                    </a>
                                 </td>
                             </tr>
                         @endforelse
                     </tbody>
                 </table>
             </div>
-
-            <!-- Pagination -->
-            @if($representatives->hasPages())
-                <div class="bg-white px-4 py-3 border-t border-gray-200 sm:px-6">
-                    {{ $representatives->links() }}
-                </div>
-            @endif
         </div>
+
+        <!-- Pagination -->
+        @if($mandators->hasPages())
+            <div class="mt-6">
+                {{ $mandators->links() }}
+            </div>
+        @endif
     </div>
 
     <script>

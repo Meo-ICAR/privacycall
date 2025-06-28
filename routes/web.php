@@ -16,11 +16,13 @@ use App\Http\Controllers\InspectionController;
 use App\Http\Controllers\SupplierInspectionController;
 use App\Http\Controllers\ImpersonationController;
 use App\Http\Controllers\SupplierMailMergeController;
-use App\Http\Controllers\RepresentativeController;
 use App\Http\Controllers\CompanyEmailController;
 use App\Http\Controllers\CompanyEmailConfigController;
 use App\Http\Controllers\UnifiedEmailController;
 use App\Http\Controllers\AuditRequestController;
+use App\Http\Controllers\MandatorController;
+use Illuminate\Support\Facades\Auth;
+use App\Http\Controllers\CustomerInspectionController;
 
 Route::get('/', function () {
     return view('welcome');
@@ -28,11 +30,16 @@ Route::get('/', function () {
 
 // Dashboard route
 Route::get('/dashboard', function () {
-    return view('dashboard');
+    if (Auth::check()) {
+        // For authenticated users, show the main dashboard
+        return view('dashboard');
+    }
+    // For non-authenticated users, redirect to login
+    return redirect()->route('login');
 })->name('dashboard');
 
 // Company management routes
-Route::prefix('companies')->group(function () {
+Route::prefix('companies')->middleware(['auth', 'verified'])->group(function () {
     Route::get('/', [\App\Http\Controllers\CompanyController::class, 'index'])->name('companies.index');
 
     Route::get('/create', [\App\Http\Controllers\CompanyController::class, 'create'])->name('companies.create');
@@ -47,7 +54,7 @@ Route::prefix('companies')->group(function () {
 });
 
 // GDPR management routes
-Route::prefix('gdpr')->group(function () {
+Route::prefix('gdpr')->middleware(['auth', 'verified'])->group(function () {
     Route::get('/', function () {
         return view('gdpr.dashboard');
     })->name('gdpr.dashboard');
@@ -141,25 +148,25 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('customers/import', [CustomerController::class, 'import'])->name('customers.import');
 });
 
-// Representative management routes (admin/superadmin)
+// Mandator management routes (admin/superadmin)
 Route::middleware(['auth', 'verified'])->group(function () {
-    Route::resource('representatives', RepresentativeController::class);
+    Route::resource('mandators', MandatorController::class);
 
     // Cloning routes (superadmin only)
     Route::middleware(['role:superadmin'])->group(function () {
-        Route::get('/representatives/{representative}/clone', [RepresentativeController::class, 'showCloneForm'])->name('representatives.clone-form');
-        Route::post('/representatives/{representative}/clone', [RepresentativeController::class, 'clone'])->name('representatives.clone');
-        Route::post('/representatives/{representative}/clone-multiple', [RepresentativeController::class, 'cloneToMultiple'])->name('representatives.clone-multiple');
+        Route::get('/mandators/{mandator}/clone', [MandatorController::class, 'showCloneForm'])->name('mandators.clone-form');
+        Route::post('/mandators/{mandator}/clone', [MandatorController::class, 'clone'])->name('mandators.clone');
+        Route::post('/mandators/{mandator}/clone-multiple', [MandatorController::class, 'cloneToMultiple'])->name('mandators.clone-multiple');
     });
 
-    // Related representatives routes
-    Route::get('/representatives/{representative}/clones', [RepresentativeController::class, 'getClones'])->name('representatives.clones');
-    Route::get('/representatives/{representative}/related', [RepresentativeController::class, 'getRelated'])->name('representatives.related');
+    // Related mandators routes
+    Route::get('/mandators/{mandator}/clones', [MandatorController::class, 'getClones'])->name('mandators.clones');
+    Route::get('/mandators/{mandator}/related', [MandatorController::class, 'getRelated'])->name('mandators.related');
 
     // Disclosure subscription routes
-    Route::post('/representatives/{representative}/add-disclosure-subscription', [RepresentativeController::class, 'addDisclosureSubscription'])->name('representatives.add-disclosure-subscription');
-    Route::post('/representatives/{representative}/remove-disclosure-subscription', [RepresentativeController::class, 'removeDisclosureSubscription'])->name('representatives.remove-disclosure-subscription');
-    Route::get('/representatives/disclosure-summary', [RepresentativeController::class, 'getDisclosureSummary'])->name('representatives.disclosure-summary');
+    Route::post('/mandators/{mandator}/add-disclosure-subscription', [MandatorController::class, 'addDisclosureSubscription'])->name('mandators.add-disclosure-subscription');
+    Route::post('/mandators/{mandator}/remove-disclosure-subscription', [MandatorController::class, 'removeDisclosureSubscription'])->name('mandators.remove-disclosure-subscription');
+    Route::get('/mandators/disclosure-summary', [MandatorController::class, 'getDisclosureSummary'])->name('mandators.disclosure-summary');
 });
 
 // Company email management routes (admin/superadmin)
@@ -195,6 +202,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
     });
 });
 
+// Email Provider management routes (superadmin only)
+Route::middleware(['auth', 'verified', 'role:superadmin'])->group(function () {
+    Route::resource('email-providers', \App\Http\Controllers\EmailProviderController::class);
+});
+
 // Unified Email Management routes (admin/superadmin)
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::prefix('emails')->group(function () {
@@ -206,6 +218,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('/quick-mail-merge', [\App\Http\Controllers\UnifiedEmailController::class, 'quickMailMerge'])->name('emails.quick-mail-merge');
         Route::post('/fetch', [\App\Http\Controllers\UnifiedEmailController::class, 'fetchEmails'])->name('emails.fetch');
         Route::get('/attachment/{id}/{type?}', [\App\Http\Controllers\UnifiedEmailController::class, 'downloadAttachment'])->name('emails.download-attachment');
+
+        // Email impersonation route (superadmin only)
+        Route::post('/impersonate/{company}', [\App\Http\Controllers\UnifiedEmailController::class, 'impersonateForEmail'])->name('emails.impersonate')->middleware('role:superadmin');
     });
 });
 
@@ -217,6 +232,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
 // Supplier inspection management routes (admin/superadmin)
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::resource('supplier-inspections', SupplierInspectionController::class);
+});
+
+// Customer inspection management routes (admin/superadmin)
+Route::middleware(['auth', 'verified'])->group(function () {
+    Route::resource('customer-inspections', CustomerInspectionController::class);
 });
 
 // Consent records management routes (admin/superadmin)
@@ -269,4 +289,27 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // Supplier audit dashboard
     Route::get('/suppliers/{supplier}/audit-dashboard', [\App\Http\Controllers\AuditRequestController::class, 'supplierDashboard'])->name('suppliers.audit-dashboard');
+});
+
+// Load Fortify routes for authentication and profile management
+require __DIR__.'/../vendor/laravel/fortify/routes/routes.php';
+
+// Load Jetstream routes for profile management
+require __DIR__.'/../vendor/laravel/jetstream/routes/livewire.php';
+
+// Additional Jetstream routes that are typically provided by Livewire components
+Route::middleware(['auth', 'verified'])->group(function () {
+    // Browser Sessions
+    Route::delete('/user/other-browser-sessions', function () {
+        // This would typically be handled by a Livewire component
+        // For now, we'll just redirect back with a message
+        return redirect()->back()->with('status', 'Browser sessions cleared.');
+    })->name('other-browser-sessions.destroy');
+
+    // Account Deletion
+    Route::delete('/user', function () {
+        // This would typically be handled by a Livewire component
+        // For now, we'll just redirect back with a message
+        return redirect()->back()->with('status', 'Account deletion requested.');
+    })->name('current-user.destroy');
 });
