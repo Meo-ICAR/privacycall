@@ -302,7 +302,7 @@
                             <i class="fas fa-shield-alt text-blue-600 mr-2"></i>
                             GDPR Compliance
                         </h4>
-                        
+
                         <!-- GDPR Status Summary -->
                         <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
                             <h5 class="text-sm font-medium text-blue-900 mb-3">GDPR Status Summary</h5>
