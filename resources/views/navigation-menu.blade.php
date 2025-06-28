@@ -48,6 +48,9 @@
                                     <x-dropdown-link href="{{ route('suppliers.index') }}" :active="request()->routeIs('suppliers.index')">
                                         {{ __('Suppliers') }}
                                     </x-dropdown-link>
+                                    <x-dropdown-link href="{{ route('representatives.index') }}" :active="request()->routeIs('representatives.index')">
+                                        {{ __('Representatives') }}
+                                    </x-dropdown-link>
                                     <x-dropdown-link href="{{ route('holdings.index') }}" :active="request()->routeIs('holdings.index')">
                                         {{ __('Holdings') }}
                                     </x-dropdown-link>
@@ -287,6 +290,9 @@
                 </x-responsive-nav-link>
                 <x-responsive-nav-link href="{{ route('suppliers.index') }}" :active="request()->routeIs('suppliers.index')">
                     {{ __('Suppliers') }}
+                </x-responsive-nav-link>
+                <x-responsive-nav-link href="{{ route('representatives.index') }}" :active="request()->routeIs('representatives.index')">
+                    {{ __('Representatives') }}
                 </x-responsive-nav-link>
                 <x-responsive-nav-link href="{{ route('holdings.index') }}" :active="request()->routeIs('holdings.index')">
                     {{ __('Holdings') }}

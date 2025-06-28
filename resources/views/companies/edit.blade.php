@@ -46,6 +46,20 @@
                     @enderror
                 </div>
 
+                <!-- Administrator Signature -->
+                <div>
+                    <label for="signature" class="block text-sm font-medium text-gray-700">Administrator Signature</label>
+                    <input type="file" name="signature" id="signature" accept="image/*" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                    @if($company->signature)
+                        <div class="mt-2">
+                            <img src="{{ $company->signature }}" alt="Current Signature" class="h-32 w-auto object-contain rounded border border-gray-200">
+                        </div>
+                    @endif
+                    @error('signature')
+                        <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                    @enderror
+                </div>
+
                 <!-- Basic Information -->
                 <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
                     <div>

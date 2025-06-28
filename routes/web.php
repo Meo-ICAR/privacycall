@@ -16,6 +16,7 @@ use App\Http\Controllers\InspectionController;
 use App\Http\Controllers\SupplierInspectionController;
 use App\Http\Controllers\ImpersonationController;
 use App\Http\Controllers\SupplierMailMergeController;
+use App\Http\Controllers\RepresentativeController;
 
 Route::get('/', function () {
     return view('welcome');
@@ -134,6 +135,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::delete('customers/{customer}', [CustomerController::class, 'destroy'])->name('customers.destroy');
     Route::get('customers/export', [CustomerController::class, 'export'])->name('customers.export');
     Route::post('customers/import', [CustomerController::class, 'import'])->name('customers.import');
+});
+
+// Representative management routes (admin/superadmin)
+Route::middleware(['auth', 'verified'])->group(function () {
+    Route::resource('representatives', RepresentativeController::class);
 });
 
 // Inspection management routes (admin/superadmin)

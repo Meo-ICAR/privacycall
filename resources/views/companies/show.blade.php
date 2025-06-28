@@ -183,6 +183,16 @@
             </div>
             @endif
 
+            <!-- Administrator Signature -->
+            @if($company->signature)
+            <div class="bg-white shadow rounded-lg">
+                <div class="px-4 py-5 sm:p-6">
+                    <h3 class="text-lg font-medium text-gray-900 mb-4">Administrator Signature</h3>
+                    <img src="{{ $company->signature }}" alt="Administrator Signature" class="w-full h-auto object-contain rounded border border-gray-200">
+                </div>
+            </div>
+            @endif
+
             <!-- Holding Information -->
             @if($company->holding)
             <div class="bg-white shadow rounded-lg">
@@ -286,6 +296,14 @@
                         <a href="{{ route('suppliers.create', ['company_id' => $company->id]) }}" class="w-full inline-flex items-center justify-center px-4 py-2 border border-purple-300 text-sm font-medium rounded-md text-purple-700 bg-white hover:bg-purple-50">
                             <i class="fas fa-truck mr-2"></i>
                             Add Supplier
+                        </a>
+                        @endif
+
+                        <!-- Add Representative -->
+                        @if(auth()->check() && (auth()->user()->hasRole('admin') || auth()->user()->hasRole('superadmin')))
+                        <a href="{{ route('representatives.create', ['company_id' => $company->id]) }}" class="w-full inline-flex items-center justify-center px-4 py-2 border border-purple-300 text-sm font-medium rounded-md text-purple-700 bg-white hover:bg-purple-50">
+                            <i class="fas fa-user-shield mr-2"></i>
+                            Add Representative
                         </a>
                         @endif
 

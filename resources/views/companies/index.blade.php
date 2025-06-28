@@ -74,7 +74,6 @@
                                 <thead class="bg-gray-50">
                                     <tr>
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Legal Name</th>
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Holding</th>
@@ -85,7 +84,6 @@
                                     @foreach($companies as $company)
                                         <tr>
                                             <td class="px-6 py-4 whitespace-nowrap">{{ $company->name }}</td>
-                                            <td class="px-6 py-4 whitespace-nowrap">{{ $company->legal_name }}</td>
                                             <td class="px-6 py-4 whitespace-nowrap">{{ $company->email }}</td>
                                             <td class="px-6 py-4 whitespace-nowrap">{{ ucfirst($company->company_type) }}</td>
                                             <td class="px-6 py-4 whitespace-nowrap">{{ $company->holding ? $company->holding->name : '-' }}</td>

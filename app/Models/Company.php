@@ -30,6 +30,7 @@ class Company extends Model
         'postal_code',
         'country',
         'phone',
+        'signature',
         'email',
         'website',
         'company_type', // employer, customer, supplier
@@ -118,6 +119,14 @@ class Company extends Model
     public function consentRecords(): HasMany
     {
         return $this->hasMany(ConsentRecord::class);
+    }
+
+    /**
+     * Get the representatives associated with this company.
+     */
+    public function representatives(): HasMany
+    {
+        return $this->hasMany(Representative::class);
     }
 
     /**

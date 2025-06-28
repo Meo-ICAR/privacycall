@@ -49,6 +49,18 @@
                     @enderror
                 </div>
 
+                <!-- Administrator Signature -->
+                <div>
+                    <label for="signature" class="block text-sm font-medium text-gray-700">Administrator Signature</label>
+                    <input type="file" name="signature" id="signature" accept="image/*" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                    <div class="mt-2">
+                        <img id="signaturePreview" src="#" alt="Signature Preview" class="h-32 w-auto object-contain rounded border border-gray-200 hidden" />
+                    </div>
+                    @error('signature')
+                        <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                    @enderror
+                </div>
+
                 <!-- Basic Information -->
                 <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
                     <div>
@@ -200,6 +212,21 @@
         } else {
             logoPreview.src = '#';
             logoPreview.classList.add('hidden');
+        }
+    });
+
+    // Signature preview functionality
+    const signatureInput = document.getElementById('signature');
+    const signaturePreview = document.getElementById('signaturePreview');
+
+    signatureInput.addEventListener('change', function(e) {
+        const [file] = signatureInput.files;
+        if (file) {
+            signaturePreview.src = URL.createObjectURL(file);
+            signaturePreview.classList.remove('hidden');
+        } else {
+            signaturePreview.src = '#';
+            signaturePreview.classList.add('hidden');
         }
     });
 </script>

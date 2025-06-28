@@ -68,6 +68,7 @@ class CompanyController extends Controller
                 'gdpr_compliant' => 'nullable|boolean',
                 'data_retention_policy' => 'nullable|string',
                 'logo' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
+                'signature' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
                 'holding_id' => 'nullable|exists:holdings,id',
             ]);
 
@@ -115,6 +116,18 @@ class CompanyController extends Controller
                 })->encode();
                 Storage::disk('public')->put($filename, $resized);
                 $companyData['logo_url'] = Storage::url($filename);
+            }
+
+            // Handle signature upload
+            if ($request->hasFile('signature')) {
+                $image = $request->file('signature');
+                $filename = 'company_signatures/' . uniqid('signature_') . '.' . $image->getClientOriginalExtension();
+                $resized = Image::make($image)->resize(400, 200, function ($constraint) {
+                    $constraint->aspectRatio();
+                    $constraint->upsize();
+                })->encode();
+                Storage::disk('public')->put($filename, $resized);
+                $companyData['signature'] = Storage::url($filename);
             }
 
             $company = Company::create($companyData);
@@ -225,6 +238,7 @@ class CompanyController extends Controller
                 'data_controller_contact' => 'nullable|string|max:255',
                 'data_protection_officer' => 'nullable|string|max:255',
                 'logo' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
+                'signature' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
                 'holding_id' => 'nullable|exists:holdings,id',
             ]);
 
@@ -251,6 +265,18 @@ class CompanyController extends Controller
                 })->encode();
                 Storage::disk('public')->put($filename, $resized);
                 $data['logo_url'] = Storage::url($filename);
+            }
+
+            // Handle signature upload
+            if ($request->hasFile('signature')) {
+                $image = $request->file('signature');
+                $filename = 'company_signatures/' . uniqid('signature_') . '.' . $image->getClientOriginalExtension();
+                $resized = Image::make($image)->resize(400, 200, function ($constraint) {
+                    $constraint->aspectRatio();
+                    $constraint->upsize();
+                })->encode();
+                Storage::disk('public')->put($filename, $resized);
+                $data['signature'] = Storage::url($filename);
             }
 
             $company->update($data);

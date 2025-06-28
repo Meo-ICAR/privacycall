@@ -4,6 +4,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\CompanyController;
 use App\Http\Controllers\GdprController;
+use App\Http\Controllers\RepresentativeController;
 
 /*
 |--------------------------------------------------------------------------
@@ -31,6 +32,24 @@ Route::prefix('v1')->group(function () {
         Route::put('/{company}', [CompanyController::class, 'update']);
         Route::delete('/{company}', [CompanyController::class, 'destroy']);
         Route::get('/{company}/gdpr-status', [CompanyController::class, 'gdprStatus']);
+    });
+
+    // Representative Management Routes
+    Route::prefix('representatives')->group(function () {
+        Route::get('/', [RepresentativeController::class, 'index']);
+        Route::post('/', [RepresentativeController::class, 'store']);
+        Route::get('/{representative}', [RepresentativeController::class, 'show']);
+        Route::put('/{representative}', [RepresentativeController::class, 'update']);
+        Route::delete('/{representative}', [RepresentativeController::class, 'destroy']);
+
+        // Disclosure subscription management
+        Route::post('/{representative}/add-disclosure-subscription', [RepresentativeController::class, 'addDisclosureSubscription']);
+        Route::post('/{representative}/remove-disclosure-subscription', [RepresentativeController::class, 'removeDisclosureSubscription']);
+        Route::post('/{representative}/update-last-disclosure-date', [RepresentativeController::class, 'updateLastDisclosureDate']);
+
+        // Company-specific routes
+        Route::get('/company/{company}', [RepresentativeController::class, 'getByCompany']);
+        Route::get('/disclosure-summary', [RepresentativeController::class, 'getDisclosureSummary']);
     });
 
     // GDPR Data Subject Rights Routes
