@@ -160,6 +160,7 @@ class DatabaseSeeder extends Seeder
             SupplierInspectionSeeder::class,
             CustomerInspectionSeeder::class,
             UserSeeder::class,
+            EmailTemplateSeeder::class,
         ]);
     }
 }

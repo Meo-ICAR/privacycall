@@ -11,8 +11,16 @@
                     @php
                         $company = Auth::user()->company ?? null;
                     @endphp
-                    @if($company && $company->logo_url)
-                        <img src="{{ $company->logo_url }}" alt="Company Logo" class="h-9 w-9 object-contain ml-4 rounded shadow border border-gray-200" />
+                    @if($company)
+                        @if($company->logo_url)
+                            <img src="{{ $company->logo_url }}" alt="Company Logo" class="h-9 w-9 object-contain ml-4 rounded shadow border border-gray-200" />
+                        @else
+                            <div class="h-9 w-auto px-3 ml-4 rounded shadow border border-gray-200 bg-blue-100 flex items-center justify-center">
+                                <span class="text-sm font-medium text-blue-800 truncate max-w-24">
+                                    {{ Str::limit($company->name, 10) }}
+                                </span>
+                            </div>
+                        @endif
                     @endif
                 </div>
 
@@ -28,7 +36,7 @@
                             {{ __('Holdings') }}
                         </x-nav-link>
                         <x-nav-link href="{{ route('companies.index') }}" :active="request()->routeIs('companies.index')">
-                                        {{ __('Companies') }}
+                            {{ __('Companies') }}
                         </x-nav-link>
                         <x-nav-link href="{{ route('emails.dashboard') }}" :active="request()->routeIs('emails.dashboard')">
                             {{ __('Email Dashboard') }}
@@ -64,6 +72,9 @@
                                     </x-dropdown-link>
                                     <x-dropdown-link href="{{ route('email-providers.index') }}" :active="request()->routeIs('email-providers.*')">
                                         {{ __('Email Providers') }}
+                                    </x-dropdown-link>
+                                    <x-dropdown-link href="{{ route('email-templates.index') }}" :active="request()->routeIs('email-templates.*')">
+                                        {{ __('Email Templates') }}
                                     </x-dropdown-link>
                                 </x-slot>
                             </x-dropdown>
@@ -407,6 +418,9 @@
                 @endrole
 
                 @role('superadmin')
+                    <x-responsive-nav-link href="{{ route('email-templates.index') }}" :active="request()->routeIs('email-templates.*')">
+                        <i class="fas fa-envelope mr-2"></i>{{ __('Email Templates') }}
+                    </x-responsive-nav-link>
                     <x-responsive-nav-link href="{{ route('companies.index') }}" :active="request()->routeIs('companies.index')">
                         <i class="fas fa-building mr-2"></i>{{ __('Companies') }}
                     </x-responsive-nav-link>
@@ -442,6 +456,9 @@
                 </x-responsive-nav-link>
                 <x-responsive-nav-link href="{{ route('supplier-types.index') }}" :active="request()->routeIs('supplier-types.index')">
                     {{ __('Supplier Types') }}
+                </x-responsive-nav-link>
+                <x-responsive-nav-link href="{{ route('email-providers.index') }}" :active="request()->routeIs('email-providers.*')">
+                    {{ __('Email Providers') }}
                 </x-responsive-nav-link>
             @endif
         </div>

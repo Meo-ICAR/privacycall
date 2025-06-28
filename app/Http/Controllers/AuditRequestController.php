@@ -85,7 +85,7 @@ class AuditRequestController extends Controller
 
         $suppliers = Supplier::where('company_id', $company->id)->get();
         $auditors = User::where('company_id', $company->id)
-            ->whereIn('role', ['admin', 'representative'])
+            ->role(['admin', 'mandator'])
             ->get();
 
         return view('audit-requests.index', compact('auditRequests', 'stats', 'suppliers', 'auditors', 'company'));
@@ -101,7 +101,7 @@ class AuditRequestController extends Controller
 
         $suppliers = Supplier::where('company_id', $company->id)->get();
         $auditors = User::where('company_id', $company->id)
-            ->whereIn('role', ['admin', 'representative'])
+            ->role(['admin', 'mandator'])
             ->get();
         $templates = EmailTemplate::where('company_id', $company->id)
             ->where('category', 'audit')
@@ -212,7 +212,7 @@ class AuditRequestController extends Controller
 
         $suppliers = Supplier::where('company_id', $auditRequest->company_id)->get();
         $auditors = User::where('company_id', $auditRequest->company_id)
-            ->whereIn('role', ['admin', 'representative'])
+            ->role(['admin', 'mandator'])
             ->get();
 
         return view('audit-requests.edit', compact('auditRequest', 'suppliers', 'auditors'));

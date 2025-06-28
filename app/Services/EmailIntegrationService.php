@@ -481,6 +481,15 @@ class EmailIntegrationService
             }
             $connectionString .= "}INBOX";
 
+            // Check if IMAP extension is available
+            if (!function_exists('imap_open')) {
+                return ['success' => false, 'error' => 'IMAP extension is not available. Please install php-imap extension.'];
+            }
+
+            if (!function_exists('imap_errors') || !function_exists('imap_mailboxmsginfo') || !function_exists('imap_close')) {
+                return ['success' => false, 'error' => 'Required IMAP functions are not available. Please check php-imap extension installation.'];
+            }
+
             // Test connection using PHP's imap functions
             $connection = @imap_open($connectionString, $username, $password, 0, 1);
 

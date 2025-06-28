@@ -30,8 +30,8 @@ class ImpersonationController extends Controller
         if ($originalId) {
             Auth::loginUsingId($originalId);
             session()->forget('impersonate_original_id');
-            return redirect('/')->with('success', 'Stopped impersonating.');
+            return redirect()->route('roles.permissions.index')->with('success', 'Stopped impersonating.');
         }
-        return redirect('/')->with('error', 'Not impersonating anyone.');
+        return redirect()->route('roles.permissions.index')->with('error', 'Not impersonating anyone.');
     }
 }

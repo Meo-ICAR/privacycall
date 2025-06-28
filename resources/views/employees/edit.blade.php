@@ -114,25 +114,6 @@
                     </div>
                 </div>
 
-                <!-- Company Information -->
-                <div class="border-b border-gray-200 pb-6">
-                    <h3 class="text-lg font-medium text-gray-900 mb-4">Company Information</h3>
-                    <div>
-                        <label for="company_id" class="block text-sm font-medium text-gray-700">Company *</label>
-                        <select name="company_id" id="company_id" required class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
-                            <option value="">Select Company</option>
-                            @foreach($companies as $company)
-                                <option value="{{ $company->id }}" {{ old('company_id', $employee->company_id) == $company->id ? 'selected' : '' }}>
-                                    {{ $company->name }}
-                                </option>
-                            @endforeach
-                        </select>
-                        @error('company_id')
-                            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                        @enderror
-                    </div>
-                </div>
-
                 <!-- Additional Information -->
                 <div class="border-b border-gray-200 pb-6">
                     <h3 class="text-lg font-medium text-gray-900 mb-4">Additional Information</h3>

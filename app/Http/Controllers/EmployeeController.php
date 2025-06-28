@@ -14,7 +14,29 @@ class EmployeeController extends Controller
     public function index()
     {
         $user = Auth::user();
+
+        // Debug information
+        \Log::info('EmployeeController index called', [
+            'user_id' => $user->id,
+            'user_email' => $user->email,
+            'company_id' => $user->company_id,
+            'is_impersonating' => session('impersonate_original_id') ? true : false,
+            'impersonate_original_id' => session('impersonate_original_id')
+        ]);
+
+        // Ensure user has a company_id
+        if (!$user->company_id) {
+            \Log::warning('User has no company_id', ['user_id' => $user->id]);
+            return redirect()->back()->with('error', 'Your account is not associated with any company.');
+        }
+
         $employees = Employee::where('company_id', $user->company_id)->get();
+
+        \Log::info('Employees found', [
+            'company_id' => $user->company_id,
+            'employee_count' => $employees->count()
+        ]);
+
         return view('employees.index', compact('employees'));
     }
 

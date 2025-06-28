@@ -121,12 +121,35 @@
                         </label>
                         <input type="password" id="password" name="password"
                                value="{{ old('password') }}"
-                               class="form-input w-full">
-                        <p class="text-gray-500 text-sm mt-1">Your email password or app password</p>
+                               class="form-input w-full"
+                               placeholder="{{ $company->hasEmailConfigured() ? 'Leave blank to keep current password' : 'Your email password or app password' }}">
+                        <p class="text-gray-500 text-sm mt-1">
+                            @if($company->hasEmailConfigured())
+                                Leave blank to keep the current password, or enter a new password to update it.
+                            @else
+                                Your email password or app password
+                            @endif
+                        </p>
                         @error('password')
                         <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
                         @enderror
                     </div>
+
+                    <!-- Show Password for Existing Config -->
+                    @if($company->hasEmailConfigured() && $company->emailProvider && !$company->emailProvider->usesOAuth())
+                    <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                        <div class="flex items-start">
+                            <i class="fas fa-info-circle text-blue-500 mt-1 mr-3"></i>
+                            <div>
+                                <h4 class="font-medium text-blue-800">Current Password</h4>
+                                <p class="text-blue-700 text-sm mt-1">
+                                    A password is currently configured for this email account.
+                                    You can update it using the password field above, or leave it blank to keep the current password.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    @endif
 
                     <!-- OAuth Authentication -->
                     <div id="oauthAuth" class="hidden">
@@ -321,9 +344,30 @@ document.addEventListener('DOMContentLoaded', function() {
         const isOAuth = selectedOption.dataset.oauth === '1';
         const isCustom = selectedOption.dataset.provider === 'custom';
 
-        // Show provider info
+        // Show authentication method immediately based on data attributes
+        if (isOAuth) {
+            oauthAuth.classList.remove('hidden');
+            passwordAuth.classList.add('hidden');
+        } else {
+            passwordAuth.classList.remove('hidden');
+            oauthAuth.classList.add('hidden');
+        }
+
+        // Show custom settings
+        if (isCustom) {
+            customSettings.classList.remove('hidden');
+        } else {
+            customSettings.classList.add('hidden');
+        }
+
+        // Show provider info via AJAX (but don't block on failure)
         fetch(`/email-providers/${providerId}/config`)
-            .then(response => response.json())
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Provider config not available');
+                }
+                return response.json();
+            })
             .then(data => {
                 providerName.textContent = data.provider.display_name;
                 providerDescription.textContent = data.provider.description;
@@ -350,27 +394,34 @@ document.addEventListener('DOMContentLoaded', function() {
                 } else {
                     setupInstructions.classList.add('hidden');
                 }
+            })
+            .catch(error => {
+                // If AJAX fails, still show basic provider info
+                providerName.textContent = providerNameValue;
+                providerDescription.textContent = 'Provider information not available';
+                providerCapabilities.innerHTML = `
+                    <div class="flex flex-wrap gap-2 mt-2">
+                        <span class="px-2 py-1 bg-gray-100 text-gray-800 text-xs rounded">Basic</span>
+                    </div>
+                `;
+                providerInfo.classList.remove('hidden');
+                setupInstructions.classList.add('hidden');
             });
-
-        // Show authentication method
-        if (isOAuth) {
-            oauthAuth.classList.remove('hidden');
-            passwordAuth.classList.add('hidden');
-        } else {
-            passwordAuth.classList.remove('hidden');
-            oauthAuth.classList.add('hidden');
-        }
-
-        // Show custom settings
-        if (isCustom) {
-            customSettings.classList.remove('hidden');
-        } else {
-            customSettings.classList.add('hidden');
-        }
     }
 
     providerSelect.addEventListener('change', updateProviderInfo);
+
+    // Initialize on page load
     updateProviderInfo();
+
+    // Also check if there's a pre-selected provider and show password field if needed
+    const selectedOption = providerSelect.options[providerSelect.selectedIndex];
+    if (selectedOption && selectedOption.value) {
+        const isOAuth = selectedOption.dataset.oauth === '1';
+        if (!isOAuth) {
+            passwordAuth.classList.remove('hidden');
+        }
+    }
 
     // Test connection
     testConnectionBtn.addEventListener('click', function() {

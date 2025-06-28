@@ -207,6 +207,11 @@ Route::middleware(['auth', 'verified', 'role:superadmin'])->group(function () {
     Route::resource('email-providers', \App\Http\Controllers\EmailProviderController::class);
 });
 
+// Email Templates management routes
+Route::middleware(['auth', 'verified'])->group(function () {
+    Route::resource('email-templates', \App\Http\Controllers\EmailTemplateController::class);
+});
+
 // Unified Email Management routes (admin/superadmin)
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::prefix('emails')->group(function () {
@@ -312,4 +317,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
         // For now, we'll just redirect back with a message
         return redirect()->back()->with('status', 'Account deletion requested.');
     })->name('current-user.destroy');
+});
+
+// Temporary debug route for impersonate stop
+Route::get('/impersonate/stop', function () {
+    return 'Impersonate stop GET route hit';
 });

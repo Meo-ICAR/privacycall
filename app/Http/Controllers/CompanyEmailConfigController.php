@@ -82,7 +82,15 @@ class CompanyEmailConfigController extends Controller
                 $credentials['oauth_token'] = $request->oauth_token;
                 $credentials['oauth_refresh_token'] = $request->oauth_refresh_token;
             } else {
-                $credentials['password'] = $request->password;
+                // Handle password - if blank and company has existing config, keep current password
+                if (empty($request->password) && $company->hasEmailConfigured() && $company->email_credentials) {
+                    $existingCredentials = $company->email_credentials;
+                    if (isset($existingCredentials['password'])) {
+                        $credentials['password'] = $existingCredentials['password'];
+                    }
+                } else {
+                    $credentials['password'] = $request->password;
+                }
             }
 
             // Add custom settings if provider is custom
@@ -149,7 +157,15 @@ class CompanyEmailConfigController extends Controller
         if ($provider->usesOAuth()) {
             $credentials['oauth_token'] = $request->oauth_token;
         } else {
-            $credentials['password'] = $request->password;
+            // Handle password - if blank and company has existing config, use current password for testing
+            if (empty($request->password) && $company->hasEmailConfigured() && $company->email_credentials) {
+                $existingCredentials = $company->email_credentials;
+                if (isset($existingCredentials['password'])) {
+                    $credentials['password'] = $existingCredentials['password'];
+                }
+            } else {
+                $credentials['password'] = $request->password;
+            }
         }
 
         if ($provider->name === 'custom') {
