@@ -115,7 +115,7 @@
                     </div>
 
                     <!-- Password Authentication -->
-                    <div id="passwordAuth" class="hidden">
+                    <div id="passwordAuth" class="{{ $company->hasEmailConfigured() ? '' : 'hidden' }}">
                         <label for="password" class="block text-sm font-medium text-gray-700 mb-2">
                             Password
                         </label>
@@ -332,7 +332,10 @@ document.addEventListener('DOMContentLoaded', function() {
         const selectedOption = providerSelect.options[providerSelect.selectedIndex];
         if (!selectedOption.value) {
             providerInfo.classList.add('hidden');
-            passwordAuth.classList.add('hidden');
+            // Don't hide password auth if company has email configured
+            if (!{{ $company->hasEmailConfigured() ? 'true' : 'false' }}) {
+                passwordAuth.classList.add('hidden');
+            }
             oauthAuth.classList.add('hidden');
             customSettings.classList.add('hidden');
             setupInstructions.classList.add('hidden');
@@ -347,7 +350,10 @@ document.addEventListener('DOMContentLoaded', function() {
         // Show authentication method immediately based on data attributes
         if (isOAuth) {
             oauthAuth.classList.remove('hidden');
-            passwordAuth.classList.add('hidden');
+            // Don't hide password auth if company has email configured
+            if (!{{ $company->hasEmailConfigured() ? 'true' : 'false' }}) {
+                passwordAuth.classList.add('hidden');
+            }
         } else {
             passwordAuth.classList.remove('hidden');
             oauthAuth.classList.add('hidden');

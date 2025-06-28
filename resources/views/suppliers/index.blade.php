@@ -54,18 +54,20 @@
 
             @if($suppliers->count() > 0)
                 <div class="overflow-x-auto">
-                    <table class="min-w-full divide-y divide-gray-200">
+                    <table class="w-full divide-y divide-gray-200" style="table-layout: fixed;">
                         <thead class="bg-gray-50">
                             <tr>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Supplier</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Contact</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Website</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" style="width: 25%;">Supplier</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" style="width: 12%;">Type</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" style="width: 20%;">Contact</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" style="width: 20%;">Website</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" style="width: 8%;">Status</th>
                                 @if(auth()->user()->hasRole('superadmin'))
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Company</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" style="width: 10%;">Company</th>
                                 @endif
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                                @if(auth()->user()->hasRole('admin') || auth()->user()->hasRole('superadmin'))
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" style="width: 15%;">Actions</th>
+                                @endif
                             </tr>
                         </thead>
                         <tbody class="bg-white divide-y divide-gray-200">
@@ -111,8 +113,9 @@
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap">
                                         @if($supplier->website)
-                                            <a href="{{ $supplier->website }}" target="_blank" class="text-sm text-blue-600 hover:text-blue-900 truncate block max-w-xs">
-                                                {{ $supplier->website }}
+                                            <a href="{{ $supplier->website }}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center text-sm text-blue-600 hover:text-blue-900 hover:underline truncate max-w-xs" title="Open website in new tab">
+                                                <span class="truncate">{{ $supplier->website }}</span>
+                                                <i class="fas fa-external-link-alt ml-1 text-xs"></i>
                                             </a>
                                         @else
                                             <span class="text-sm text-gray-500">No website</span>
@@ -128,23 +131,25 @@
                                             {{ $supplier->company->name ?? '' }}
                                         </td>
                                     @endif
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                        <div class="flex space-x-2">
-                                            <a href="{{ route('suppliers.show', $supplier) }}" class="text-blue-600 hover:text-blue-900" title="View">
-                                                <i class="fas fa-eye"></i>
-                                            </a>
-                                            <a href="{{ route('suppliers.edit', $supplier) }}" class="text-yellow-600 hover:text-yellow-900" title="Edit">
-                                                <i class="fas fa-edit"></i>
-                                            </a>
-                                            <form action="{{ route('suppliers.destroy', $supplier) }}" method="POST" class="inline" onsubmit="return confirm('Are you sure you want to delete this supplier?')">
-                                                @csrf
-                                                @method('DELETE')
-                                                <button type="submit" class="text-red-600 hover:text-red-900" title="Delete">
-                                                    <i class="fas fa-trash"></i>
-                                                </button>
-                                            </form>
-                                        </div>
-                                    </td>
+                                    @if(auth()->user()->hasRole('admin') || auth()->user()->hasRole('superadmin'))
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                            <div class="flex items-center space-x-2">
+                                                <a href="{{ route('suppliers.show', $supplier) }}" class="inline-flex items-center justify-center w-8 h-8 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-md transition-colors duration-200" title="View">
+                                                    <i class="fas fa-eye"></i>
+                                                </a>
+                                                <a href="{{ route('suppliers.edit', $supplier) }}" class="inline-flex items-center justify-center w-8 h-8 text-sm font-medium text-white bg-yellow-600 hover:bg-yellow-700 rounded-md transition-colors duration-200" title="Edit">
+                                                    <i class="fas fa-edit"></i>
+                                                </a>
+                                                <form action="{{ route('suppliers.destroy', $supplier) }}" method="POST" class="inline" onsubmit="return confirm('Are you sure you want to delete this supplier?')">
+                                                    @csrf
+                                                    @method('DELETE')
+                                                    <button type="submit" class="inline-flex items-center justify-center w-8 h-8 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-md transition-colors duration-200" title="Delete">
+                                                        <i class="fas fa-trash"></i>
+                                                    </button>
+                                                </form>
+                                            </div>
+                                        </td>
+                                    @endif
                                 </tr>
                             @endforeach
                         </tbody>

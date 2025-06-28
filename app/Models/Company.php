@@ -65,7 +65,7 @@ class Company extends Model
         'gdpr_consent_date' => 'datetime',
         'is_active' => 'boolean',
         'data_retention_period' => 'integer',
-        'email_credentials' => 'encrypted:array',
+        'email_credentials' => 'array',
         'email_configured' => 'boolean',
         'email_last_sync' => 'datetime',
     ];

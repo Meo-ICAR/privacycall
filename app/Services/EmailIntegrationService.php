@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Company;
 use App\Models\CompanyEmail;
+use App\Models\EmailDocument;
 use App\Models\User;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -26,15 +27,23 @@ class EmailIntegrationService
      */
     public function fetchEmailsForCompany(Company $company, $maxResults = 50): array
     {
-        if (!$company->data_controller_contact) {
-            Log::warning("No data controller contact email for company: {$company->id}");
-            return [];
+        if (!$company->hasEmailConfigured()) {
+            Log::warning("Email not configured for company: {$company->id}");
+            return ['success' => false, 'error' => 'Email is not configured for this company.'];
         }
 
         try {
-            // For demo purposes, we'll simulate email fetching
-            // In production, you would integrate with Gmail API, IMAP, or other email services
-            $emails = $this->simulateEmailFetch($company, $maxResults);
+            // Get the email provider and credentials
+            $provider = $company->emailProvider;
+            $credentials = $company->getEmailCredentials();
+
+            if (!$provider || !$credentials) {
+                Log::warning("Email provider or credentials not found for company: {$company->id}");
+                return ['success' => false, 'error' => 'Email provider or credentials not configured.'];
+            }
+
+            // Fetch real emails from IMAP server
+            $emails = $this->fetchEmailsFromImap($company, $provider, $credentials, $maxResults);
 
             $processedCount = 0;
             foreach ($emails as $emailData) {
@@ -121,9 +130,14 @@ class EmailIntegrationService
                 $filename = uniqid() . '_' . $attachment['name'];
                 $storagePath = 'email-documents/' . $email->company_id . '/' . $filename;
 
-                // Save file to storage (in real implementation, you'd get the actual file content)
-                // For demo purposes, we'll create a placeholder file
-                Storage::put($storagePath, 'Attachment content for: ' . $attachment['name']);
+                // Save the actual attachment data to storage
+                if (isset($attachment['data'])) {
+                    Storage::put($storagePath, $attachment['data']);
+                } else {
+                    // Fallback: create a placeholder if no data is available
+                    Log::warning("No attachment data available for: " . $attachment['name']);
+                    Storage::put($storagePath, 'Attachment data not available for: ' . $attachment['name']);
+                }
 
                 // Create EmailDocument record
                 \App\Models\EmailDocument::create([
@@ -134,6 +148,8 @@ class EmailIntegrationService
                     'size' => $attachment['size'] ?? 0,
                     'storage_path' => $storagePath,
                 ]);
+
+                Log::info("Successfully processed attachment: {$attachment['name']} for email {$email->id}");
 
             } catch (\Exception $e) {
                 Log::error("Error processing attachment for email {$email->id}: " . $e->getMessage());
@@ -750,5 +766,438 @@ class EmailIntegrationService
         } catch (\Exception $e) {
             return ['success' => false, 'error' => 'Microsoft OAuth callback failed: ' . $e->getMessage()];
         }
+    }
+
+    /**
+     * Fetch real emails from IMAP server.
+     */
+    protected function fetchEmailsFromImap(Company $company, $provider, array $credentials, int $maxResults): array
+    {
+        try {
+            $host = $provider->imap_host;
+            $port = $provider->imap_port;
+            $encryption = $provider->imap_encryption;
+            $username = $credentials['username'];
+            $password = $credentials['password'] ?? '';
+
+            if (empty($host) || empty($port) || empty($username) || empty($password)) {
+                throw new \Exception('Missing required IMAP connection parameters');
+            }
+
+            // Build connection string
+            $connectionString = "{{$host}:{$port}";
+            if ($encryption) {
+                $connectionString .= "/{$encryption}";
+            }
+            $connectionString .= "}INBOX";
+
+            // Check if IMAP extension is available
+            if (!function_exists('imap_open')) {
+                throw new \Exception('IMAP extension is not available');
+            }
+
+            // Connect to IMAP server
+            $connection = @imap_open($connectionString, $username, $password, 0, 1);
+
+            if ($connection === false) {
+                $errors = imap_errors();
+                $errorMessage = $errors ? implode(', ', $errors) : 'Unknown connection error';
+                throw new \Exception('IMAP connection failed: ' . $errorMessage);
+            }
+
+            // Get mailbox info
+            $mailboxInfo = imap_mailboxmsginfo($connection);
+            $totalMessages = $mailboxInfo->Nmsgs ?? 0;
+
+            Log::info("Found {$totalMessages} messages in mailbox for company {$company->id}");
+
+            $emails = [];
+            $processedCount = 0;
+
+            // Fetch emails (start from newest)
+            for ($i = $totalMessages; $i > max(1, $totalMessages - $maxResults); $i--) {
+                try {
+                    $emailData = $this->fetchEmailFromImap($connection, $i, $company);
+                    if ($emailData) {
+                        $emails[] = $emailData;
+                        $processedCount++;
+                    }
+                } catch (\Exception $e) {
+                    Log::warning("Error fetching email {$i} for company {$company->id}: " . $e->getMessage());
+                    continue;
+                }
+            }
+
+            imap_close($connection);
+
+            Log::info("Successfully fetched {$processedCount} emails for company {$company->id}");
+            return $emails;
+
+        } catch (\Exception $e) {
+            Log::error("Error fetching emails from IMAP for company {$company->id}: " . $e->getMessage());
+            throw $e;
+        }
+    }
+
+    /**
+     * Fetch a single email from IMAP connection.
+     */
+    protected function fetchEmailFromImap($connection, int $messageNumber, Company $company): ?array
+    {
+        try {
+            // Get email headers
+            $headers = imap_headerinfo($connection, $messageNumber);
+            if (!$headers) {
+                return null;
+            }
+
+            // Get email body
+            $body = imap_body($connection, $messageNumber);
+            if ($body === false) {
+                return null;
+            }
+
+            // Parse email structure
+            $structure = imap_fetchstructure($connection, $messageNumber);
+
+            // Extract text and HTML parts
+            $textBody = '';
+            $htmlBody = '';
+            $attachments = [];
+
+            if ($structure) {
+                $this->parseEmailStructure($connection, $messageNumber, $structure, $textBody, $htmlBody, $attachments);
+
+                // Log attachment count
+                if (!empty($attachments)) {
+                    Log::info("Email {$messageNumber} has " . count($attachments) . " attachments");
+                }
+            }
+
+            // Use HTML body if available, otherwise use text body
+            $body = !empty($htmlBody) ? $htmlBody : $textBody;
+
+            // Generate unique email ID
+            $emailId = 'imap_' . $company->id . '_' . $messageNumber . '_' . time();
+
+            // Extract email data
+            $emailData = [
+                'email_id' => $emailId,
+                'thread_id' => $headers->message_id ?? null,
+                'from_email' => $headers->from[0]->mailbox . '@' . $headers->from[0]->host ?? '',
+                'from_name' => $headers->from[0]->personal ?? null,
+                'subject' => $headers->subject ?? 'No Subject',
+                'body' => $body,
+                'body_plain' => $textBody,
+                'received_at' => $headers->date ? date('Y-m-d H:i:s', strtotime($headers->date)) : now(),
+                'attachments' => $attachments,
+                'headers' => [
+                    'message_id' => $headers->message_id ?? null,
+                    'in_reply_to' => $headers->in_reply_to ?? null,
+                    'references' => $headers->references ?? null,
+                    'date' => $headers->date ?? null,
+                ],
+                'labels' => ['INBOX'],
+            ];
+
+            return $emailData;
+
+        } catch (\Exception $e) {
+            Log::warning("Error parsing email {$messageNumber}: " . $e->getMessage());
+            return null;
+        }
+    }
+
+    /**
+     * Parse email structure to extract text, HTML, and attachments.
+     */
+    protected function parseEmailStructure($connection, int $messageNumber, $structure, &$textBody, &$htmlBody, &$attachments, $partNumber = ''): void
+    {
+        if ($structure->type == 0) {
+            // Text part
+            $data = imap_fetchbody($connection, $messageNumber, $partNumber ?: 1);
+
+            if (strtolower($structure->subtype) == 'html') {
+                $htmlBody = $this->decodeEmailBody($data, $structure);
+            } else {
+                $textBody = $this->decodeEmailBody($data, $structure);
+            }
+        } elseif ($structure->type == 1) {
+            // Multipart
+            if (isset($structure->parts)) {
+                foreach ($structure->parts as $index => $part) {
+                    $newPartNumber = $partNumber ? $partNumber . '.' . ($index + 1) : ($index + 1);
+                    $this->parseEmailStructure($connection, $messageNumber, $part, $textBody, $htmlBody, $attachments, $newPartNumber);
+                }
+            }
+        } elseif ($structure->type == 2) {
+            // Attachments (application, image, audio, video, etc.)
+            $data = imap_fetchbody($connection, $messageNumber, $partNumber ?: 1);
+            $filename = $this->getAttachmentFilename($structure);
+
+            if ($filename) {
+                $decodedData = $this->decodeEmailBody($data, $structure);
+                $attachments[] = [
+                    'name' => $filename,
+                    'mime_type' => $structure->subtype ?? 'application/octet-stream',
+                    'size' => strlen($decodedData),
+                    'data' => $decodedData,
+                ];
+
+                Log::info("Found attachment: {$filename} (size: " . strlen($decodedData) . " bytes)");
+            }
+        } elseif ($structure->type == 3) {
+            // Application (treat as attachment)
+            $data = imap_fetchbody($connection, $messageNumber, $partNumber ?: 1);
+            $filename = $this->getAttachmentFilename($structure);
+
+            if ($filename) {
+                $decodedData = $this->decodeEmailBody($data, $structure);
+                $attachments[] = [
+                    'name' => $filename,
+                    'mime_type' => $structure->subtype ?? 'application/octet-stream',
+                    'size' => strlen($decodedData),
+                    'data' => $decodedData,
+                ];
+
+                Log::info("Found application attachment: {$filename} (size: " . strlen($decodedData) . " bytes)");
+            }
+        } elseif ($structure->type == 4) {
+            // Audio (treat as attachment)
+            $data = imap_fetchbody($connection, $messageNumber, $partNumber ?: 1);
+            $filename = $this->getAttachmentFilename($structure);
+
+            if ($filename) {
+                $decodedData = $this->decodeEmailBody($data, $structure);
+                $attachments[] = [
+                    'name' => $filename,
+                    'mime_type' => $structure->subtype ?? 'audio/octet-stream',
+                    'size' => strlen($decodedData),
+                    'data' => $decodedData,
+                ];
+
+                Log::info("Found audio attachment: {$filename} (size: " . strlen($decodedData) . " bytes)");
+            }
+        } elseif ($structure->type == 5) {
+            // Image (treat as attachment)
+            $data = imap_fetchbody($connection, $messageNumber, $partNumber ?: 1);
+            $filename = $this->getAttachmentFilename($structure);
+
+            if ($filename) {
+                $decodedData = $this->decodeEmailBody($data, $structure);
+                $attachments[] = [
+                    'name' => $filename,
+                    'mime_type' => $structure->subtype ?? 'image/octet-stream',
+                    'size' => strlen($decodedData),
+                    'data' => $decodedData,
+                ];
+
+                Log::info("Found image attachment: {$filename} (size: " . strlen($decodedData) . " bytes)");
+            }
+        } elseif ($structure->type == 6) {
+            // Video (treat as attachment)
+            $data = imap_fetchbody($connection, $messageNumber, $partNumber ?: 1);
+            $filename = $this->getAttachmentFilename($structure);
+
+            if ($filename) {
+                $decodedData = $this->decodeEmailBody($data, $structure);
+                $attachments[] = [
+                    'name' => $filename,
+                    'mime_type' => $structure->subtype ?? 'video/octet-stream',
+                    'size' => strlen($decodedData),
+                    'data' => $decodedData,
+                ];
+
+                Log::info("Found video attachment: {$filename} (size: " . strlen($decodedData) . " bytes)");
+            }
+        } elseif ($structure->type == 7) {
+            // Other (treat as attachment)
+            $data = imap_fetchbody($connection, $messageNumber, $partNumber ?: 1);
+            $filename = $this->getAttachmentFilename($structure);
+
+            if ($filename) {
+                $decodedData = $this->decodeEmailBody($data, $structure);
+                $attachments[] = [
+                    'name' => $filename,
+                    'mime_type' => $structure->subtype ?? 'application/octet-stream',
+                    'size' => strlen($decodedData),
+                    'data' => $decodedData,
+                ];
+
+                Log::info("Found other attachment: {$filename} (size: " . strlen($decodedData) . " bytes)");
+            }
+        }
+    }
+
+    /**
+     * Decode email body based on encoding.
+     */
+    protected function decodeEmailBody(string $data, $structure): string
+    {
+        $encoding = $structure->encoding ?? 0;
+
+        switch ($encoding) {
+            case 3: // BASE64
+                return base64_decode($data);
+            case 4: // QUOTED-PRINTABLE
+                return quoted_printable_decode($data);
+            default:
+                return $data;
+        }
+    }
+
+    /**
+     * Get attachment filename from structure.
+     */
+    protected function getAttachmentFilename($structure): ?string
+    {
+        // Check dparameters first (disposition parameters)
+        if (isset($structure->dparameters)) {
+            foreach ($structure->dparameters as $param) {
+                if (strtolower($param->attribute) == 'filename') {
+                    return $this->decodeFilename($param->value);
+                }
+            }
+        }
+
+        // Check parameters (content-type parameters)
+        if (isset($structure->parameters)) {
+            foreach ($structure->parameters as $param) {
+                if (strtolower($param->attribute) == 'name') {
+                    return $this->decodeFilename($param->value);
+                }
+            }
+        }
+
+        // Check if there's a name property directly on the structure
+        if (isset($structure->name)) {
+            return $this->decodeFilename($structure->name);
+        }
+
+        // Generate a fallback filename based on MIME type
+        if (isset($structure->subtype)) {
+            $extension = $this->getExtensionFromMimeType($structure->subtype);
+            return 'attachment_' . uniqid() . '.' . $extension;
+        }
+
+        return null;
+    }
+
+    /**
+     * Decode filename that might be encoded (RFC 2231, RFC 2047, etc.)
+     */
+    protected function decodeFilename(string $filename): string
+    {
+        // Handle RFC 2231 encoding
+        if (preg_match('/^([^=]+)\*[0-9]*\*?=(.+)$/', $filename, $matches)) {
+            $filename = $matches[2];
+        }
+
+        // Handle quoted-printable encoding
+        if (strpos($filename, '=?') !== false) {
+            $filename = mb_decode_mimeheader($filename);
+        }
+
+        // Handle URL encoding
+        if (strpos($filename, '%') !== false) {
+            $filename = urldecode($filename);
+        }
+
+        // Remove quotes if present
+        $filename = trim($filename, '"\'');
+
+        // Clean up the filename
+        $filename = preg_replace('/[^\w\-\.]/', '_', $filename);
+
+        return $filename;
+    }
+
+    /**
+     * Get file extension from MIME type.
+     */
+    protected function getExtensionFromMimeType(string $mimeType): string
+    {
+        $mimeToExt = [
+            'pdf' => 'pdf',
+            'msword' => 'doc',
+            'vnd.openxmlformats-officedocument.wordprocessingml.document' => 'docx',
+            'vnd.ms-excel' => 'xls',
+            'vnd.openxmlformats-officedocument.spreadsheetml.sheet' => 'xlsx',
+            'vnd.ms-powerpoint' => 'ppt',
+            'vnd.openxmlformats-officedocument.presentationml.presentation' => 'pptx',
+            'jpeg' => 'jpg',
+            'png' => 'png',
+            'gif' => 'gif',
+            'bmp' => 'bmp',
+            'svg+xml' => 'svg',
+            'mpeg' => 'mpg',
+            'mp4' => 'mp4',
+            'avi' => 'avi',
+            'wav' => 'wav',
+            'mp3' => 'mp3',
+            'zip' => 'zip',
+            'rar' => 'rar',
+            '7z' => '7z',
+            'tar' => 'tar',
+            'gz' => 'gz',
+            'txt' => 'txt',
+            'html' => 'html',
+            'xml' => 'xml',
+            'json' => 'json',
+            'csv' => 'csv',
+        ];
+
+        return $mimeToExt[$mimeType] ?? 'bin';
+    }
+
+    /**
+     * Check if IMAP extension is available and properly configured.
+     */
+    public function checkImapConfiguration(): array
+    {
+        $issues = [];
+
+        // Check if IMAP extension is loaded
+        if (!extension_loaded('imap')) {
+            $issues[] = 'IMAP extension is not loaded. Please install php-imap extension.';
+        }
+
+        // Check if imap functions are available
+        if (!function_exists('imap_open')) {
+            $issues[] = 'IMAP functions are not available. Please check PHP configuration.';
+        }
+
+        // Check if mbstring extension is loaded (needed for filename decoding)
+        if (!extension_loaded('mbstring')) {
+            $issues[] = 'MBString extension is not loaded. This may affect attachment filename decoding.';
+        }
+
+        return [
+            'available' => empty($issues),
+            'issues' => $issues
+        ];
+    }
+
+    /**
+     * Get attachment processing statistics.
+     */
+    public function getAttachmentStats(Company $company): array
+    {
+        $totalEmails = CompanyEmail::where('company_id', $company->id)->count();
+        $emailsWithAttachments = CompanyEmail::where('company_id', $company->id)
+            ->whereNotNull('attachments')
+            ->where('attachments', '!=', '[]')
+            ->count();
+
+        $totalAttachments = EmailDocument::whereHas('companyEmail', function ($query) use ($company) {
+            $query->where('company_id', $company->id);
+        })->count();
+
+        return [
+            'total_emails' => $totalEmails,
+            'emails_with_attachments' => $emailsWithAttachments,
+            'total_attachments' => $totalAttachments,
+            'attachment_rate' => $totalEmails > 0 ? round(($emailsWithAttachments / $totalEmails) * 100, 2) : 0,
+        ];
     }
 }

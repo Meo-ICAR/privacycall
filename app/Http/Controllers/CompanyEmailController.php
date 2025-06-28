@@ -13,19 +13,10 @@ use Illuminate\Support\Facades\DB;
 
 class CompanyEmailController extends Controller
 {
-    protected $emailService;
-
-    public function __construct(EmailIntegrationService $emailService)
-    {
-        $this->emailService = $emailService;
-        $this->middleware('auth');
-        $this->middleware('role:admin|superadmin');
-    }
-
     /**
      * Display a listing of emails for a company.
      */
-    public function index(Request $request, Company $company)
+    public function index(Request $request, Company $company, EmailIntegrationService $emailService)
     {
         // Check if user has access to this company
         if (auth()->user()->company_id && auth()->user()->company_id !== $company->id) {
@@ -66,7 +57,7 @@ class CompanyEmailController extends Controller
         }
 
         $emails = $query->paginate(20);
-        $stats = $this->emailService->getEmailStats($company);
+        $stats = $emailService->getEmailStats($company);
 
         if ($request->expectsJson()) {
             return response()->json([
@@ -133,7 +124,7 @@ class CompanyEmailController extends Controller
     /**
      * Store a newly created email.
      */
-    public function store(Request $request, Company $company)
+    public function store(Request $request, Company $company, EmailIntegrationService $emailService)
     {
         // Check if user has access to this company
         if (auth()->user()->company_id && auth()->user()->company_id !== $company->id) {
@@ -180,7 +171,7 @@ class CompanyEmailController extends Controller
             }
 
             // Send the email
-            $sent = $this->emailService->sendEmail([
+            $sent = $emailService->sendEmail([
                 'to_email' => $emailData['to_email'],
                 'to_name' => $emailData['to_name'] ?? null,
                 'subject' => $emailData['subject'],
@@ -242,7 +233,7 @@ class CompanyEmailController extends Controller
     /**
      * Send a reply to an email.
      */
-    public function sendReply(Request $request, Company $company, CompanyEmail $email)
+    public function sendReply(Request $request, Company $company, CompanyEmail $email, EmailIntegrationService $emailService)
     {
         // Check if user has access to this company
         if (auth()->user()->company_id && auth()->user()->company_id !== $company->id) {
@@ -291,7 +282,7 @@ class CompanyEmailController extends Controller
             }
 
             // Send the reply
-            $sent = $this->emailService->sendReply(
+            $sent = $emailService->sendReply(
                 $email,
                 auth()->user(),
                 $replyData['reply_body'],
@@ -428,7 +419,7 @@ class CompanyEmailController extends Controller
     /**
      * Fetch new emails for a company.
      */
-    public function fetchEmails(Company $company): JsonResponse
+    public function fetchEmails(Company $company, EmailIntegrationService $emailService): JsonResponse
     {
         // Check if user has access to this company
         if (auth()->user()->company_id && auth()->user()->company_id !== $company->id) {
@@ -439,7 +430,7 @@ class CompanyEmailController extends Controller
         }
 
         try {
-            $result = $this->emailService->fetchEmailsForCompany($company);
+            $result = $emailService->fetchEmailsForCompany($company);
 
             return response()->json([
                 'success' => $result['success'],
@@ -462,7 +453,7 @@ class CompanyEmailController extends Controller
     /**
      * Get email statistics for a company.
      */
-    public function stats(Company $company): JsonResponse
+    public function stats(Company $company, EmailIntegrationService $emailService): JsonResponse
     {
         // Check if user has access to this company
         if (auth()->user()->company_id && auth()->user()->company_id !== $company->id) {
@@ -473,7 +464,7 @@ class CompanyEmailController extends Controller
         }
 
         try {
-            $stats = $this->emailService->getEmailStats($company);
+            $stats = $emailService->getEmailStats($company);
 
             return response()->json([
                 'success' => true,

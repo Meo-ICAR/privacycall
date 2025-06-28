@@ -86,13 +86,18 @@ class DataProcessingActivityController extends Controller
      */
     public function edit(DataProcessingActivity $dataProcessingActivity)
     {
-        if (!auth()->user() || !auth()->user()->hasRole('superadmin')) {
-            abort(403, 'Only superadmin can edit data processing activities.');
-        }
         $user = Auth::user();
+
+        // Check if user has permission to edit (admin or superadmin)
+        if (!$user->hasRole('admin') && !$user->hasRole('superadmin')) {
+            abort(403, 'Only admin and superadmin users can edit data processing activities.');
+        }
+
+        // Check if activity belongs to user's company
         if ($dataProcessingActivity->company_id !== $user->company_id) {
             abort(403, 'Access denied.');
         }
+
         return view('data_processing_activities.edit', compact('dataProcessingActivity'));
     }
 
@@ -101,10 +106,14 @@ class DataProcessingActivityController extends Controller
      */
     public function update(Request $request, DataProcessingActivity $dataProcessingActivity)
     {
-        if (!auth()->user() || !auth()->user()->hasRole('superadmin')) {
-            abort(403, 'Only superadmin can update data processing activities.');
-        }
         $user = Auth::user();
+
+        // Check if user has permission to update (admin or superadmin)
+        if (!$user->hasRole('admin') && !$user->hasRole('superadmin')) {
+            abort(403, 'Only admin and superadmin users can update data processing activities.');
+        }
+
+        // Check if activity belongs to user's company
         if ($dataProcessingActivity->company_id !== $user->company_id) {
             abort(403, 'Access denied.');
         }
@@ -132,10 +141,14 @@ class DataProcessingActivityController extends Controller
      */
     public function destroy(DataProcessingActivity $dataProcessingActivity)
     {
-        if (!auth()->user() || !auth()->user()->hasRole('superadmin')) {
-            abort(403, 'Only superadmin can delete data processing activities.');
-        }
         $user = Auth::user();
+
+        // Check if user has permission to delete (admin or superadmin)
+        if (!$user->hasRole('admin') && !$user->hasRole('superadmin')) {
+            abort(403, 'Only admin and superadmin users can delete data processing activities.');
+        }
+
+        // Check if activity belongs to user's company
         if ($dataProcessingActivity->company_id !== $user->company_id) {
             abort(403, 'Access denied.');
         }

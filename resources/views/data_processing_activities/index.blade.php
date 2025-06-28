@@ -35,7 +35,9 @@
                         <thead class="bg-gray-50">
                             <tr>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Activity Name</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Company</th>
+                                @if(auth()->user()->hasRole('superadmin'))
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Company</th>
+                                @endif
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Purpose</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Legal Basis</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
@@ -48,9 +50,11 @@
                                     <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                                         {{ $activity->activity_name }}
                                     </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                        {{ $activity->company->name ?? 'Unknown' }}
-                                    </td>
+                                    @if(auth()->user()->hasRole('superadmin'))
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                            {{ $activity->company->name ?? 'Unknown' }}
+                                        </td>
+                                    @endif
                                     <td class="px-6 py-4 text-sm text-gray-900">
                                         <div class="max-w-xs truncate" title="{{ $activity->processing_purpose }}">
                                             {{ Str::limit($activity->processing_purpose, 50) }}
@@ -65,13 +69,23 @@
                                         </span>
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                        <a href="{{ route('data-processing-activities.show', $activity) }}" class="text-blue-600 hover:text-blue-900 mr-3">View</a>
-                                        <a href="{{ route('data-processing-activities.edit', $activity) }}" class="text-yellow-600 hover:text-yellow-900 mr-3">Edit</a>
-                                        <form action="{{ route('data-processing-activities.destroy', $activity) }}" method="POST" class="inline">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button type="submit" class="text-red-600 hover:text-red-900" onclick="return confirm('Are you sure?')">Delete</button>
-                                        </form>
+                                        <div class="flex space-x-2">
+                                            <a href="{{ route('data-processing-activities.show', $activity) }}" class="text-blue-600 hover:text-blue-900" title="View">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                            @if(auth()->user()->hasRole('admin') || auth()->user()->hasRole('superadmin'))
+                                                <a href="{{ route('data-processing-activities.edit', $activity) }}" class="text-yellow-600 hover:text-yellow-900" title="Edit">
+                                                    <i class="fas fa-edit"></i>
+                                                </a>
+                                                <form action="{{ route('data-processing-activities.destroy', $activity) }}" method="POST" class="inline" onsubmit="return confirm('Are you sure you want to delete this activity?')">
+                                                    @csrf
+                                                    @method('DELETE')
+                                                    <button type="submit" class="text-red-600 hover:text-red-900" title="Delete">
+                                                        <i class="fas fa-trash"></i>
+                                                    </button>
+                                                </form>
+                                            @endif
+                                        </div>
                                     </td>
                                 </tr>
                             @endforeach

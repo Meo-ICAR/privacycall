@@ -170,7 +170,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 });
 
 // Company email management routes (admin/superadmin)
-Route::middleware(['auth', 'verified'])->group(function () {
+Route::middleware(['auth', 'verified', 'role:admin|superadmin'])->group(function () {
     Route::prefix('companies/{company}/emails')->group(function () {
         Route::get('/', [\App\Http\Controllers\CompanyEmailController::class, 'index'])->name('companies.emails.index');
         Route::get('/create', [\App\Http\Controllers\CompanyEmailController::class, 'create'])->name('companies.emails.create');
