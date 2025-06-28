@@ -307,6 +307,26 @@
                         </a>
                         @endif
 
+                        <!-- Manage Emails -->
+                        @if(auth()->check() && (auth()->user()->hasRole('admin') || auth()->user()->hasRole('superadmin')) && $company->data_controller_contact)
+                        <a href="{{ route('companies.emails.index', $company) }}" class="w-full inline-flex items-center justify-center px-4 py-2 border border-indigo-300 text-sm font-medium rounded-md text-indigo-700 bg-white hover:bg-indigo-50">
+                            <i class="fas fa-envelope mr-2"></i>
+                            Manage Emails
+                        </a>
+                        @endif
+
+                        <!-- Email Configuration -->
+                        @if(auth()->check() && (auth()->user()->hasRole('admin') || auth()->user()->hasRole('superadmin')))
+                        <a href="{{ route('companies.email-config.show', $company) }}" class="w-full inline-flex items-center justify-center px-4 py-2 border border-teal-300 text-sm font-medium rounded-md text-teal-700 bg-white hover:bg-teal-50">
+                            <i class="fas fa-cog mr-2"></i>
+                            @if($company->hasEmailConfigured())
+                                Email Configuration
+                            @else
+                                Configure Email
+                            @endif
+                        </a>
+                        @endif
+
                         <a href="{{ route('companies.index') }}" class="w-full inline-flex items-center justify-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
                             <i class="fas fa-arrow-left mr-2"></i>
                             Back to List

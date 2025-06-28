@@ -54,6 +54,11 @@
                                     <x-dropdown-link href="{{ route('holdings.index') }}" :active="request()->routeIs('holdings.index')">
                                         {{ __('Holdings') }}
                                     </x-dropdown-link>
+                                    @if(auth()->user()->company && auth()->user()->company->data_controller_contact)
+                                        <x-dropdown-link href="{{ route('companies.emails.index', auth()->user()->company) }}" :active="request()->routeIs('companies.emails.*')">
+                                            {{ __('Email Management') }}
+                                        </x-dropdown-link>
+                                    @endif
                                 </x-slot>
                             </x-dropdown>
                         </div>
@@ -297,6 +302,11 @@
                 <x-responsive-nav-link href="{{ route('holdings.index') }}" :active="request()->routeIs('holdings.index')">
                     {{ __('Holdings') }}
                 </x-responsive-nav-link>
+                @if(auth()->user()->company && auth()->user()->company->data_controller_contact)
+                    <x-responsive-nav-link href="{{ route('companies.emails.index', auth()->user()->company) }}" :active="request()->routeIs('companies.emails.*')">
+                        {{ __('Email Management') }}
+                    </x-responsive-nav-link>
+                @endif
 
                 <!-- Inspections Section -->
                 <div class="border-t border-gray-200"></div>

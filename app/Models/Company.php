@@ -48,7 +48,12 @@ class Company extends Model
         'type',
         'gdpr_compliant',
         'data_retention_policy',
-        'address'
+        'address',
+        'email_provider_id',
+        'email_credentials',
+        'email_configured',
+        'email_last_sync',
+        'email_sync_error'
     ];
 
     /**
@@ -60,6 +65,9 @@ class Company extends Model
         'gdpr_consent_date' => 'datetime',
         'is_active' => 'boolean',
         'data_retention_period' => 'integer',
+        'email_credentials' => 'encrypted:array',
+        'email_configured' => 'boolean',
+        'email_last_sync' => 'datetime',
     ];
 
     /**
@@ -189,5 +197,118 @@ class Company extends Model
     public function holding()
     {
         return $this->belongsTo(Holding::class);
+    }
+
+    /**
+     * Get the email provider for this company.
+     */
+    public function emailProvider(): BelongsTo
+    {
+        return $this->belongsTo(EmailProvider::class);
+    }
+
+    /**
+     * Get the emails for this company.
+     */
+    public function emails(): HasMany
+    {
+        return $this->hasMany(CompanyEmail::class);
+    }
+
+    /**
+     * Check if company has email configured.
+     */
+    public function hasEmailConfigured(): bool
+    {
+        return $this->email_configured &&
+               $this->email_provider_id &&
+               $this->data_controller_contact;
+    }
+
+    /**
+     * Get email credentials.
+     */
+    public function getEmailCredentials(): array
+    {
+        return $this->email_credentials ?? [];
+    }
+
+    /**
+     * Set email credentials.
+     */
+    public function setEmailCredentials(array $credentials): void
+    {
+        $this->update(['email_credentials' => $credentials]);
+    }
+
+    /**
+     * Get email username.
+     */
+    public function getEmailUsername(): ?string
+    {
+        return $this->getEmailCredentials()['username'] ?? null;
+    }
+
+    /**
+     * Get email password.
+     */
+    public function getEmailPassword(): ?string
+    {
+        return $this->getEmailCredentials()['password'] ?? null;
+    }
+
+    /**
+     * Get OAuth token.
+     */
+    public function getOAuthToken(): ?string
+    {
+        return $this->getEmailCredentials()['oauth_token'] ?? null;
+    }
+
+    /**
+     * Get OAuth refresh token.
+     */
+    public function getOAuthRefreshToken(): ?string
+    {
+        return $this->getEmailCredentials()['oauth_refresh_token'] ?? null;
+    }
+
+    /**
+     * Check if email sync is needed.
+     */
+    public function needsEmailSync(): bool
+    {
+        if (!$this->hasEmailConfigured()) {
+            return false;
+        }
+
+        // Sync if never synced or last sync was more than 15 minutes ago
+        return !$this->email_last_sync ||
+               $this->email_last_sync->diffInMinutes(now()) > 15;
+    }
+
+    /**
+     * Update email sync status.
+     */
+    public function updateEmailSyncStatus(bool $success, ?string $error = null): void
+    {
+        $this->update([
+            'email_last_sync' => $success ? now() : $this->email_last_sync,
+            'email_sync_error' => $success ? null : $error,
+        ]);
+    }
+
+    /**
+     * Get email sync status.
+     */
+    public function getEmailSyncStatus(): array
+    {
+        return [
+            'configured' => $this->email_configured,
+            'last_sync' => $this->email_last_sync,
+            'error' => $this->email_sync_error,
+            'needs_sync' => $this->needsEmailSync(),
+            'provider' => $this->emailProvider?->display_name ?? 'Not configured',
+        ];
     }
 }

@@ -17,6 +17,9 @@ use App\Http\Controllers\SupplierInspectionController;
 use App\Http\Controllers\ImpersonationController;
 use App\Http\Controllers\SupplierMailMergeController;
 use App\Http\Controllers\RepresentativeController;
+use App\Http\Controllers\CompanyEmailController;
+use App\Http\Controllers\CompanyEmailConfigController;
+use App\Http\Controllers\UnifiedEmailController;
 
 Route::get('/', function () {
     return view('welcome');
@@ -140,6 +143,52 @@ Route::middleware(['auth', 'verified'])->group(function () {
 // Representative management routes (admin/superadmin)
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::resource('representatives', RepresentativeController::class);
+});
+
+// Company email management routes (admin/superadmin)
+Route::middleware(['auth', 'verified'])->group(function () {
+    Route::prefix('companies/{company}/emails')->group(function () {
+        Route::get('/', [\App\Http\Controllers\CompanyEmailController::class, 'index'])->name('companies.emails.index');
+        Route::get('/create', [\App\Http\Controllers\CompanyEmailController::class, 'create'])->name('companies.emails.create');
+        Route::post('/', [\App\Http\Controllers\CompanyEmailController::class, 'store'])->name('companies.emails.store');
+        Route::get('/{email}', [\App\Http\Controllers\CompanyEmailController::class, 'show'])->name('companies.emails.show');
+        Route::get('/{email}/reply', [\App\Http\Controllers\CompanyEmailController::class, 'reply'])->name('companies.emails.reply');
+        Route::post('/{email}/reply', [\App\Http\Controllers\CompanyEmailController::class, 'sendReply'])->name('companies.emails.send-reply');
+        Route::put('/{email}', [\App\Http\Controllers\CompanyEmailController::class, 'update'])->name('companies.emails.update');
+        Route::delete('/{email}', [\App\Http\Controllers\CompanyEmailController::class, 'destroy'])->name('companies.emails.destroy');
+        Route::post('/fetch', [\App\Http\Controllers\CompanyEmailController::class, 'fetchEmails'])->name('companies.emails.fetch');
+        Route::get('/stats', [\App\Http\Controllers\CompanyEmailController::class, 'stats'])->name('companies.emails.stats');
+    });
+});
+
+// Company email configuration routes (admin/superadmin)
+Route::middleware(['auth', 'verified'])->group(function () {
+    Route::prefix('companies/{company}/email-config')->group(function () {
+        Route::get('/', [\App\Http\Controllers\CompanyEmailConfigController::class, 'show'])->name('companies.email-config.show');
+        Route::put('/', [\App\Http\Controllers\CompanyEmailConfigController::class, 'update'])->name('companies.email-config.update');
+        Route::delete('/', [\App\Http\Controllers\CompanyEmailConfigController::class, 'destroy'])->name('companies.email-config.destroy');
+        Route::post('/test-connection', [\App\Http\Controllers\CompanyEmailConfigController::class, 'testConnection'])->name('companies.email-config.test');
+        Route::get('/oauth-url', [\App\Http\Controllers\CompanyEmailConfigController::class, 'getOAuthUrl'])->name('companies.email-config.oauth-url');
+        Route::get('/oauth-callback', [\App\Http\Controllers\CompanyEmailConfigController::class, 'oauthCallback'])->name('companies.email-config.oauth-callback');
+    });
+
+    // Email provider configuration routes
+    Route::prefix('email-providers')->group(function () {
+        Route::get('/{provider}/config', [\App\Http\Controllers\CompanyEmailConfigController::class, 'getProviderConfig'])->name('email-providers.config');
+    });
+});
+
+// Unified Email Management routes (admin/superadmin)
+Route::middleware(['auth', 'verified'])->group(function () {
+    Route::prefix('emails')->group(function () {
+        Route::get('/dashboard', [\App\Http\Controllers\UnifiedEmailController::class, 'dashboard'])->name('emails.dashboard');
+        Route::get('/', [\App\Http\Controllers\UnifiedEmailController::class, 'index'])->name('emails.index');
+        Route::get('/{id}/{type?}', [\App\Http\Controllers\UnifiedEmailController::class, 'show'])->name('emails.show');
+        Route::post('/{email}/reply', [\App\Http\Controllers\UnifiedEmailController::class, 'reply'])->name('emails.reply');
+        Route::post('/send', [\App\Http\Controllers\UnifiedEmailController::class, 'send'])->name('emails.send');
+        Route::post('/quick-mail-merge', [\App\Http\Controllers\UnifiedEmailController::class, 'quickMailMerge'])->name('emails.quick-mail-merge');
+        Route::post('/fetch', [\App\Http\Controllers\UnifiedEmailController::class, 'fetchEmails'])->name('emails.fetch');
+    });
 });
 
 // Inspection management routes (admin/superadmin)
