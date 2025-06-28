@@ -263,6 +263,105 @@
                             </div>
                         </div>
 
+                        <!-- Consent Acquisition -->
+                        <div class="mb-6">
+                            <h5 class="text-sm font-medium text-gray-700 mb-3">Consent Acquisition</h5>
+                            <dl class="grid grid-cols-1 gap-x-4 gap-y-4 sm:grid-cols-2">
+                                <div class="sm:col-span-1">
+                                    <dt class="text-sm font-medium text-gray-500">Consent Method</dt>
+                                    <dd class="mt-1 text-sm text-gray-900">
+                                        @if($customer->consent_method)
+                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                                {{ ucfirst(str_replace('_', ' ', $customer->consent_method)) }}
+                                            </span>
+                                        @else
+                                            <span class="text-gray-400">Not specified</span>
+                                        @endif
+                                    </dd>
+                                </div>
+                                <div class="sm:col-span-1">
+                                    <dt class="text-sm font-medium text-gray-500">Consent Source</dt>
+                                    <dd class="mt-1 text-sm text-gray-900">
+                                        @if($customer->consent_source)
+                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                                {{ ucfirst(str_replace('_', ' ', $customer->consent_source)) }}
+                                            </span>
+                                        @else
+                                            <span class="text-gray-400">Not specified</span>
+                                        @endif
+                                    </dd>
+                                </div>
+                                <div class="sm:col-span-1">
+                                    <dt class="text-sm font-medium text-gray-500">Consent Channel</dt>
+                                    <dd class="mt-1 text-sm text-gray-900">
+                                        @if($customer->consent_channel)
+                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                                                {{ ucfirst($customer->consent_channel) }}
+                                            </span>
+                                        @else
+                                            <span class="text-gray-400">Not specified</span>
+                                        @endif
+                                    </dd>
+                                </div>
+                                <div class="sm:col-span-1">
+                                    <dt class="text-sm font-medium text-gray-500">Consent Evidence</dt>
+                                    <dd class="mt-1 text-sm text-gray-900">
+                                        @if($customer->consent_evidence)
+                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                                                {{ ucfirst(str_replace('_', ' ', $customer->consent_evidence)) }}
+                                            </span>
+                                        @else
+                                            <span class="text-gray-400">Not specified</span>
+                                        @endif
+                                    </dd>
+                                </div>
+                                <div class="sm:col-span-1">
+                                    <dt class="text-sm font-medium text-gray-500">Consent Version</dt>
+                                    <dd class="mt-1 text-sm text-gray-900">{{ $customer->consent_version ?? 'Not specified' }}</dd>
+                                </div>
+                                <div class="sm:col-span-1">
+                                    <dt class="text-sm font-medium text-gray-500">Consent Language</dt>
+                                    <dd class="mt-1 text-sm text-gray-900">{{ $customer->consent_language ?? 'Not specified' }}</dd>
+                                </div>
+                                <div class="sm:col-span-1">
+                                    <dt class="text-sm font-medium text-gray-500">IP Address</dt>
+                                    <dd class="mt-1 text-sm text-gray-900">{{ $customer->ip_address ?? 'Not recorded' }}</dd>
+                                </div>
+                                <div class="sm:col-span-1">
+                                    <dt class="text-sm font-medium text-gray-500">User Agent</dt>
+                                    <dd class="mt-1 text-sm text-gray-900">
+                                        @if($customer->user_agent)
+                                            <span class="text-xs font-mono bg-gray-100 px-2 py-1 rounded">{{ Str::limit($customer->user_agent, 50) }}</span>
+                                        @else
+                                            <span class="text-gray-400">Not recorded</span>
+                                        @endif
+                                    </dd>
+                                </div>
+                                @if($customer->consent_evidence_file)
+                                <div class="sm:col-span-2">
+                                    <dt class="text-sm font-medium text-gray-500">Evidence File</dt>
+                                    <dd class="mt-1 text-sm text-gray-900">
+                                        <a href="{{ Storage::url($customer->consent_evidence_file) }}" target="_blank"
+                                           class="inline-flex items-center px-3 py-1 border border-transparent text-xs font-medium rounded-md text-blue-700 bg-blue-100 hover:bg-blue-200">
+                                            <i class="fas fa-download mr-1"></i>
+                                            {{ basename($customer->consent_evidence_file) }}
+                                        </a>
+                                    </dd>
+                                </div>
+                                @endif
+                                @if($customer->consent_text)
+                                <div class="sm:col-span-2">
+                                    <dt class="text-sm font-medium text-gray-500">Consent Text</dt>
+                                    <dd class="mt-1 text-sm text-gray-900">
+                                        <div class="bg-gray-50 p-3 rounded-md border">
+                                            <p class="text-sm leading-relaxed">{{ $customer->consent_text }}</p>
+                                        </div>
+                                    </dd>
+                                </div>
+                                @endif
+                            </dl>
+                        </div>
+
                         <!-- Data Subject Rights -->
                         <div class="mb-6">
                             <h5 class="text-sm font-medium text-gray-700 mb-3">Data Subject Rights</h5>
@@ -287,111 +386,6 @@
                                             <span class="text-yellow-600 font-medium">Requested</span>
                                             @if($customer->data_portability_date)
                                                 <br><span class="text-xs text-gray-500">Date: {{ $customer->data_portability_date->format('M d, Y') }}</span>
-                                            @endif
-                                        @else
-                                            <span class="text-green-600">Not Requested</span>
-                                        @endif
-                                    </dd>
-                                </div>
-                            </dl>
-                        </div>
-                    </div>
-                    <!-- GDPR Compliance -->
-                    <div class="border-b border-gray-200 pb-6 mb-6">
-                        <h4 class="text-md font-medium text-gray-900 mb-4">
-                            <i class="fas fa-shield-alt text-blue-600 mr-2"></i>
-                            GDPR Compliance
-                        </h4>
-
-                        <!-- GDPR Status Summary -->
-                        <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-                            <h5 class="text-sm font-medium text-blue-900 mb-3">GDPR Status Summary</h5>
-                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-                                <div class="flex items-center">
-                                    <span class="w-3 h-3 rounded-full mr-2 {{ $customer->hasValidGdprConsent() ? "bg-green-500" : "bg-red-500" }}"></span>
-                                    <span class="text-blue-800">Consent Valid: {{ $customer->hasValidGdprConsent() ? "Yes" : "No" }}</span>
-                                </div>
-                                <div class="flex items-center">
-                                    <span class="w-3 h-3 rounded-full mr-2 {{ $customer->hasRequestedRightToBeForgotten() ? "bg-red-500" : "bg-green-500" }}"></span>
-                                    <span class="text-blue-800">Right to be Forgotten: {{ $customer->hasRequestedRightToBeForgotten() ? "Requested" : "Not Requested" }}</span>
-                                </div>
-                                <div class="flex items-center">
-                                    <span class="w-3 h-3 rounded-full mr-2 {{ $customer->hasRequestedDataPortability() ? "bg-yellow-500" : "bg-green-500" }}"></span>
-                                    <span class="text-blue-800">Data Portability: {{ $customer->hasRequestedDataPortability() ? "Requested" : "Not Requested" }}</span>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Consent Information -->
-                        <div class="mb-6">
-                            <h5 class="text-sm font-medium text-gray-700 mb-3">Consent Information</h5>
-                            <dl class="grid grid-cols-1 gap-x-4 gap-y-4 sm:grid-cols-2">
-                                <div class="sm:col-span-1">
-                                    <dt class="text-sm font-medium text-gray-500">GDPR Consent Date</dt>
-                                    <dd class="mt-1 text-sm text-gray-900">
-                                        {{ $customer->gdpr_consent_date ? $customer->gdpr_consent_date->format("M d, Y \a\t g:i A") : "Not provided" }}
-                                    </dd>
-                                </div>
-                                <div class="sm:col-span-1">
-                                    <dt class="text-sm font-medium text-gray-500">Data Processing Purpose</dt>
-                                    <dd class="mt-1 text-sm text-gray-900">{{ $customer->data_processing_purpose ?? "Not specified" }}</dd>
-                                </div>
-                                <div class="sm:col-span-1">
-                                    <dt class="text-sm font-medium text-gray-500">Data Retention Period</dt>
-                                    <dd class="mt-1 text-sm text-gray-900">
-                                        {{ $customer->data_retention_period ? $customer->data_retention_period . " days" : "Not specified" }}
-                                    </dd>
-                                </div>
-                            </dl>
-                        </div>
-
-                        <!-- Consent Types -->
-                        <div class="mb-6">
-                            <h5 class="text-sm font-medium text-gray-700 mb-3">Consent Types</h5>
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div class="flex items-center">
-                                    <span class="w-3 h-3 rounded-full mr-2 {{ $customer->data_processing_consent ? "bg-green-500" : "bg-red-500" }}"></span>
-                                    <span class="text-sm text-gray-900">Data Processing Consent</span>
-                                </div>
-                                <div class="flex items-center">
-                                    <span class="w-3 h-3 rounded-full mr-2 {{ $customer->marketing_consent ? "bg-green-500" : "bg-red-500" }}"></span>
-                                    <span class="text-sm text-gray-900">Marketing Consent</label>
-                                </div>
-                                <div class="flex items-center">
-                                    <span class="w-3 h-3 rounded-full mr-2 {{ $customer->third_party_sharing_consent ? "bg-green-500" : "bg-red-500" }}"></span>
-                                    <span class="text-sm text-gray-900">Third Party Sharing Consent</span>
-                                </div>
-                                <div class="flex items-center">
-                                    <span class="w-3 h-3 rounded-full mr-2 {{ $customer->data_retention_consent ? "bg-green-500" : "bg-red-500" }}"></span>
-                                    <span class="text-sm text-gray-900">Data Retention Consent</span>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Data Subject Rights -->
-                        <div class="mb-6">
-                            <h5 class="text-sm font-medium text-gray-700 mb-3">Data Subject Rights</h5>
-                            <dl class="grid grid-cols-1 gap-x-4 gap-y-4 sm:grid-cols-2">
-                                <div class="sm:col-span-1">
-                                    <dt class="text-sm font-medium text-gray-500">Right to be Forgotten</dt>
-                                    <dd class="mt-1 text-sm text-gray-900">
-                                        @if($customer->right_to_be_forgotten_requested)
-                                            <span class="text-red-600 font-medium">Requested</span>
-                                            @if($customer->right_to_be_forgotten_date)
-                                                <br><span class="text-xs text-gray-500">Date: {{ $customer->right_to_be_forgotten_date->format("M d, Y") }}</span>
-                                            @endif
-                                        @else
-                                            <span class="text-green-600">Not Requested</span>
-                                        @endif
-                                    </dd>
-                                </div>
-                                <div class="sm:col-span-1">
-                                    <dt class="text-sm font-medium text-gray-500">Data Portability</dt>
-                                    <dd class="mt-1 text-sm text-gray-900">
-                                        @if($customer->data_portability_requested)
-                                            <span class="text-yellow-600 font-medium">Requested</span>
-                                            @if($customer->data_portability_date)
-                                                <br><span class="text-xs text-gray-500">Date: {{ $customer->data_portability_date->format("M d, Y") }}</span>
                                             @endif
                                         @else
                                             <span class="text-green-600">Not Requested</span>

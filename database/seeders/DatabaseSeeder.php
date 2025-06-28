@@ -159,6 +159,7 @@ class DatabaseSeeder extends Seeder
             DocumentSeeder::class,
             UserSeeder::class,
             EmailTemplateSeeder::class,
+            SupplierInspectionSeeder::class,
         ]);
     }
 }

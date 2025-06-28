@@ -16,15 +16,16 @@ class SupplierInspectionSeeder extends Seeder
      */
     public function run(): void
     {
-        $this->command->info('Creating supplier inspections...');
+        // Get existing companies and suppliers
+        $companies = Company::all();
+        $suppliers = Supplier::all();
 
-        // Get all suppliers with their companies
-        $suppliers = Supplier::with('company')->get();
-
-        if ($suppliers->isEmpty()) {
-            $this->command->warn('No suppliers found. Please run SupplierSeeder first.');
+        if ($companies->isEmpty() || $suppliers->isEmpty()) {
+            $this->command->warn('No companies or suppliers found. Please run CompanySeeder and SupplierSeeder first.');
             return;
         }
+
+        $this->command->info('Creating supplier inspections...');
 
         // Create various types of supplier inspections
         $inspectionTypes = [
@@ -105,13 +106,26 @@ class SupplierInspectionSeeder extends Seeder
             ]
         ];
 
-        $createdCount = 0;
-
-        foreach ($inspectionTypes as $inspectionData) {
+        foreach ($inspectionTypes as $index => $inspectionData) {
             // Create multiple inspections for each type
             for ($i = 0; $i < 3; $i++) {
-                // Get a random supplier
-                $supplier = $suppliers->random();
+                // Get a random company that has suppliers
+                $company = null;
+                $supplier = null;
+
+                // Try to find a company with suppliers
+                foreach ($companies as $comp) {
+                    $companySuppliers = Supplier::where('company_id', $comp->id)->get();
+                    if ($companySuppliers->isNotEmpty()) {
+                        $company = $comp;
+                        $supplier = $companySuppliers->random();
+                        break;
+                    }
+                }
+
+                if (!$company || !$supplier) {
+                    continue; // Skip if no valid company/supplier found
+                }
 
                 $inspectionDate = Carbon::parse($inspectionData['date_range'][0]);
                 if ($inspectionData['date_range'][1] !== 'now') {
@@ -119,21 +133,18 @@ class SupplierInspectionSeeder extends Seeder
                 }
 
                 SupplierInspection::create([
-                    'company_id' => $supplier->company_id,
+                    'company_id' => $company->id,
                     'supplier_id' => $supplier->id,
                     'inspection_date' => $inspectionDate,
                     'notes' => $inspectionData['notes'],
                     'status' => $inspectionData['status'],
                 ]);
-
-                $createdCount++;
             }
         }
 
-        // Create some additional random inspections using the factory
+        // Create some additional random inspections
         SupplierInspection::factory(20)->create();
-        $createdCount += 20;
 
-        $this->command->info("Created {$createdCount} supplier inspections successfully!");
+        $this->command->info('Supplier inspections created successfully!');
     }
 }
