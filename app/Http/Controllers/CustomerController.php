@@ -72,10 +72,57 @@ class CustomerController extends Controller
             'customer_number' => 'nullable|string|max:255',
             'is_active' => 'boolean',
             'notes' => 'nullable|string',
+
+            // GDPR Compliance Fields
+            'gdpr_consent_date' => 'nullable|date',
+            'data_processing_consent' => 'boolean',
+            'marketing_consent' => 'boolean',
+            'third_party_sharing_consent' => 'boolean',
+            'data_retention_consent' => 'boolean',
+            'right_to_be_forgotten_requested' => 'boolean',
+            'right_to_be_forgotten_date' => 'nullable|date',
+            'data_portability_requested' => 'boolean',
+            'data_portability_date' => 'nullable|date',
+            'data_processing_purpose' => 'nullable|string|max:500',
+            'data_retention_period' => 'nullable|integer|min:0',
+
+            // Consent Acquisition Fields
+            'consent_method' => 'nullable|in:web_form,email,phone,in_person,document,app_notification',
+            'consent_source' => 'nullable|in:website,mobile_app,call_center,in_store,email_campaign,contract',
+            'consent_channel' => 'nullable|in:online,offline,phone,email',
+            'consent_evidence' => 'nullable|in:screenshot,document,audio_recording,video_recording,email_confirmation,digital_signature',
+            'consent_evidence_file' => 'nullable|file|max:10240', // 10MB
+            'consent_text' => 'nullable|string|max:5000',
+            'consent_language' => 'nullable|string|max:10',
+            'consent_version' => 'nullable|string|max:50',
+            'ip_address' => 'nullable|ip',
+            'user_agent' => 'nullable|string|max:500',
         ]);
 
         $validated['company_id'] = $user->company_id;
         $validated['is_active'] = $request->has('is_active');
+
+        // Handle GDPR boolean fields
+        $validated['data_processing_consent'] = $request->has('data_processing_consent');
+        $validated['marketing_consent'] = $request->has('marketing_consent');
+        $validated['third_party_sharing_consent'] = $request->has('third_party_sharing_consent');
+        $validated['data_retention_consent'] = $request->has('data_retention_consent');
+        $validated['right_to_be_forgotten_requested'] = $request->has('right_to_be_forgotten_requested');
+        $validated['data_portability_requested'] = $request->has('data_portability_requested');
+
+        // Handle file upload
+        if ($request->hasFile('consent_evidence_file')) {
+            $path = $request->file('consent_evidence_file')->store('consent_evidence');
+            $validated['consent_evidence_file'] = $path;
+        }
+
+        // Set IP address and user agent if not provided
+        if (empty($validated['ip_address'])) {
+            $validated['ip_address'] = $request->ip();
+        }
+        if (empty($validated['user_agent'])) {
+            $validated['user_agent'] = $request->userAgent();
+        }
 
         Customer::create($validated);
 
@@ -129,10 +176,57 @@ class CustomerController extends Controller
             'customer_number' => 'nullable|string|max:255',
             'is_active' => 'boolean',
             'notes' => 'nullable|string',
+
+            // GDPR Compliance Fields
+            'gdpr_consent_date' => 'nullable|date',
+            'data_processing_consent' => 'boolean',
+            'marketing_consent' => 'boolean',
+            'third_party_sharing_consent' => 'boolean',
+            'data_retention_consent' => 'boolean',
+            'right_to_be_forgotten_requested' => 'boolean',
+            'right_to_be_forgotten_date' => 'nullable|date',
+            'data_portability_requested' => 'boolean',
+            'data_portability_date' => 'nullable|date',
+            'data_processing_purpose' => 'nullable|string|max:500',
+            'data_retention_period' => 'nullable|integer|min:0',
+
+            // Consent Acquisition Fields
+            'consent_method' => 'nullable|in:web_form,email,phone,in_person,document,app_notification',
+            'consent_source' => 'nullable|in:website,mobile_app,call_center,in_store,email_campaign,contract',
+            'consent_channel' => 'nullable|in:online,offline,phone,email',
+            'consent_evidence' => 'nullable|in:screenshot,document,audio_recording,video_recording,email_confirmation,digital_signature',
+            'consent_evidence_file' => 'nullable|file|max:10240', // 10MB
+            'consent_text' => 'nullable|string|max:5000',
+            'consent_language' => 'nullable|string|max:10',
+            'consent_version' => 'nullable|string|max:50',
+            'ip_address' => 'nullable|ip',
+            'user_agent' => 'nullable|string|max:500',
         ]);
 
         $validated['company_id'] = $user->company_id;
         $validated['is_active'] = $request->has('is_active');
+
+        // Handle GDPR boolean fields
+        $validated['data_processing_consent'] = $request->has('data_processing_consent');
+        $validated['marketing_consent'] = $request->has('marketing_consent');
+        $validated['third_party_sharing_consent'] = $request->has('third_party_sharing_consent');
+        $validated['data_retention_consent'] = $request->has('data_retention_consent');
+        $validated['right_to_be_forgotten_requested'] = $request->has('right_to_be_forgotten_requested');
+        $validated['data_portability_requested'] = $request->has('data_portability_requested');
+
+        // Handle file upload
+        if ($request->hasFile('consent_evidence_file')) {
+            $path = $request->file('consent_evidence_file')->store('consent_evidence');
+            $validated['consent_evidence_file'] = $path;
+        }
+
+        // Set IP address and user agent if not provided
+        if (empty($validated['ip_address'])) {
+            $validated['ip_address'] = $request->ip();
+        }
+        if (empty($validated['user_agent'])) {
+            $validated['user_agent'] = $request->userAgent();
+        }
 
         $customer->update($validated);
 

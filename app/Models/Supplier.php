@@ -239,6 +239,4 @@ class Supplier extends Model
     {
         return $this->morphMany(\App\Models\Document::class, 'documentable');
     }
-
-    }
 }

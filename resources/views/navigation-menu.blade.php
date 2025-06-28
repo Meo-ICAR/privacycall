@@ -194,11 +194,8 @@
                                     <x-dropdown-link href="{{ route('employee-training.index') }}" :active="request()->routeIs('employee-training.*')">
                                         <i class="fas fa-user-graduate mr-2"></i>{{ __('Employee Training') }}
                                     </x-dropdown-link>
-                                        <i class="fas fa-clipboard-list mr-2"></i>{{ __('Inspections') }}
-                                    </x-dropdown-link>
+                                    <x-dropdown-link href="{{ route('supplier-inspections.index') }}" :active="request()->routeIs('supplier-inspections.*')">
                                         <i class="fas fa-truck mr-2"></i>{{ __('Supplier Inspections') }}
-                                    </x-dropdown-link>
-                                        <i class="fas fa-user-friends mr-2"></i>{{ __('Customer Inspections') }}
                                     </x-dropdown-link>
                                 </x-slot>
                             </x-dropdown>
@@ -405,11 +402,8 @@
                     <x-responsive-nav-link href="{{ route('employee-training.index') }}" :active="request()->routeIs('employee-training.*')">
                         <i class="fas fa-user-graduate mr-2"></i>{{ __('Employee Training') }}
                     </x-responsive-nav-link>
-                        <i class="fas fa-clipboard-list mr-2"></i>{{ __('Inspections') }}
-                    </x-responsive-nav-link>
+                    <x-responsive-nav-link href="{{ route('supplier-inspections.index') }}" :active="request()->routeIs('supplier-inspections.*')">
                         <i class="fas fa-truck mr-2"></i>{{ __('Supplier Inspections') }}
-                    </x-responsive-nav-link>
-                        <i class="fas fa-user-friends mr-2"></i>{{ __('Customer Inspections') }}
                     </x-responsive-nav-link>
 
                     <!-- Email Management -->

@@ -53,6 +53,18 @@ class Customer extends Model
         'data_processing_purpose',
         'data_retention_period',
 
+        // Consent Acquisition Fields
+        'consent_method',
+        'consent_source',
+        'consent_channel',
+        'consent_evidence',
+        'consent_evidence_file',
+        'consent_text',
+        'consent_language',
+        'consent_version',
+        'ip_address',
+        'user_agent',
+
         'is_active',
         'notes'
     ];
