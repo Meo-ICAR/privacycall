@@ -432,12 +432,24 @@ class CompanyEmailController extends Controller
         try {
             $result = $emailService->fetchEmailsForCompany($company);
 
+            if ($result['success']) {
+                $message = "Successfully processed {$result['processed']} new emails";
+                if ($result['skipped'] > 0) {
+                    $message .= ", skipped {$result['skipped']} existing emails";
+                }
+                if ($result['total'] > 0) {
+                    $message .= " (total checked: {$result['total']})";
+                }
+            } else {
+                $message = $result['error'];
+            }
+
             return response()->json([
                 'success' => $result['success'],
-                'message' => $result['success'] ?
-                    "Successfully processed {$result['processed']} emails" :
-                    $result['error'],
-                'processed' => $result['processed'] ?? 0
+                'message' => $message,
+                'processed' => $result['processed'] ?? 0,
+                'skipped' => $result['skipped'] ?? 0,
+                'total' => $result['total'] ?? 0
             ]);
 
         } catch (\Exception $e) {

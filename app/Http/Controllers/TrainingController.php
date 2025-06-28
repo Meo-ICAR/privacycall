@@ -151,4 +151,55 @@ class TrainingController extends Controller
 
         return redirect()->route('trainings.index')->with('success', 'Training deleted successfully.');
     }
+
+    /**
+     * Show the form for managing employees in a training.
+     */
+    public function manageEmployees(Training $training)
+    {
+        $user = Auth::user();
+        if ($training->company_id !== $user->company_id) {
+            abort(403, 'Access denied.');
+        }
+
+        // Get all employees for the company
+        $employees = \App\Models\Employee::where('company_id', $user->company_id)
+            ->orderBy('first_name')
+            ->orderBy('last_name')
+            ->get();
+
+        // Get currently assigned employee IDs
+        $assignedEmployeeIds = $training->employees->pluck('id')->toArray();
+
+        return view('trainings.manage-employees', compact('training', 'employees', 'assignedEmployeeIds'));
+    }
+
+    /**
+     * Update the employees assigned to a training.
+     */
+    public function updateEmployees(Request $request, Training $training)
+    {
+        $user = Auth::user();
+        if ($training->company_id !== $user->company_id) {
+            abort(403, 'Access denied.');
+        }
+
+        $request->validate([
+            'employee_ids' => 'nullable|array',
+            'employee_ids.*' => 'exists:employees,id'
+        ]);
+
+        // Get the selected employee IDs (empty array if none selected)
+        $selectedEmployeeIds = $request->input('employee_ids', []);
+
+        // Sync the employees (this will add new ones and remove unselected ones)
+        $training->employees()->sync($selectedEmployeeIds);
+
+        $message = count($selectedEmployeeIds) > 0
+            ? 'Employees updated successfully for this training.'
+            : 'All employees removed from this training.';
+
+        return redirect()->route('trainings.show', $training)
+            ->with('success', $message);
+    }
 }

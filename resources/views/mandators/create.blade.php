@@ -146,6 +146,43 @@
                 </div>
             </div>
 
+            <!-- Disclosure Subscriptions -->
+            <div class="mb-6">
+                <h3 class="text-lg font-medium text-gray-900 mb-4">Disclosure Subscriptions</h3>
+                <p class="text-sm text-gray-600 mb-4">Select which types of disclosures this mandator should receive notifications for:</p>
+
+                @if($disclosureTypes->count() > 0)
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        @php
+                            $selectedSubscriptions = old('disclosure_subscriptions', []);
+                        @endphp
+                        @foreach($disclosureTypes as $disclosureType)
+                            <div class="flex items-start">
+                                <input type="checkbox" name="disclosure_subscriptions[]" id="disclosure_{{ $disclosureType->id }}"
+                                       value="{{ $disclosureType->name }}"
+                                       {{ in_array($disclosureType->name, $selectedSubscriptions) ? 'checked' : '' }}
+                                       class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded mt-1">
+                                <label for="disclosure_{{ $disclosureType->id }}" class="ml-2 block text-sm text-gray-900">
+                                    <div class="font-medium">{{ $disclosureType->display_name }}</div>
+                                    @if($disclosureType->description)
+                                        <div class="text-gray-500 text-xs">{{ $disclosureType->description }}</div>
+                                    @endif
+                                </label>
+                            </div>
+                        @endforeach
+                    </div>
+                @else
+                    <div class="text-center py-4 text-gray-500">
+                        <i class="fas fa-info-circle text-2xl mb-2"></i>
+                        <p>No disclosure types available. Please contact a superadmin to create disclosure types.</p>
+                    </div>
+                @endif
+
+                @error('disclosure_subscriptions')
+                    <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                @enderror
+            </div>
+
             <!-- Status -->
             <div class="mb-6">
                 <div class="flex items-center">

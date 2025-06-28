@@ -149,12 +149,19 @@
                                                     </a>
                                                 @endif
                                                 <a href="{{ route('mandators.show', $mandator) }}"
-                                                   class="text-blue-600 hover:text-blue-900">
-                                                    View
+                                                   class="text-blue-600 hover:text-blue-900"
+                                                   title="View">
+                                                    <i class="fas fa-eye"></i>
                                                 </a>
                                                 <a href="{{ route('mandators.edit', $mandator) }}"
-                                                   class="text-indigo-600 hover:text-indigo-900">
-                                                    Edit
+                                                   class="text-indigo-600 hover:text-indigo-900"
+                                                   title="Edit">
+                                                    <i class="fas fa-edit"></i>
+                                                </a>
+                                                <a href="{{ route('compliance-requests.create', ['mandator_id' => $mandator->id]) }}"
+                                                   class="text-orange-600 hover:text-orange-900"
+                                                   title="Request Compliance">
+                                                    <i class="fas fa-shield-alt"></i>
                                                 </a>
                                                 <form action="{{ route('mandators.destroy', $mandator) }}"
                                                       method="POST"
@@ -163,8 +170,9 @@
                                                     @csrf
                                                     @method('DELETE')
                                                     <button type="submit"
-                                                            class="text-red-600 hover:text-red-900">
-                                                        Delete
+                                                            class="text-red-600 hover:text-red-900"
+                                                            title="Delete">
+                                                        <i class="fas fa-trash"></i>
                                                     </button>
                                                 </form>
                                             </div>

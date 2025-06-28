@@ -53,7 +53,9 @@ class Company extends Model
         'email_credentials',
         'email_configured',
         'email_last_sync',
-        'email_sync_error'
+        'email_sync_error',
+        'bcc_to_self',
+        'email_settings'
     ];
 
     /**
@@ -68,6 +70,8 @@ class Company extends Model
         'email_credentials' => 'array',
         'email_configured' => 'boolean',
         'email_last_sync' => 'datetime',
+        'bcc_to_self' => 'boolean',
+        'email_settings' => 'array',
     ];
 
     /**
@@ -135,6 +139,22 @@ class Company extends Model
     public function representatives(): HasMany
     {
         return $this->hasMany(Representative::class);
+    }
+
+    /**
+     * Get the mandators associated with this company.
+     */
+    public function mandators(): HasMany
+    {
+        return $this->hasMany(Mandator::class);
+    }
+
+    /**
+     * Get the mandators where this company is the agent.
+     */
+    public function clientMandators(): HasMany
+    {
+        return $this->hasMany(Mandator::class, 'agent_company_id');
     }
 
     /**
@@ -216,13 +236,22 @@ class Company extends Model
     }
 
     /**
-     * Check if company has email configured.
+     * Check if the company has email configured.
      */
     public function hasEmailConfigured(): bool
     {
         return $this->email_configured &&
                $this->email_provider_id &&
-               $this->data_controller_contact;
+               $this->email_credentials &&
+               $this->data_protection_officer;
+    }
+
+    /**
+     * Check if BCC to self is enabled for this company.
+     */
+    public function isBccToSelfEnabled(): bool
+    {
+        return $this->bcc_to_self ?? true; // Default to true if not set
     }
 
     /**

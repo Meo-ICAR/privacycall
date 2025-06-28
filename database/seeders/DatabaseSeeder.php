@@ -156,9 +156,6 @@ class DatabaseSeeder extends Seeder
             EmployerTypeSeeder::class,
             DocumentTypeSeeder::class,
             DocumentSeeder::class,
-            InspectionSeeder::class,
-            SupplierInspectionSeeder::class,
-            CustomerInspectionSeeder::class,
             UserSeeder::class,
             EmailTemplateSeeder::class,
         ]);

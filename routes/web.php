@@ -22,7 +22,7 @@ use App\Http\Controllers\UnifiedEmailController;
 use App\Http\Controllers\AuditRequestController;
 use App\Http\Controllers\MandatorController;
 use Illuminate\Support\Facades\Auth;
-use App\Http\Controllers\CustomerInspectionController;
+use Illuminate\Support\Facades\Mail;
 
 Route::get('/', function () {
     return view('welcome');
@@ -169,6 +169,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/mandators/disclosure-summary', [MandatorController::class, 'getDisclosureSummary'])->name('mandators.disclosure-summary');
 });
 
+// Disclosure Type management routes (superadmin only)
+Route::middleware(['auth', 'verified', 'role:superadmin'])->group(function () {
+    Route::resource('disclosure-types', \App\Http\Controllers\DisclosureTypeController::class);
+});
+
 // Company email management routes (admin/superadmin)
 Route::middleware(['auth', 'verified', 'role:admin|superadmin'])->group(function () {
     Route::prefix('companies/{company}/emails')->group(function () {
@@ -229,19 +234,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     });
 });
 
-// Inspection management routes (admin/superadmin)
-Route::middleware(['auth', 'verified'])->group(function () {
-    Route::resource('inspections', InspectionController::class);
-});
-
 // Supplier inspection management routes (admin/superadmin)
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::resource('supplier-inspections', SupplierInspectionController::class);
-});
-
-// Customer inspection management routes (admin/superadmin)
-Route::middleware(['auth', 'verified'])->group(function () {
-    Route::resource('customer-inspections', CustomerInspectionController::class);
 });
 
 // Consent records management routes (admin/superadmin)
@@ -262,6 +257,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
 // Training management routes (admin/superadmin)
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::resource('trainings', \App\Http\Controllers\TrainingController::class);
+    Route::get('/trainings/{training}/manage-employees', [\App\Http\Controllers\TrainingController::class, 'manageEmployees'])->name('trainings.manage-employees');
+    Route::post('/trainings/{training}/update-employees', [\App\Http\Controllers\TrainingController::class, 'updateEmployees'])->name('trainings.update-employees');
     Route::resource('employee-training', \App\Http\Controllers\EmployeeTrainingController::class);
 });
 
@@ -294,6 +291,43 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // Supplier audit dashboard
     Route::get('/suppliers/{supplier}/audit-dashboard', [\App\Http\Controllers\AuditRequestController::class, 'supplierDashboard'])->name('suppliers.audit-dashboard');
+});
+
+// Compliance Request Management routes (incoming requests from mandators)
+Route::middleware(['auth', 'verified'])->group(function () {
+    Route::resource('compliance-requests', \App\Http\Controllers\ComplianceRequestController::class);
+    Route::post('/compliance-requests/{complianceRequest}/mark-in-progress', [\App\Http\Controllers\ComplianceRequestController::class, 'markInProgress'])->name('compliance-requests.mark-in-progress');
+    Route::post('/compliance-requests/{complianceRequest}/mark-completed', [\App\Http\Controllers\ComplianceRequestController::class, 'markCompleted'])->name('compliance-requests.mark-completed');
+    Route::post('/compliance-requests/{complianceRequest}/send-response', [\App\Http\Controllers\ComplianceRequestController::class, 'sendResponse'])->name('compliance-requests.send-response');
+    Route::post('/compliance-requests/{complianceRequest}/upload-documents', [\App\Http\Controllers\ComplianceRequestController::class, 'uploadDocuments'])->name('compliance-requests.upload-documents');
+    Route::post('/compliance-requests/{complianceRequest}/add-findings', [\App\Http\Controllers\ComplianceRequestController::class, 'addFindings'])->name('compliance-requests.add-findings');
+});
+
+// Test email route (remove in production)
+Route::get('/test-email', function () {
+    try {
+        Mail::raw('This is a test email from PrivacyCall application.', function ($message) {
+            $message->to('test@example.com')
+                    ->subject('Test Email from PrivacyCall')
+                    ->from('noreply@privacycall.com', 'PrivacyCall System');
+        });
+
+        return response()->json(['success' => true, 'message' => 'Test email sent successfully']);
+    } catch (\Exception $e) {
+        return response()->json(['success' => false, 'message' => 'Error: ' . $e->getMessage()]);
+    }
+})->middleware(['auth']);
+
+// Data Removal Request Management routes (GDPR right to be forgotten)
+Route::middleware(['auth', 'verified'])->group(function () {
+    Route::resource('data-removal-requests', \App\Http\Controllers\DataRemovalRequestController::class);
+    Route::get('/data-removal-requests/dashboard', [\App\Http\Controllers\DataRemovalRequestController::class, 'dashboard'])->name('data-removal-requests.dashboard');
+    Route::post('/data-removal-requests/{dataRemovalRequest}/mark-in-review', [\App\Http\Controllers\DataRemovalRequestController::class, 'markInReview'])->name('data-removal-requests.mark-in-review');
+    Route::post('/data-removal-requests/{dataRemovalRequest}/approve', [\App\Http\Controllers\DataRemovalRequestController::class, 'approve'])->name('data-removal-requests.approve');
+    Route::post('/data-removal-requests/{dataRemovalRequest}/reject', [\App\Http\Controllers\DataRemovalRequestController::class, 'reject'])->name('data-removal-requests.reject');
+    Route::post('/data-removal-requests/{dataRemovalRequest}/complete', [\App\Http\Controllers\DataRemovalRequestController::class, 'complete'])->name('data-removal-requests.complete');
+    Route::post('/data-removal-requests/{dataRemovalRequest}/cancel', [\App\Http\Controllers\DataRemovalRequestController::class, 'cancel'])->name('data-removal-requests.cancel');
+    Route::post('/data-removal-requests/{dataRemovalRequest}/upload-document', [\App\Http\Controllers\DataRemovalRequestController::class, 'uploadDocument'])->name('data-removal-requests.upload-document');
 });
 
 // Load Fortify routes for authentication and profile management

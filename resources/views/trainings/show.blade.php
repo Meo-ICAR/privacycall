@@ -9,6 +9,10 @@
                 <p class="mt-2 text-gray-600">Training session details</p>
             </div>
             <div class="flex space-x-3">
+                <a href="{{ route('trainings.manage-employees', $training) }}" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700">
+                    <i class="fas fa-users mr-2"></i>
+                    Manage Employees
+                </a>
                 <a href="{{ route('trainings.edit', $training) }}" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-yellow-600 hover:bg-yellow-700">
                     <i class="fas fa-edit mr-2"></i>
                     Edit Training
@@ -123,6 +127,25 @@
                         </div>
                         @endif
                     </dl>
+                </div>
+            </div>
+
+            <!-- Employee Summary -->
+            <div class="mt-8">
+                <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center">
+                            <i class="fas fa-users text-blue-600 text-xl mr-3"></i>
+                            <div>
+                                <h3 class="text-lg font-medium text-blue-900">Enrolled Employees</h3>
+                                <p class="text-blue-700">{{ $training->employees->count() }} employee(s) currently enrolled</p>
+                            </div>
+                        </div>
+                        <a href="{{ route('trainings.manage-employees', $training) }}" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium">
+                            <i class="fas fa-edit mr-2"></i>
+                            Manage Enrollment
+                        </a>
+                    </div>
                 </div>
             </div>
 

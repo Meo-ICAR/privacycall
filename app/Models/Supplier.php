@@ -240,8 +240,5 @@ class Supplier extends Model
         return $this->morphMany(\App\Models\Document::class, 'documentable');
     }
 
-    public function customerInspections(): BelongsToMany
-    {
-        return $this->belongsToMany(\App\Models\CustomerInspection::class, 'customer_inspection_supplier')->withTimestamps();
     }
 }

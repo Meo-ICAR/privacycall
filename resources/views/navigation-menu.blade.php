@@ -70,6 +70,9 @@
                                     <x-dropdown-link href="{{ route('supplier-types.index') }}" :active="request()->routeIs('supplier-types.index')">
                                         {{ __('Supplier Types') }}
                                     </x-dropdown-link>
+                                    <x-dropdown-link href="{{ route('disclosure-types.index') }}" :active="request()->routeIs('disclosure-types.*')">
+                                        <i class="fas fa-bell mr-2"></i>{{ __('Disclosure Types') }}
+                                    </x-dropdown-link>
                                     <x-dropdown-link href="{{ route('email-providers.index') }}" :active="request()->routeIs('email-providers.*')">
                                         {{ __('Email Providers') }}
                                     </x-dropdown-link>
@@ -161,6 +164,12 @@
                                     <x-dropdown-link href="{{ route('audit-requests.index') }}" :active="request()->routeIs('audit-requests.*')">
                                         <i class="fas fa-search mr-2"></i>{{ __('Audit Requests') }}
                                     </x-dropdown-link>
+                                    <x-dropdown-link href="{{ route('compliance-requests.index') }}" :active="request()->routeIs('compliance-requests.*')">
+                                        <i class="fas fa-clipboard-list mr-2"></i>{{ __('Compliance Requests') }}
+                                    </x-dropdown-link>
+                                    <x-dropdown-link href="{{ route('data-removal-requests.index') }}" :active="request()->routeIs('data-removal-requests.*')">
+                                        <i class="fas fa-user-times mr-2"></i>{{ __('Data Removal Requests') }}
+                                    </x-dropdown-link>
                                 </x-slot>
                             </x-dropdown>
                         </div>
@@ -185,13 +194,10 @@
                                     <x-dropdown-link href="{{ route('employee-training.index') }}" :active="request()->routeIs('employee-training.*')">
                                         <i class="fas fa-user-graduate mr-2"></i>{{ __('Employee Training') }}
                                     </x-dropdown-link>
-                                    <x-dropdown-link href="{{ route('inspections.index') }}" :active="request()->routeIs('inspections.index')">
                                         <i class="fas fa-clipboard-list mr-2"></i>{{ __('Inspections') }}
                                     </x-dropdown-link>
-                                    <x-dropdown-link href="{{ route('supplier-inspections.index') }}" :active="request()->routeIs('supplier-inspections.index')">
                                         <i class="fas fa-truck mr-2"></i>{{ __('Supplier Inspections') }}
                                     </x-dropdown-link>
-                                    <x-dropdown-link href="{{ route('customer-inspections.index') }}" :active="request()->routeIs('customer-inspections.index')">
                                         <i class="fas fa-user-friends mr-2"></i>{{ __('Customer Inspections') }}
                                     </x-dropdown-link>
                                 </x-slot>
@@ -199,7 +205,7 @@
                         </div>
 
                         <!-- Email Management -->
-                        @if(auth()->user()->company && auth()->user()->company->data_controller_contact)
+                        @if(auth()->user()->company && auth()->user()->company->data_protection_officer)
                             <x-nav-link href="{{ route('companies.emails.index', auth()->user()->company) }}" :active="request()->routeIs('companies.emails.*')">
                                 <i class="fas fa-envelope mr-2"></i>{{ __('Email Management') }}
                             </x-nav-link>
@@ -385,6 +391,9 @@
                     <x-responsive-nav-link href="{{ route('audit-requests.index') }}" :active="request()->routeIs('audit-requests.*')">
                         <i class="fas fa-search mr-2"></i>{{ __('Audit Requests') }}
                     </x-responsive-nav-link>
+                    <x-responsive-nav-link href="{{ route('compliance-requests.index') }}" :active="request()->routeIs('compliance-requests.*')">
+                        <i class="fas fa-clipboard-list mr-2"></i>{{ __('Compliance Requests') }}
+                    </x-responsive-nav-link>
 
                     <!-- Training & Inspections -->
                     <div class="block px-4 py-2 text-xs text-gray-400">
@@ -396,18 +405,15 @@
                     <x-responsive-nav-link href="{{ route('employee-training.index') }}" :active="request()->routeIs('employee-training.*')">
                         <i class="fas fa-user-graduate mr-2"></i>{{ __('Employee Training') }}
                     </x-responsive-nav-link>
-                    <x-responsive-nav-link href="{{ route('inspections.index') }}" :active="request()->routeIs('inspections.index')">
                         <i class="fas fa-clipboard-list mr-2"></i>{{ __('Inspections') }}
                     </x-responsive-nav-link>
-                    <x-responsive-nav-link href="{{ route('supplier-inspections.index') }}" :active="request()->routeIs('supplier-inspections.index')">
                         <i class="fas fa-truck mr-2"></i>{{ __('Supplier Inspections') }}
                     </x-responsive-nav-link>
-                    <x-responsive-nav-link href="{{ route('customer-inspections.index') }}" :active="request()->routeIs('customer-inspections.index')">
                         <i class="fas fa-user-friends mr-2"></i>{{ __('Customer Inspections') }}
                     </x-responsive-nav-link>
 
                     <!-- Email Management -->
-                    @if(auth()->user()->company && auth()->user()->company->data_controller_contact)
+                    @if(auth()->user()->company && auth()->user()->company->data_protection_officer)
                         <div class="block px-4 py-2 text-xs text-gray-400">
                             {{ __('Communication') }}
                         </div>

@@ -23,7 +23,7 @@ class EmailIntegrationService
     }
 
     /**
-     * Fetch emails for a company's data controller contact.
+     * Fetch emails for a company's data protection officer.
      */
     public function fetchEmailsForCompany(Company $company, $maxResults = 50): array
     {
@@ -46,16 +46,31 @@ class EmailIntegrationService
             $emails = $this->fetchEmailsFromImap($company, $provider, $credentials, $maxResults);
 
             $processedCount = 0;
+            $skippedCount = 0;
+
             foreach ($emails as $emailData) {
                 if ($this->processEmail($company, $emailData)) {
                     $processedCount++;
+                } else {
+                    $skippedCount++;
                 }
             }
 
-            Log::info("Processed {$processedCount} emails for company: {$company->id}");
-            return ['success' => true, 'processed' => $processedCount];
+            // Update sync status
+            $company->updateEmailSyncStatus(true);
+
+            Log::info("Email fetch completed for company {$company->id}: {$processedCount} processed, {$skippedCount} skipped");
+            return [
+                'success' => true,
+                'processed' => $processedCount,
+                'skipped' => $skippedCount,
+                'total' => count($emails)
+            ];
 
         } catch (\Exception $e) {
+            // Update sync status with error
+            $company->updateEmailSyncStatus(false, $e->getMessage());
+
             Log::error("Error fetching emails for company {$company->id}: " . $e->getMessage());
             return ['success' => false, 'error' => $e->getMessage()];
         }
@@ -67,13 +82,29 @@ class EmailIntegrationService
     protected function processEmail(Company $company, array $emailData): bool
     {
         try {
-            // Check if email already exists
+            // Check if email already exists by email_id (primary check)
             $existingEmail = CompanyEmail::where('email_id', $emailData['email_id'])
                 ->where('company_id', $company->id)
                 ->first();
 
             if ($existingEmail) {
+                Log::info("Email already exists with email_id: {$emailData['email_id']}");
                 return false; // Email already processed
+            }
+
+            // Additional duplicate check using message_id, from_email, subject, and received_at
+            if (!empty($emailData['headers']['message_id'])) {
+                $duplicateCheck = CompanyEmail::where('company_id', $company->id)
+                    ->where('from_email', $emailData['from_email'])
+                    ->where('subject', $emailData['subject'])
+                    ->where('received_at', $emailData['received_at'])
+                    ->whereJsonContains('headers->message_id', $emailData['headers']['message_id'])
+                    ->first();
+
+                if ($duplicateCheck) {
+                    Log::info("Duplicate email detected by message_id: {$emailData['headers']['message_id']}");
+                    return false; // Email already processed
+                }
             }
 
             // Determine if email is GDPR-related
@@ -92,7 +123,7 @@ class EmailIntegrationService
                 'thread_id' => $emailData['thread_id'] ?? null,
                 'from_email' => $emailData['from_email'],
                 'from_name' => $emailData['from_name'] ?? null,
-                'to_email' => $company->data_controller_contact,
+                'to_email' => $company->data_protection_officer,
                 'subject' => $emailData['subject'],
                 'body' => $emailData['body'],
                 'body_plain' => $emailData['body_plain'] ?? null,
@@ -111,6 +142,7 @@ class EmailIntegrationService
                 $this->processAttachments($email, $emailData['attachments']);
             }
 
+            Log::info("Successfully processed new email: {$emailData['email_id']} from {$emailData['from_email']}");
             return true;
 
         } catch (\Exception $e) {
@@ -200,15 +232,39 @@ class EmailIntegrationService
     /**
      * Send a new email.
      */
-    public function sendEmail(array $emailData): bool
+    public function sendEmail(array $emailData, ?Company $company = null): bool
     {
         try {
-            // In production, you would use Laravel's Mail facade or external email service
-            // For demo purposes, we'll simulate email sending
-            $this->simulateEmailSending($emailData);
+            // If no company provided, try to get from authenticated user
+            if (!$company) {
+                $user = auth()->user();
+                $company = $user ? $user->company : null;
+            }
 
-            Log::info("Email sent to: {$emailData['to_email']}");
-            return true;
+            // If company has email configured, use it
+            if ($company && $company->hasEmailConfigured()) {
+                // Get the email provider and credentials
+                $provider = $company->emailProvider;
+                $credentials = $company->getEmailCredentials();
+
+                if ($provider && $credentials) {
+                    // Send email based on provider type
+                    if ($provider->supportsSmtp()) {
+                        return $this->sendEmailViaSmtp($emailData, $company, $provider, $credentials);
+                    } elseif ($provider->supportsApi()) {
+                        return $this->sendEmailViaApi($emailData, $company, $provider, $credentials);
+                    } else {
+                        Log::warning("No supported sending method for provider: {$provider->name}, falling back to default mail");
+                    }
+                } else {
+                    Log::warning("Email provider or credentials not found for company: {$company->id}, falling back to default mail");
+                }
+            } else {
+                Log::info("Email not configured for company: " . ($company ? $company->id : 'no company') . ", using default mail configuration");
+            }
+
+            // Fallback to Laravel's default mail configuration
+            return $this->sendEmailViaDefaultMail($emailData, $company);
 
         } catch (\Exception $e) {
             Log::error("Error sending email: " . $e->getMessage());
@@ -217,190 +273,314 @@ class EmailIntegrationService
     }
 
     /**
-     * Determine if an email is GDPR-related.
+     * Send email using Laravel's default mail configuration.
      */
-    protected function isGdprRelatedEmail(string $subject, string $body): bool
+    protected function sendEmailViaDefaultMail(array $emailData, ?Company $company): bool
     {
-        $gdprKeywords = [
-            'gdpr', 'data protection', 'privacy', 'consent', 'data subject',
-            'right to be forgotten', 'data portability', 'data breach',
-            'personal data', 'processing', 'controller', 'processor',
-            'data protection officer', 'dpo', 'artificial intelligence',
-            'ai', 'machine learning', 'automated decision making'
-        ];
+        try {
+            // Use Laravel's default mail configuration
+            Mail::raw($emailData['body'], function ($message) use ($emailData, $company) {
+                $message->to($emailData['to_email'], $emailData['to_name'] ?? null)
+                        ->subject($emailData['subject']);
 
-        $content = strtolower($subject . ' ' . strip_tags($body));
+                // Set from address
+                if ($company && $company->data_protection_officer) {
+                    $message->from($company->data_protection_officer, $company->name);
 
-        foreach ($gdprKeywords as $keyword) {
-            if (str_contains($content, $keyword)) {
+                    // BCC to sender's own email to appear in webmail (if enabled)
+                    if ($company->isBccToSelfEnabled()) {
+                        $message->bcc($company->data_protection_officer, $company->name);
+                    }
+                } else {
+                    $message->from(config('mail.from.address'), config('mail.from.name'));
+                }
+
+                // Add attachments if any
+                if (!empty($emailData['attachments'])) {
+                    foreach ($emailData['attachments'] as $attachment) {
+                        if (isset($attachment['path']) && Storage::exists($attachment['path'])) {
+                            $message->attach(Storage::path($attachment['path']), [
+                                'as' => $attachment['name'],
+                                'mime' => $attachment['mime_type'] ?? 'application/octet-stream',
+                            ]);
+                        }
+                    }
+                }
+            });
+
+            Log::info("Email sent via default mail configuration to: {$emailData['to_email']}");
+            return true;
+
+        } catch (\Exception $e) {
+            Log::error("Default mail sending failed: " . $e->getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * Send email via SMTP.
+     */
+    protected function sendEmailViaSmtp(array $emailData, Company $company, $provider, array $credentials): bool
+    {
+        try {
+            // Get SMTP configuration
+            $smtpConfig = $provider->getSmtpConfig();
+
+            // Use custom settings if provider is custom
+            if ($provider->name === 'custom') {
+                $customSettings = $credentials['custom_settings'] ?? [];
+                $smtpConfig = [
+                    'host' => $customSettings['smtp_host'] ?? $smtpConfig['host'],
+                    'port' => $customSettings['smtp_port'] ?? $smtpConfig['port'],
+                    'encryption' => $customSettings['smtp_encryption'] ?? $smtpConfig['encryption'],
+                    'auth_required' => $smtpConfig['auth_required'],
+                    'timeout' => $smtpConfig['timeout'],
+                    'verify_ssl' => $smtpConfig['verify_ssl'],
+                ];
+            }
+
+            // Configure Laravel Mail with SMTP settings (using correct format)
+            $config = [
+                'transport' => 'smtp',
+                'host' => $smtpConfig['host'],
+                'port' => $smtpConfig['port'],
+                'encryption' => $smtpConfig['encryption'],
+                'username' => $credentials['username'],
+                'password' => $credentials['password'] ?? '',
+                'timeout' => $smtpConfig['timeout'],
+                'local_domain' => parse_url(env('APP_URL', 'http://localhost'), PHP_URL_HOST),
+            ];
+
+            // Create a temporary mail configuration
+            $tempConfig = config('mail');
+            $tempConfig['mailers']['temp_smtp'] = $config;
+            $tempConfig['default'] = 'temp_smtp';
+
+            // Set the temporary configuration
+            config(['mail' => $tempConfig]);
+
+            // Send the email using Laravel Mail
+            Mail::raw($emailData['body'], function ($message) use ($emailData, $company) {
+                $message->to($emailData['to_email'], $emailData['to_name'] ?? null)
+                        ->subject($emailData['subject'])
+                        ->from($company->data_protection_officer, $company->name);
+
+                // BCC to sender's own email to appear in webmail (if enabled)
+                if ($company->isBccToSelfEnabled()) {
+                    $message->bcc($company->data_protection_officer, $company->name);
+                }
+
+                // Add attachments if any
+                if (!empty($emailData['attachments'])) {
+                    foreach ($emailData['attachments'] as $attachment) {
+                        if (isset($attachment['path']) && Storage::exists($attachment['path'])) {
+                            $message->attach(Storage::path($attachment['path']), [
+                                'as' => $attachment['name'],
+                                'mime' => $attachment['mime_type'] ?? 'application/octet-stream',
+                            ]);
+                        }
+                    }
+                }
+            });
+
+            Log::info("Email sent via SMTP to: {$emailData['to_email']} from company {$company->id}");
+            return true;
+
+        } catch (\Exception $e) {
+            Log::error("SMTP email sending failed: " . $e->getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * Send email via API (Gmail, Microsoft Graph, etc.).
+     */
+    protected function sendEmailViaApi(array $emailData, Company $company, $provider, array $credentials): bool
+    {
+        try {
+            if ($provider->name === 'gmail') {
+                return $this->sendEmailViaGmailApi($emailData, $company, $credentials);
+            } elseif ($provider->name === 'microsoft') {
+                return $this->sendEmailViaMicrosoftApi($emailData, $company, $credentials);
+            } else {
+                Log::error("API sending not supported for provider: {$provider->name}");
+                return false;
+            }
+        } catch (\Exception $e) {
+            Log::error("API email sending failed: " . $e->getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * Send email via Gmail API.
+     */
+    protected function sendEmailViaGmailApi(array $emailData, Company $company, array $credentials): bool
+    {
+        try {
+            $accessToken = $credentials['oauth_token'] ?? '';
+
+            if (empty($accessToken)) {
+                Log::error("Gmail OAuth token not found for company: {$company->id}");
+                return false;
+            }
+
+            // Create email message
+            $message = $this->createGmailMessage($emailData, $company);
+
+            // Encode the message
+            $encodedMessage = base64_encode($message);
+            $encodedMessage = str_replace(['+', '/', '='], ['-', '_', ''], $encodedMessage);
+
+            // Send via Gmail API
+            $response = Http::withHeaders([
+                'Authorization' => "Bearer {$accessToken}",
+                'Content-Type' => 'application/json',
+            ])->post('https://gmail.googleapis.com/gmail/v1/users/me/messages/send', [
+                'raw' => $encodedMessage
+            ]);
+
+            if ($response->successful()) {
+                Log::info("Email sent via Gmail API to: {$emailData['to_email']} from company {$company->id}");
                 return true;
+            } else {
+                Log::error("Gmail API error: " . $response->body());
+                return false;
             }
-        }
 
-        return false;
+        } catch (\Exception $e) {
+            Log::error("Gmail API sending failed: " . $e->getMessage());
+            return false;
+        }
     }
 
     /**
-     * Determine email priority.
+     * Send email via Microsoft Graph API.
      */
-    protected function determinePriority(string $subject, string $body): string
+    protected function sendEmailViaMicrosoftApi(array $emailData, Company $company, array $credentials): bool
     {
-        $urgentKeywords = ['urgent', 'immediate', 'asap', 'emergency', 'critical'];
-        $highKeywords = ['important', 'priority', 'attention', 'deadline'];
+        try {
+            $accessToken = $credentials['oauth_token'] ?? '';
 
-        $content = strtolower($subject . ' ' . strip_tags($body));
-
-        foreach ($urgentKeywords as $keyword) {
-            if (str_contains($content, $keyword)) {
-                return 'urgent';
+            if (empty($accessToken)) {
+                Log::error("Microsoft OAuth token not found for company: {$company->id}");
+                return false;
             }
-        }
 
-        foreach ($highKeywords as $keyword) {
-            if (str_contains($content, $keyword)) {
-                return 'high';
+            // Prepare email data for Microsoft Graph
+            $emailPayload = [
+                'message' => [
+                    'subject' => $emailData['subject'],
+                    'body' => [
+                        'contentType' => 'HTML',
+                        'content' => $emailData['body']
+                    ],
+                    'toRecipients' => [
+                        [
+                            'emailAddress' => [
+                                'address' => $emailData['to_email'],
+                                'name' => $emailData['to_name'] ?? null
+                            ]
+                        ]
+                    ]
+                ],
+                'saveToSentItems' => true
+            ];
+
+            // Add BCC if enabled
+            if ($company->isBccToSelfEnabled()) {
+                $emailPayload['message']['bccRecipients'] = [
+                    [
+                        'emailAddress' => [
+                            'address' => $company->data_protection_officer,
+                            'name' => $company->name
+                        ]
+                    ]
+                ];
             }
-        }
 
-        return 'normal';
-    }
-
-    /**
-     * Determine email category.
-     */
-    protected function determineCategory(string $subject, string $body): string
-    {
-        $content = strtolower($subject . ' ' . strip_tags($body));
-
-        if (str_contains($content, 'complaint') || str_contains($content, 'grievance')) {
-            return 'complaint';
-        }
-
-        if (str_contains($content, 'request') || str_contains($content, 'inquiry') || str_contains($content, 'question')) {
-            return 'inquiry';
-        }
-
-        if (str_contains($content, 'notification') || str_contains($content, 'update') || str_contains($content, 'inform')) {
-            return 'notification';
-        }
-
-        return 'general';
-    }
-
-    /**
-     * Format reply subject.
-     */
-    protected function formatReplySubject(string $originalSubject): string
-    {
-        if (!str_starts_with(strtolower($originalSubject), 're:')) {
-            return 'Re: ' . $originalSubject;
-        }
-
-        return $originalSubject;
-    }
-
-    /**
-     * Format reply body with original email quoted.
-     */
-    protected function formatReplyBody(CompanyEmail $email, string $replyBody, User $user): string
-    {
-        $originalBody = strip_tags($email->body_plain ?: $email->body);
-
-        return $replyBody . "\n\n" .
-               "--- Original Message ---\n" .
-               "From: {$email->from_name} <{$email->from_email}>\n" .
-               "Date: {$email->received_at->format('Y-m-d H:i:s')}\n" .
-               "Subject: {$email->subject}\n\n" .
-               $originalBody;
-    }
-
-    /**
-     * Simulate email fetching for demo purposes.
-     */
-    protected function simulateEmailFetch(Company $company, int $maxResults): array
-    {
-        $emails = [];
-
-        for ($i = 0; $i < min($maxResults, 10); $i++) {
-            $hasAttachments = rand(0, 3) > 0;
-            $attachments = null;
-
-            if ($hasAttachments) {
-                $attachmentCount = rand(1, 3);
-                $attachments = [];
-
-                for ($j = 0; $j < $attachmentCount; $j++) {
-                    $attachmentTypes = [
-                        ['name' => 'document.pdf', 'mime_type' => 'application/pdf', 'size' => rand(50000, 500000)],
-                        ['name' => 'contract.docx', 'mime_type' => 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'size' => rand(30000, 200000)],
-                        ['name' => 'data_request.xlsx', 'mime_type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'size' => rand(20000, 150000)],
-                        ['name' => 'consent_form.pdf', 'mime_type' => 'application/pdf', 'size' => rand(40000, 300000)],
-                        ['name' => 'privacy_policy.html', 'mime_type' => 'text/html', 'size' => rand(5000, 50000)],
-                        ['name' => 'gdpr_compliance.txt', 'mime_type' => 'text/plain', 'size' => rand(1000, 10000)],
-                    ];
-
-                    $attachments[] = $attachmentTypes[array_rand($attachmentTypes)];
+            // Add attachments if any
+            if (!empty($emailData['attachments'])) {
+                $emailPayload['message']['attachments'] = [];
+                foreach ($emailData['attachments'] as $attachment) {
+                    if (isset($attachment['path']) && Storage::exists($attachment['path'])) {
+                        $fileContent = base64_encode(Storage::get($attachment['path']));
+                        $emailPayload['message']['attachments'][] = [
+                            '@odata.type' => '#microsoft.graph.fileAttachment',
+                            'name' => $attachment['name'],
+                            'contentType' => $attachment['mime_type'] ?? 'application/octet-stream',
+                            'contentBytes' => $fileContent
+                        ];
+                    }
                 }
             }
 
-            $emails[] = [
-                'email_id' => 'email_' . $company->id . '_' . time() . '_' . $i,
-                'thread_id' => 'thread_' . $company->id . '_' . $i,
-                'from_email' => 'sender' . $i . '@example.com',
-                'from_name' => 'Sender ' . $i,
-                'subject' => $this->generateSampleSubject($i),
-                'body' => $this->generateSampleBody($i),
-                'body_plain' => $this->generateSampleBody($i),
-                'received_at' => now()->subHours(rand(1, 168)),
-                'attachments' => $attachments,
-                'headers' => ['X-Mailer' => 'Sample Mailer'],
-                'labels' => ['INBOX'],
-            ];
+            // Send via Microsoft Graph API
+            $response = Http::withHeaders([
+                'Authorization' => "Bearer {$accessToken}",
+                'Content-Type' => 'application/json',
+            ])->post('https://graph.microsoft.com/v1.0/me/sendMail', $emailPayload);
+
+            if ($response->successful()) {
+                Log::info("Email sent via Microsoft Graph API to: {$emailData['to_email']} from company {$company->id}");
+                return true;
+            } else {
+                Log::error("Microsoft Graph API error: " . $response->body());
+                return false;
+            }
+
+        } catch (\Exception $e) {
+            Log::error("Microsoft Graph API sending failed: " . $e->getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * Create Gmail message format.
+     */
+    protected function createGmailMessage(array $emailData, Company $company): string
+    {
+        $boundary = uniqid();
+
+        $headers = [
+            'MIME-Version: 1.0',
+            'Content-Type: multipart/mixed; boundary="' . $boundary . '"',
+            'From: ' . $company->name . ' <' . $company->data_protection_officer . '>',
+            'To: ' . ($emailData['to_name'] ? $emailData['to_name'] . ' <' . $emailData['to_email'] . '>' : $emailData['to_email']),
+            'Subject: ' . $emailData['subject'],
+            'Date: ' . date('r'),
+        ];
+
+        // Add BCC if enabled
+        if ($company->isBccToSelfEnabled()) {
+            $headers[] = 'Bcc: ' . $company->data_protection_officer; // BCC to sender for webmail visibility
         }
 
-        return $emails;
-    }
+        $message = implode("\r\n", $headers) . "\r\n\r\n";
 
-    /**
-     * Generate sample email subjects.
-     */
-    protected function generateSampleSubject(int $index): string
-    {
-        $subjects = [
-            'GDPR Compliance Inquiry',
-            'Data Protection Request',
-            'Privacy Policy Update',
-            'Right to be Forgotten Request',
-            'Data Breach Notification',
-            'Consent Management Question',
-            'Personal Data Processing Inquiry',
-            'Data Subject Rights Request',
-            'Privacy Impact Assessment',
-            'Data Transfer Agreement'
-        ];
+        // Add text body
+        $message .= "--{$boundary}\r\n";
+        $message .= "Content-Type: text/html; charset=UTF-8\r\n";
+        $message .= "Content-Transfer-Encoding: 7bit\r\n\r\n";
+        $message .= $emailData['body'] . "\r\n\r\n";
 
-        return $subjects[$index % count($subjects)];
-    }
+        // Add attachments if any
+        if (!empty($emailData['attachments'])) {
+            foreach ($emailData['attachments'] as $attachment) {
+                if (isset($attachment['path']) && Storage::exists($attachment['path'])) {
+                    $fileContent = base64_encode(Storage::get($attachment['path']));
+                    $message .= "--{$boundary}\r\n";
+                    $message .= "Content-Type: " . ($attachment['mime_type'] ?? 'application/octet-stream') . "; name=\"" . $attachment['name'] . "\"\r\n";
+                    $message .= "Content-Disposition: attachment; filename=\"" . $attachment['name'] . "\"\r\n";
+                    $message .= "Content-Transfer-Encoding: base64\r\n\r\n";
+                    $message .= chunk_split($fileContent, 76, "\r\n") . "\r\n";
+                }
+            }
+        }
 
-    /**
-     * Generate sample email bodies.
-     */
-    protected function generateSampleBody(int $index): string
-    {
-        $bodies = [
-            'I am writing to inquire about your GDPR compliance procedures and how you handle personal data processing.',
-            'We have received a request from a data subject regarding their right to be forgotten. Please advise on the process.',
-            'Could you please provide information about your data retention policies and procedures?',
-            'We need to update our privacy policy and would like to understand your current data processing activities.',
-            'There has been a potential data breach and we need to notify the relevant authorities. Please provide guidance.',
-            'We are implementing new consent management procedures and would like to ensure compliance with GDPR requirements.',
-            'A customer has requested access to their personal data. What is the process for handling such requests?',
-            'We are considering using artificial intelligence for data processing. What are the GDPR implications?',
-            'Please provide information about your data protection officer and their contact details.',
-            'We need to transfer data to a third country. What safeguards should we implement?'
-        ];
+        $message .= "--{$boundary}--\r\n";
 
-        return $bodies[$index % count($bodies)];
+        return $message;
     }
 
     /**
@@ -813,11 +993,30 @@ class EmailIntegrationService
 
             $emails = [];
             $processedCount = 0;
+            $skippedCount = 0;
+
+            // Determine the cutoff date for fetching emails
+            $cutoffDate = $company->email_last_sync ? $company->email_last_sync->subMinutes(5) : now()->subDays(7);
+            Log::info("Fetching emails newer than: {$cutoffDate->format('Y-m-d H:i:s')} for company {$company->id}");
 
             // Fetch emails (start from newest)
             for ($i = $totalMessages; $i > max(1, $totalMessages - $maxResults); $i--) {
                 try {
-                    $emailData = $this->fetchEmailFromImap($connection, $i, $company);
+                    // Get email headers first to check date
+                    $headers = imap_headerinfo($connection, $i);
+                    if (!$headers) {
+                        continue;
+                    }
+
+                    // Check if email is newer than cutoff date
+                    $emailDate = $headers->date ? strtotime($headers->date) : time();
+                    if ($emailDate < $cutoffDate->timestamp) {
+                        Log::info("Skipping email {$i} - older than cutoff date");
+                        $skippedCount++;
+                        continue;
+                    }
+
+                    $emailData = $this->fetchEmailFromImap($connection, $i, $company, $headers);
                     if ($emailData) {
                         $emails[] = $emailData;
                         $processedCount++;
@@ -830,7 +1029,7 @@ class EmailIntegrationService
 
             imap_close($connection);
 
-            Log::info("Successfully fetched {$processedCount} emails for company {$company->id}");
+            Log::info("Email fetch completed for company {$company->id}: {$processedCount} processed, {$skippedCount} skipped (older than cutoff)");
             return $emails;
 
         } catch (\Exception $e) {
@@ -842,13 +1041,15 @@ class EmailIntegrationService
     /**
      * Fetch a single email from IMAP connection.
      */
-    protected function fetchEmailFromImap($connection, int $messageNumber, Company $company): ?array
+    protected function fetchEmailFromImap($connection, int $messageNumber, Company $company, $headers = null): ?array
     {
         try {
-            // Get email headers
-            $headers = imap_headerinfo($connection, $messageNumber);
+            // Get email headers if not provided
             if (!$headers) {
-                return null;
+                $headers = imap_headerinfo($connection, $messageNumber);
+                if (!$headers) {
+                    return null;
+                }
             }
 
             // Get email body
@@ -877,8 +1078,16 @@ class EmailIntegrationService
             // Use HTML body if available, otherwise use text body
             $body = !empty($htmlBody) ? $htmlBody : $textBody;
 
-            // Generate unique email ID
-            $emailId = 'imap_' . $company->id . '_' . $messageNumber . '_' . time();
+            // Generate unique email ID using message_id if available, otherwise fallback to message number
+            $messageId = $headers->message_id ?? null;
+            if ($messageId) {
+                // Clean the message_id to make it safe for use as an ID
+                $cleanMessageId = preg_replace('/[^a-zA-Z0-9._-]/', '_', $messageId);
+                $emailId = 'imap_' . $company->id . '_' . $cleanMessageId;
+            } else {
+                // Fallback to message number if no message_id is available
+                $emailId = 'imap_' . $company->id . '_msg_' . $messageNumber;
+            }
 
             // Extract email data
             $emailData = [

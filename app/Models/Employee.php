@@ -178,11 +178,4 @@ class Employee extends Model
             ->withPivot('attended', 'completed', 'score', 'notes')
             ->withTimestamps();
     }
-
-    public function customerInspections(): BelongsToMany
-    {
-        return $this->belongsToMany(\App\Models\CustomerInspection::class, 'customer_inspection_employee')
-            ->withPivot('position', 'hire_date')
-            ->withTimestamps();
-    }
 }

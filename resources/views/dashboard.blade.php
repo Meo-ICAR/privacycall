@@ -172,10 +172,6 @@
                                 <i class="fas fa-user-graduate text-green-600 mr-3"></i>
                                 <span>Employee Training</span>
                             </a>
-                            <a href="{{ route('inspections.index') }}" class="flex items-center p-3 text-gray-700 hover:bg-gray-50 rounded-lg transition-colors">
-                                <i class="fas fa-clipboard-list text-purple-600 mr-3"></i>
-                                <span>Inspections</span>
-                            </a>
                         </div>
                     </div>
                 </div>

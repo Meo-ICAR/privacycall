@@ -282,9 +282,22 @@ document.addEventListener('DOMContentLoaded', function() {
         .then(response => response.json())
         .then(data => {
             if (data.success) {
+                // Show detailed success message
+                let message = data.message;
+                if (data.processed > 0 || data.skipped > 0) {
+                    message = `✅ ${data.message}`;
+                    if (data.processed === 0 && data.skipped > 0) {
+                        message += '\n\nNo new emails found - all emails were already processed.';
+                    }
+                }
+
+                // Show alert with detailed information
+                alert(message);
+
+                // Reload the page to show new emails
                 location.reload();
             } else {
-                alert('Error: ' + data.message);
+                alert('❌ Error: ' + data.message);
             }
         })
         .catch(error => {

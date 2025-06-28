@@ -75,7 +75,11 @@ class MandatorController extends Controller
             $company = Company::findOrFail($companyId);
         }
         $companies = $company ? null : Company::active()->get();
-        return view('mandators.create', compact('companies', 'company'));
+
+        // Get active disclosure types from database
+        $disclosureTypes = \App\Models\DisclosureType::active()->ordered()->get();
+
+        return view('mandators.create', compact('companies', 'company', 'disclosureTypes'));
     }
 
     /**
@@ -85,6 +89,8 @@ class MandatorController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'company_id' => 'required|exists:companies,id',
+            'agent_company_id' => 'nullable|exists:companies,id',
+            'gdpr_representative_id' => 'nullable|exists:users,id',
             'first_name' => 'required|string|max:255',
             'last_name' => 'nullable|string|max:255',
             'email' => 'required|email|unique:mandators,email',
@@ -99,6 +105,49 @@ class MandatorController extends Controller
             'email_notifications' => 'boolean',
             'sms_notifications' => 'boolean',
             'preferred_contact_method' => 'in:email,phone,sms',
+            // GDPR service agreement fields
+            'service_agreement_number' => 'nullable|string|max:255',
+            'service_start_date' => 'nullable|date',
+            'service_end_date' => 'nullable|date|after_or_equal:service_start_date',
+            'service_status' => 'nullable|in:active,expired,terminated,pending_renewal',
+            'service_type' => 'nullable|in:gdpr_compliance,data_audit,dpo_services,training,consulting',
+            // GDPR compliance tracking
+            'compliance_score' => 'nullable|integer|min:0|max:100',
+            'last_gdpr_audit_date' => 'nullable|date',
+            'next_gdpr_audit_date' => 'nullable|date|after:last_gdpr_audit_date',
+            'gdpr_maturity_level' => 'nullable|in:beginner,intermediate,advanced,expert',
+            'risk_level' => 'nullable|in:low,medium,high,very_high',
+            // GDPR service scope
+            'gdpr_services_provided' => 'nullable|array',
+            'gdpr_services_provided.*' => 'string|max:255',
+            'gdpr_requirements' => 'nullable|string|max:1000',
+            'applicable_regulations' => 'nullable|array',
+            'applicable_regulations.*' => 'string|max:255',
+            // Communication preferences for GDPR matters
+            'gdpr_reporting_frequency' => 'nullable|in:monthly,quarterly,annually,on_demand',
+            'gdpr_reporting_format' => 'nullable|in:pdf,excel,web_dashboard,email',
+            'gdpr_reporting_recipients' => 'nullable|array',
+            'gdpr_reporting_recipients.*' => 'email|max:255',
+            // GDPR incident management
+            'last_data_incident_date' => 'nullable|date',
+            'data_incidents_count' => 'nullable|integer|min:0',
+            'incident_response_plan' => 'nullable|string|max:1000',
+            // GDPR training and awareness
+            'last_gdpr_training_date' => 'nullable|date',
+            'next_gdpr_training_date' => 'nullable|date|after:last_gdpr_training_date',
+            'employees_trained_count' => 'nullable|integer|min:0',
+            'gdpr_training_required' => 'boolean',
+            // GDPR documentation
+            'privacy_policy_updated' => 'boolean',
+            'privacy_policy_last_updated' => 'nullable|date',
+            'data_processing_register_maintained' => 'boolean',
+            'data_breach_procedures_established' => 'boolean',
+            'data_subject_rights_procedures_established' => 'boolean',
+            // GDPR deadlines and reminders
+            'upcoming_gdpr_deadlines' => 'nullable|array',
+            'upcoming_gdpr_deadlines.*' => 'string|max:255',
+            'next_review_date' => 'nullable|date',
+            'gdpr_notes' => 'nullable|string|max:1000',
         ]);
 
         if ($validator->fails()) {
@@ -161,7 +210,11 @@ class MandatorController extends Controller
     public function edit(Mandator $mandator)
     {
         $company = $mandator->company;
-        return view('mandators.edit', compact('mandator', 'company'));
+
+        // Get active disclosure types from database
+        $disclosureTypes = \App\Models\DisclosureType::active()->ordered()->get();
+
+        return view('mandators.edit', compact('mandator', 'company', 'disclosureTypes'));
     }
 
     /**
@@ -171,6 +224,8 @@ class MandatorController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'company_id' => 'sometimes|required|exists:companies,id',
+            'agent_company_id' => 'nullable|exists:companies,id',
+            'gdpr_representative_id' => 'nullable|exists:users,id',
             'first_name' => 'sometimes|required|string|max:255',
             'last_name' => 'nullable|string|max:255',
             'email' => [
@@ -190,6 +245,49 @@ class MandatorController extends Controller
             'email_notifications' => 'boolean',
             'sms_notifications' => 'boolean',
             'preferred_contact_method' => 'in:email,phone,sms',
+            // GDPR service agreement fields
+            'service_agreement_number' => 'nullable|string|max:255',
+            'service_start_date' => 'nullable|date',
+            'service_end_date' => 'nullable|date|after_or_equal:service_start_date',
+            'service_status' => 'nullable|in:active,expired,terminated,pending_renewal',
+            'service_type' => 'nullable|in:gdpr_compliance,data_audit,dpo_services,training,consulting',
+            // GDPR compliance tracking
+            'compliance_score' => 'nullable|integer|min:0|max:100',
+            'last_gdpr_audit_date' => 'nullable|date',
+            'next_gdpr_audit_date' => 'nullable|date|after:last_gdpr_audit_date',
+            'gdpr_maturity_level' => 'nullable|in:beginner,intermediate,advanced,expert',
+            'risk_level' => 'nullable|in:low,medium,high,very_high',
+            // GDPR service scope
+            'gdpr_services_provided' => 'nullable|array',
+            'gdpr_services_provided.*' => 'string|max:255',
+            'gdpr_requirements' => 'nullable|string|max:1000',
+            'applicable_regulations' => 'nullable|array',
+            'applicable_regulations.*' => 'string|max:255',
+            // Communication preferences for GDPR matters
+            'gdpr_reporting_frequency' => 'nullable|in:monthly,quarterly,annually,on_demand',
+            'gdpr_reporting_format' => 'nullable|in:pdf,excel,web_dashboard,email',
+            'gdpr_reporting_recipients' => 'nullable|array',
+            'gdpr_reporting_recipients.*' => 'email|max:255',
+            // GDPR incident management
+            'last_data_incident_date' => 'nullable|date',
+            'data_incidents_count' => 'nullable|integer|min:0',
+            'incident_response_plan' => 'nullable|string|max:1000',
+            // GDPR training and awareness
+            'last_gdpr_training_date' => 'nullable|date',
+            'next_gdpr_training_date' => 'nullable|date|after:last_gdpr_training_date',
+            'employees_trained_count' => 'nullable|integer|min:0',
+            'gdpr_training_required' => 'boolean',
+            // GDPR documentation
+            'privacy_policy_updated' => 'boolean',
+            'privacy_policy_last_updated' => 'nullable|date',
+            'data_processing_register_maintained' => 'boolean',
+            'data_breach_procedures_established' => 'boolean',
+            'data_subject_rights_procedures_established' => 'boolean',
+            // GDPR deadlines and reminders
+            'upcoming_gdpr_deadlines' => 'nullable|array',
+            'upcoming_gdpr_deadlines.*' => 'string|max:255',
+            'next_review_date' => 'nullable|date',
+            'gdpr_notes' => 'nullable|string|max:1000',
         ]);
 
         if ($validator->fails()) {
