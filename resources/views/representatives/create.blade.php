@@ -46,7 +46,7 @@
 
         <!-- Form -->
         <div class="bg-white rounded-lg shadow p-6">
-            <form action="{{ route('representatives.store') }}" method="POST">
+            <form action="{{ route('representatives.store') }}" method="POST" enctype="multipart/form-data">
                 @csrf
 
                 <!-- Basic Information -->
@@ -143,6 +143,28 @@
                             @error('department')
                                 <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
                             @enderror
+                        </div>
+
+                        <div class="md:col-span-2">
+                            <label for="logo" class="block text-sm font-medium text-gray-700 mb-2">Logo/Photo</label>
+                            <div class="flex items-center space-x-4">
+                                <div class="flex-shrink-0">
+                                    <div id="logo-preview" class="w-20 h-20 rounded-full bg-gray-200 flex items-center justify-center border-2 border-dashed border-gray-300">
+                                        <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                                        </svg>
+                                    </div>
+                                </div>
+                                <div class="flex-1">
+                                    <input type="file" name="logo" id="logo" accept="image/*"
+                                           class="w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 @error('logo') border-red-500 @enderror"
+                                           onchange="previewLogo(this)">
+                                    <p class="text-sm text-gray-500 mt-1">Upload a profile photo (JPEG, PNG, GIF, SVG - max 2MB)</p>
+                                    @error('logo')
+                                        <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
+                                    @enderror
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -248,18 +270,39 @@
                 </div>
 
                 <!-- Form Actions -->
-                <div class="flex justify-end space-x-4 pt-6 border-t border-gray-200">
+                <div class="flex justify-end space-x-3">
                     <a href="{{ route('representatives.index') }}"
-                       class="bg-gray-300 hover:bg-gray-400 text-gray-700 px-4 py-2 rounded-md">
+                       class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded">
                         Cancel
                     </a>
                     <button type="submit"
-                            class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-md">
+                            class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
                         Create Representative
                     </button>
                 </div>
             </form>
         </div>
     </div>
+
+    <script>
+    function previewLogo(input) {
+        const preview = document.getElementById('logo-preview');
+        const file = input.files[0];
+
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                preview.innerHTML = `<img src="${e.target.result}" alt="Logo preview" class="w-full h-full rounded-full object-cover">`;
+            };
+            reader.readAsDataURL(file);
+        } else {
+            preview.innerHTML = `
+                <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                </svg>
+            `;
+        }
+    }
+    </script>
 </body>
 </html>

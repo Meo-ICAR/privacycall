@@ -20,6 +20,7 @@ use App\Http\Controllers\RepresentativeController;
 use App\Http\Controllers\CompanyEmailController;
 use App\Http\Controllers\CompanyEmailConfigController;
 use App\Http\Controllers\UnifiedEmailController;
+use App\Http\Controllers\AuditRequestController;
 
 Route::get('/', function () {
     return view('welcome');
@@ -143,6 +144,22 @@ Route::middleware(['auth', 'verified'])->group(function () {
 // Representative management routes (admin/superadmin)
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::resource('representatives', RepresentativeController::class);
+
+    // Cloning routes (superadmin only)
+    Route::middleware(['role:superadmin'])->group(function () {
+        Route::get('/representatives/{representative}/clone', [RepresentativeController::class, 'showCloneForm'])->name('representatives.clone-form');
+        Route::post('/representatives/{representative}/clone', [RepresentativeController::class, 'clone'])->name('representatives.clone');
+        Route::post('/representatives/{representative}/clone-multiple', [RepresentativeController::class, 'cloneToMultiple'])->name('representatives.clone-multiple');
+    });
+
+    // Related representatives routes
+    Route::get('/representatives/{representative}/clones', [RepresentativeController::class, 'getClones'])->name('representatives.clones');
+    Route::get('/representatives/{representative}/related', [RepresentativeController::class, 'getRelated'])->name('representatives.related');
+
+    // Disclosure subscription routes
+    Route::post('/representatives/{representative}/add-disclosure-subscription', [RepresentativeController::class, 'addDisclosureSubscription'])->name('representatives.add-disclosure-subscription');
+    Route::post('/representatives/{representative}/remove-disclosure-subscription', [RepresentativeController::class, 'removeDisclosureSubscription'])->name('representatives.remove-disclosure-subscription');
+    Route::get('/representatives/disclosure-summary', [RepresentativeController::class, 'getDisclosureSummary'])->name('representatives.disclosure-summary');
 });
 
 // Company email management routes (admin/superadmin)
@@ -188,6 +205,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('/send', [\App\Http\Controllers\UnifiedEmailController::class, 'send'])->name('emails.send');
         Route::post('/quick-mail-merge', [\App\Http\Controllers\UnifiedEmailController::class, 'quickMailMerge'])->name('emails.quick-mail-merge');
         Route::post('/fetch', [\App\Http\Controllers\UnifiedEmailController::class, 'fetchEmails'])->name('emails.fetch');
+        Route::get('/attachment/{id}/{type?}', [\App\Http\Controllers\UnifiedEmailController::class, 'downloadAttachment'])->name('emails.download-attachment');
     });
 });
 
@@ -233,4 +251,22 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/supplier-mail-merge', [\App\Http\Controllers\SupplierMailMergeController::class, 'index'])->name('supplier-mail-merge.index');
     Route::post('/supplier-mail-merge/preview', [\App\Http\Controllers\SupplierMailMergeController::class, 'preview'])->name('supplier-mail-merge.preview');
     Route::post('/supplier-mail-merge/send', [\App\Http\Controllers\SupplierMailMergeController::class, 'send'])->name('supplier-mail-merge.send');
+});
+
+// Audit Request Management routes (admin/superadmin)
+Route::middleware(['auth', 'verified'])->group(function () {
+    Route::resource('audit-requests', \App\Http\Controllers\AuditRequestController::class);
+    Route::post('/audit-requests/{auditRequest}/send-email', [\App\Http\Controllers\AuditRequestController::class, 'sendEmail'])->name('audit-requests.send-email');
+    Route::post('/audit-requests/{auditRequest}/mark-in-progress', [\App\Http\Controllers\AuditRequestController::class, 'markInProgress'])->name('audit-requests.mark-in-progress');
+    Route::post('/audit-requests/{auditRequest}/mark-completed', [\App\Http\Controllers\AuditRequestController::class, 'markCompleted'])->name('audit-requests.mark-completed');
+
+    // Enhanced supplier audit features
+    Route::post('/audit-requests/{auditRequest}/add-findings', [\App\Http\Controllers\AuditRequestController::class, 'addFindings'])->name('audit-requests.add-findings');
+    Route::post('/audit-requests/{auditRequest}/add-corrective-actions', [\App\Http\Controllers\AuditRequestController::class, 'addCorrectiveActions'])->name('audit-requests.add-corrective-actions');
+    Route::post('/audit-requests/{auditRequest}/mark-response-received', [\App\Http\Controllers\AuditRequestController::class, 'markResponseReceived'])->name('audit-requests.mark-response-received');
+    Route::post('/audit-requests/{auditRequest}/upload-report', [\App\Http\Controllers\AuditRequestController::class, 'uploadReport'])->name('audit-requests.upload-report');
+    Route::post('/audit-requests/{auditRequest}/schedule-next-audit', [\App\Http\Controllers\AuditRequestController::class, 'scheduleNextAudit'])->name('audit-requests.schedule-next-audit');
+
+    // Supplier audit dashboard
+    Route::get('/suppliers/{supplier}/audit-dashboard', [\App\Http\Controllers\AuditRequestController::class, 'supplierDashboard'])->name('suppliers.audit-dashboard');
 });

@@ -103,16 +103,16 @@
                                 Representative
                             </th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Company
-                            </th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                 Position
                             </th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Subscriptions
+                                Company
                             </th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                 Status
+                            </th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Subscriptions
                             </th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                 Actions
@@ -125,76 +125,60 @@
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     <div class="flex items-center">
                                         <div class="flex-shrink-0 h-10 w-10">
-                                            <div class="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center">
-                                                <span class="text-blue-600 font-medium">
-                                                    {{ strtoupper(substr($representative->first_name, 0, 1) . substr($representative->last_name, 0, 1)) }}
-                                                </span>
-                                            </div>
+                                            <img class="h-10 w-10 rounded-full object-cover"
+                                                 src="{{ $representative->logo_url }}"
+                                                 alt="{{ $representative->full_name }}">
                                         </div>
                                         <div class="ml-4">
                                             <div class="text-sm font-medium text-gray-900">
-                                                {{ $representative->first_name }} {{ $representative->last_name }}
+                                                {{ $representative->full_name }}
+                                                @if($representative->isClone())
+                                                    <span class="ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-yellow-100 text-yellow-800">
+                                                        <i class="fas fa-copy mr-1"></i>Clone
+                                                    </span>
+                                                @endif
                                             </div>
-                                            <div class="text-sm text-gray-500">
-                                                {{ $representative->email }}
-                                            </div>
-                                            @if($representative->phone)
-                                                <div class="text-sm text-gray-500">
-                                                    {{ $representative->phone }}
-                                                </div>
-                                            @endif
+                                            <div class="text-sm text-gray-500">{{ $representative->email }}</div>
                                         </div>
                                     </div>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap">
-                                    <div class="text-sm text-gray-900">{{ $representative->company->name }}</div>
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap">
                                     <div class="text-sm text-gray-900">{{ $representative->position ?? 'N/A' }}</div>
-                                    @if($representative->department)
-                                        <div class="text-sm text-gray-500">{{ $representative->department }}</div>
-                                    @endif
+                                    <div class="text-sm text-gray-500">{{ $representative->department ?? 'N/A' }}</div>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap">
-                                    @if($representative->disclosure_subscriptions && count($representative->disclosure_subscriptions) > 0)
-                                        <div class="flex flex-wrap gap-1">
-                                            @foreach(array_slice($representative->disclosure_subscriptions, 0, 3) as $subscription)
-                                                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                                                    {{ $subscription }}
-                                                </span>
-                                            @endforeach
-                                            @if(count($representative->disclosure_subscriptions) > 3)
-                                                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                                                    +{{ count($representative->disclosure_subscriptions) - 3 }} more
-                                                </span>
-                                            @endif
+                                    <div class="text-sm text-gray-900">{{ $representative->company->name }}</div>
+                                    @if($representative->isClone())
+                                        <div class="text-xs text-gray-500">
+                                            Cloned from: {{ $representative->original->full_name }}
                                         </div>
-                                    @else
-                                        <span class="text-sm text-gray-500">No subscriptions</span>
                                     @endif
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap">
-                                    @if($representative->is_active)
-                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                            <i class="fas fa-check-circle mr-1"></i>
-                                            Active
-                                        </span>
-                                    @else
-                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
-                                            <i class="fas fa-times-circle mr-1"></i>
-                                            Inactive
-                                        </span>
-                                    @endif
+                                    <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full
+                                        {{ $representative->is_active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800' }}">
+                                        {{ $representative->is_active ? 'Active' : 'Inactive' }}
+                                    </span>
                                 </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                    <div class="flex space-x-2">
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                    {{ $representative->disclosure_subscriptions ? count($representative->disclosure_subscriptions) : 0 }} subscriptions
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                    <div class="flex items-center justify-end space-x-2">
+                                        @if(Auth::user()->role === 'superadmin')
+                                            <a href="{{ route('representatives.clone-form', $representative) }}"
+                                               class="text-green-600 hover:text-green-900"
+                                               title="Clone to another company">
+                                                <i class="fas fa-copy"></i>
+                                            </a>
+                                        @endif
                                         <a href="{{ route('representatives.show', $representative) }}"
                                            class="text-blue-600 hover:text-blue-900">
-                                            <i class="fas fa-eye"></i>
+                                            View
                                         </a>
                                         <a href="{{ route('representatives.edit', $representative) }}"
                                            class="text-indigo-600 hover:text-indigo-900">
-                                            <i class="fas fa-edit"></i>
+                                            Edit
                                         </a>
                                         <form action="{{ route('representatives.destroy', $representative) }}"
                                               method="POST"
@@ -202,8 +186,9 @@
                                               onsubmit="return confirm('Are you sure you want to delete this representative?')">
                                             @csrf
                                             @method('DELETE')
-                                            <button type="submit" class="text-red-600 hover:text-red-900">
-                                                <i class="fas fa-trash"></i>
+                                            <button type="submit"
+                                                    class="text-red-600 hover:text-red-900">
+                                                Delete
                                             </button>
                                         </form>
                                     </div>
@@ -211,14 +196,8 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="6" class="px-6 py-4 text-center text-gray-500">
-                                    <div class="flex flex-col items-center">
-                                        <i class="fas fa-users text-4xl mb-2 text-gray-300"></i>
-                                        <p>No representatives found</p>
-                                        <a href="{{ route('representatives.create') }}" class="text-blue-600 hover:text-blue-800 mt-2">
-                                            Add your first representative
-                                        </a>
-                                    </div>
+                                <td colspan="6" class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
+                                    No representatives found.
                                 </td>
                             </tr>
                         @endforelse

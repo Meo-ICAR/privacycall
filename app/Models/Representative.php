@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Representative extends Model
 {
@@ -24,6 +25,8 @@ class Representative extends Model
         'phone',
         'position',
         'department',
+        'logo_url',
+        'original_id',
         'disclosure_subscriptions',
         'last_disclosure_date',
         'is_active',
@@ -66,6 +69,85 @@ class Representative extends Model
     }
 
     /**
+     * Get the original representative (if this is a clone).
+     */
+    public function original(): BelongsTo
+    {
+        return $this->belongsTo(Representative::class, 'original_id');
+    }
+
+    /**
+     * Get all clones of this representative.
+     */
+    public function clones(): HasMany
+    {
+        return $this->hasMany(Representative::class, 'original_id');
+    }
+
+    /**
+     * Check if this representative is a clone.
+     */
+    public function isClone(): bool
+    {
+        return !is_null($this->original_id);
+    }
+
+    /**
+     * Check if this representative has clones.
+     */
+    public function hasClones(): bool
+    {
+        return $this->clones()->exists();
+    }
+
+    /**
+     * Get the root representative (original or self if not a clone).
+     */
+    public function getRootRepresentative(): Representative
+    {
+        return $this->original_id ? $this->original : $this;
+    }
+
+    /**
+     * Clone this representative to another company.
+     */
+    public function cloneToCompany(int $targetCompanyId, array $overrides = []): Representative
+    {
+        $cloneData = $this->toArray();
+
+        // Remove fields that shouldn't be cloned
+        unset($cloneData['id'], $cloneData['created_at'], $cloneData['updated_at'], $cloneData['deleted_at']);
+
+        // Set the new company and original reference
+        $cloneData['company_id'] = $targetCompanyId;
+        $cloneData['original_id'] = $this->id;
+
+        // Apply any overrides
+        $cloneData = array_merge($cloneData, $overrides);
+
+        // Ensure email is unique by adding a suffix if needed
+        $originalEmail = $cloneData['email'];
+        $counter = 1;
+        while (Representative::where('email', $cloneData['email'])->exists()) {
+            $cloneData['email'] = $originalEmail . '_clone_' . $counter;
+            $counter++;
+        }
+
+        return Representative::create($cloneData);
+    }
+
+    /**
+     * Get all related representatives (original + clones).
+     */
+    public function getAllRelated(): \Illuminate\Database\Eloquent\Collection
+    {
+        $root = $this->getRootRepresentative();
+        return Representative::where('id', $root->id)
+            ->orWhere('original_id', $root->id)
+            ->get();
+    }
+
+    /**
      * Get the full name of the representative.
      */
     public function getFullNameAttribute(): string
@@ -87,6 +169,22 @@ class Representative extends Model
     public function scopeForCompany($query, $companyId)
     {
         return $query->where('company_id', $companyId);
+    }
+
+    /**
+     * Scope a query to only include original representatives (not clones).
+     */
+    public function scopeOriginals($query)
+    {
+        return $query->whereNull('original_id');
+    }
+
+    /**
+     * Scope a query to only include cloned representatives.
+     */
+    public function scopeClones($query)
+    {
+        return $query->whereNotNull('original_id');
     }
 
     /**
@@ -141,5 +239,19 @@ class Representative extends Model
     public function updateLastDisclosureDate(): void
     {
         $this->update(['last_disclosure_date' => now()]);
+    }
+
+    /**
+     * Get the logo URL or a default avatar.
+     */
+    public function getLogoUrlAttribute($value): string
+    {
+        if ($value) {
+            return $value;
+        }
+
+        // Return a default avatar based on initials
+        $initials = strtoupper(substr($this->first_name, 0, 1) . substr($this->last_name ?? '', 0, 1));
+        return "https://ui-avatars.com/api/?name=" . urlencode($initials) . "&color=7C3AED&background=EBF4FF";
     }
 }

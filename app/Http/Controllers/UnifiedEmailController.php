@@ -11,6 +11,7 @@ use App\Services\EmailIntegrationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Storage;
 
 class UnifiedEmailController extends Controller
 {
@@ -169,14 +170,47 @@ class UnifiedEmailController extends Controller
     {
         $request->validate([
             'reply_body' => 'required|string|max:5000',
-            'template_id' => 'nullable|exists:email_templates,id'
+            'template_id' => 'nullable|exists:email_templates,id',
+            'attachments.*' => 'nullable|file|max:10240' // 10MB max per file
         ]);
 
         $user = Auth::user();
 
         try {
+            // Handle file uploads
+            $attachments = [];
+            if ($request->hasFile('attachments')) {
+                foreach ($request->file('attachments') as $file) {
+                    // Generate unique filename
+                    $filename = uniqid() . '_' . $file->getClientOriginalName();
+                    $storagePath = 'email-reply-attachments/' . $email->company_id . '/' . $filename;
+
+                    // Store the file
+                    $file->storeAs('email-reply-attachments/' . $email->company_id, $filename);
+
+                    // Create EmailReplyAttachment record
+                    $attachmentRecord = \App\Models\EmailReplyAttachment::create([
+                        'company_email_id' => $email->id,
+                        'user_id' => $user->id,
+                        'filename' => $filename,
+                        'original_name' => $file->getClientOriginalName(),
+                        'mime_type' => $file->getMimeType(),
+                        'size' => $file->getSize(),
+                        'storage_path' => $storagePath,
+                    ]);
+
+                    // Add to attachments array for email service
+                    $attachments[] = [
+                        'name' => $file->getClientOriginalName(),
+                        'mime_type' => $file->getMimeType(),
+                        'size' => $file->getSize(),
+                        'path' => $storagePath,
+                    ];
+                }
+            }
+
             // Send reply using email service
-            $sent = $this->emailService->sendReply($email, $user, $request->reply_body);
+            $sent = $this->emailService->sendReply($email, $user, $request->reply_body, $attachments);
 
             if ($sent) {
                 return redirect()->route('emails.show', ['id' => $email->id, 'type' => 'incoming'])
@@ -203,7 +237,8 @@ class UnifiedEmailController extends Controller
             'subject' => 'required|string|max:255',
             'body' => 'required|string|max:10000',
             'template_id' => 'nullable|exists:email_templates,id',
-            'priority' => 'nullable|in:low,normal,high,urgent'
+            'priority' => 'nullable|in:low,normal,high,urgent',
+            'attachments.*' => 'nullable|file|max:10240' // 10MB max per file
         ]);
 
         try {
@@ -212,13 +247,35 @@ class UnifiedEmailController extends Controller
                 return back()->withErrors(['email' => 'Email is not configured for this company. Please configure email settings first.']);
             }
 
+            // Handle file uploads
+            $attachments = [];
+            if ($request->hasFile('attachments')) {
+                foreach ($request->file('attachments') as $file) {
+                    // Generate unique filename
+                    $filename = uniqid() . '_' . $file->getClientOriginalName();
+                    $storagePath = 'email-attachments/' . $company->id . '/' . $filename;
+
+                    // Store the file
+                    $file->storeAs('email-attachments/' . $company->id, $filename);
+
+                    // Add to attachments array for email service
+                    $attachments[] = [
+                        'name' => $file->getClientOriginalName(),
+                        'mime_type' => $file->getMimeType(),
+                        'size' => $file->getSize(),
+                        'path' => $storagePath,
+                    ];
+                }
+            }
+
             // Prepare email data
             $emailData = [
                 'to_email' => $request->to_email,
                 'to_name' => $request->to_name,
                 'subject' => $request->subject,
                 'body' => $request->body,
-                'priority' => $request->priority ?? 'normal'
+                'priority' => $request->priority ?? 'normal',
+                'attachments' => $attachments
             ];
 
             // Send email using configured provider
@@ -226,7 +283,7 @@ class UnifiedEmailController extends Controller
 
             if ($sent) {
                 // Log the email
-                EmailLog::create([
+                $emailLog = EmailLog::create([
                     'company_id' => $company->id,
                     'user_id' => $user->id,
                     'recipient_email' => $request->to_email,
@@ -242,6 +299,25 @@ class UnifiedEmailController extends Controller
                         'type' => 'manual'
                     ]
                 ]);
+
+                // Save attachments if any
+                if ($request->hasFile('attachments')) {
+                    foreach ($request->file('attachments') as $file) {
+                        $filename = uniqid() . '_' . $file->getClientOriginalName();
+                        $storagePath = 'email-attachments/' . $company->id . '/' . $filename;
+
+                        \App\Models\EmailReplyAttachment::create([
+                            'company_email_id' => null, // Not a reply to existing email
+                            'email_log_id' => $emailLog->id,
+                            'user_id' => $user->id,
+                            'filename' => $filename,
+                            'original_name' => $file->getClientOriginalName(),
+                            'mime_type' => $file->getMimeType(),
+                            'size' => $file->getSize(),
+                            'storage_path' => $storagePath,
+                        ]);
+                    }
+                }
 
                 return redirect()->route('emails.dashboard', $company)
                     ->with('success', 'Email sent successfully!');
@@ -432,5 +508,32 @@ class UnifiedEmailController extends Controller
             'notification' => 'Notification',
             'gdpr' => 'GDPR Related',
         ];
+    }
+
+    /**
+     * Download an email attachment.
+     */
+    public function downloadAttachment($id, $type = 'incoming')
+    {
+        $user = Auth::user();
+        $company = $user->company;
+
+        if ($type === 'incoming') {
+            $attachment = \App\Models\EmailDocument::whereHas('companyEmail', function ($query) use ($company) {
+                $query->where('company_id', $company->id);
+            })->findOrFail($id);
+        } else {
+            $attachment = \App\Models\EmailReplyAttachment::whereHas('companyEmail', function ($query) use ($company) {
+                $query->where('company_id', $company->id);
+            })->findOrFail($id);
+        }
+
+        // Check if file exists
+        if (!Storage::exists($attachment->storage_path)) {
+            abort(404, 'File not found');
+        }
+
+        // Return file download
+        return Storage::download($attachment->storage_path, $attachment->original_name);
     }
 }

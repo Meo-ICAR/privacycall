@@ -10,9 +10,14 @@
                 <h1 class="text-3xl font-bold text-gray-900">Unified Email Dashboard</h1>
                 <p class="text-gray-600 mt-2">Manage all incoming and outgoing emails for <span class="font-semibold">{{ $company->name }}</span></p>
             </div>
-            <a href="{{ route('companies.show', $company) }}" class="btn btn-secondary">
-                <i class="fas fa-arrow-left mr-2"></i>Back to Company
-            </a>
+            <div class="flex space-x-3">
+                <button onclick="openSendEmailModal()" class="btn btn-primary">
+                    <i class="fas fa-plus mr-2"></i>Send New Email
+                </button>
+                <a href="{{ route('companies.show', $company) }}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left mr-2"></i>Back to Company
+                </a>
+            </div>
         </div>
 
         <!-- Email Statistics -->
@@ -156,4 +161,84 @@
         </div>
     </div>
 </div>
+
+<!-- Send Email Modal -->
+<div id="sendEmailModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50">
+    <div class="relative top-20 mx-auto p-5 border w-11/12 md:w-3/4 lg:w-1/2 shadow-lg rounded-md bg-white">
+        <div class="mt-3">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-medium text-gray-900">Send New Email</h3>
+                <button onclick="closeSendEmailModal()" class="text-gray-400 hover:text-gray-600">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
+            <form action="{{ route('emails.send') }}" method="POST" enctype="multipart/form-data">
+                @csrf
+                <div class="space-y-4">
+                    <div>
+                        <label for="to_email" class="block text-sm font-medium text-gray-700">To Email *</label>
+                        <input type="email" id="to_email" name="to_email" required class="form-input w-full mt-1">
+                    </div>
+
+                    <div>
+                        <label for="to_name" class="block text-sm font-medium text-gray-700">To Name</label>
+                        <input type="text" id="to_name" name="to_name" class="form-input w-full mt-1">
+                    </div>
+
+                    <div>
+                        <label for="subject" class="block text-sm font-medium text-gray-700">Subject *</label>
+                        <input type="text" id="subject" name="subject" required class="form-input w-full mt-1">
+                    </div>
+
+                    <div>
+                        <label for="body" class="block text-sm font-medium text-gray-700">Message *</label>
+                        <textarea id="body" name="body" rows="6" required class="form-textarea w-full mt-1"></textarea>
+                    </div>
+
+                    <div>
+                        <label for="attachments" class="block text-sm font-medium text-gray-700">Attachments</label>
+                        <input type="file" id="attachments" name="attachments[]" multiple class="form-input w-full mt-1" accept=".pdf,.doc,.docx,.txt,.jpg,.jpeg,.png,.gif">
+                        <p class="text-xs text-gray-500 mt-1">You can select multiple files. Maximum 10MB per file.</p>
+                    </div>
+
+                    <div>
+                        <label for="priority" class="block text-sm font-medium text-gray-700">Priority</label>
+                        <select id="priority" name="priority" class="form-select w-full mt-1">
+                            <option value="normal">Normal</option>
+                            <option value="high">High</option>
+                            <option value="urgent">Urgent</option>
+                            <option value="low">Low</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="flex justify-end space-x-3 mt-6">
+                    <button type="button" onclick="closeSendEmailModal()" class="btn btn-secondary">Cancel</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-paper-plane mr-2"></i>Send Email
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+function openSendEmailModal() {
+    document.getElementById('sendEmailModal').classList.remove('hidden');
+}
+
+function closeSendEmailModal() {
+    document.getElementById('sendEmailModal').classList.add('hidden');
+}
+
+// Close modal when clicking outside
+document.getElementById('sendEmailModal').addEventListener('click', function(e) {
+    if (e.target === this) {
+        closeSendEmailModal();
+    }
+});
+</script>
+
 @endsection

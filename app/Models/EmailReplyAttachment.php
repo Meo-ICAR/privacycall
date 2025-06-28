@@ -12,6 +12,7 @@ class EmailReplyAttachment extends Model
 
     protected $fillable = [
         'company_email_id',
+        'email_log_id',
         'user_id',
         'filename',
         'original_name',
@@ -23,6 +24,11 @@ class EmailReplyAttachment extends Model
     public function companyEmail(): BelongsTo
     {
         return $this->belongsTo(CompanyEmail::class);
+    }
+
+    public function emailLog(): BelongsTo
+    {
+        return $this->belongsTo(EmailLog::class);
     }
 
     public function user(): BelongsTo

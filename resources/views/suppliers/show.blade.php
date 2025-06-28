@@ -60,6 +60,9 @@
             <div class="mt-4">
                 <h5>Actions</h5>
                 <a href="{{ route('suppliers.edit', $supplier) }}" class="btn btn-warning">Edit</a>
+                <a href="{{ route('suppliers.audit-dashboard', $supplier) }}" class="btn btn-info">
+                    <i class="fas fa-chart-line mr-2"></i>Audit Dashboard
+                </a>
                 <form action="{{ route('suppliers.destroy', $supplier) }}" method="POST" style="display:inline-block">
                     @csrf
                     @method('DELETE')

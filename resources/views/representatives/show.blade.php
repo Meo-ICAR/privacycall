@@ -32,230 +32,281 @@
     </nav>
 
     <!-- Main Content -->
-    <div class="max-w-4xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
-        <!-- Header -->
-        <div class="mb-6">
-            <div class="flex items-center justify-between">
-                <div class="flex items-center">
-                    <a href="{{ route('representatives.index') }}" class="text-blue-600 hover:text-blue-800 mr-4">
-                        <i class="fas fa-arrow-left"></i> Back to Representatives
-                    </a>
-                </div>
-                <div class="flex space-x-3">
-                    <a href="{{ route('representatives.edit', $representative) }}"
-                       class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md">
-                        <i class="fas fa-edit mr-2"></i>Edit
-                    </a>
-                    <form action="{{ route('representatives.destroy', $representative) }}"
-                          method="POST"
-                          class="inline"
-                          onsubmit="return confirm('Are you sure you want to delete this representative?')">
-                        @csrf
-                        @method('DELETE')
-                        <button type="submit" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md">
-                            <i class="fas fa-trash mr-2"></i>Delete
-                        </button>
-                    </form>
-                </div>
-            </div>
-            <h1 class="text-3xl font-bold text-gray-900 mt-2">Representative Details</h1>
-            <p class="text-gray-600 mt-2">View detailed information about this representative</p>
-        </div>
-
-        <!-- Representative Information -->
-        <div class="bg-white rounded-lg shadow overflow-hidden">
-            <!-- Header with Avatar -->
-            <div class="bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-8">
-                <div class="flex items-center">
-                    <div class="flex-shrink-0">
-                        <div class="h-20 w-20 rounded-full bg-white bg-opacity-20 flex items-center justify-center">
-                            <span class="text-white text-2xl font-bold">
-                                {{ strtoupper(substr($representative->first_name, 0, 1) . substr($representative->last_name, 0, 1)) }}
-                            </span>
-                        </div>
-                    </div>
-                    <div class="ml-6">
-                        <h2 class="text-2xl font-bold text-white">
-                            {{ $representative->first_name }} {{ $representative->last_name }}
-                        </h2>
-                        <p class="text-blue-100">{{ $representative->position ?? 'No position specified' }}</p>
-                        <p class="text-blue-100">{{ $representative->company->name }}</p>
-                    </div>
-                    <div class="ml-auto">
-                        @if($representative->is_active)
-                            <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
-                                <i class="fas fa-check-circle mr-1"></i>
-                                Active
-                            </span>
-                        @else
-                            <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-red-100 text-red-800">
-                                <i class="fas fa-times-circle mr-1"></i>
-                                Inactive
-                            </span>
-                        @endif
-                    </div>
-                </div>
-            </div>
-
-            <!-- Content -->
-            <div class="px-6 py-6">
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                    <!-- Basic Information -->
+    <div class="container mx-auto px-4 py-8">
+        <div class="max-w-4xl mx-auto">
+            <!-- Header -->
+            <div class="mb-8">
+                <div class="flex items-center justify-between">
                     <div>
-                        <h3 class="text-lg font-medium text-gray-900 mb-4">Basic Information</h3>
-                        <dl class="space-y-3">
-                            <div>
-                                <dt class="text-sm font-medium text-gray-500">Full Name</dt>
-                                <dd class="text-sm text-gray-900">{{ $representative->first_name }} {{ $representative->last_name }}</dd>
-                            </div>
-                            <div>
-                                <dt class="text-sm font-medium text-gray-500">Email</dt>
-                                <dd class="text-sm text-gray-900">
-                                    <a href="mailto:{{ $representative->email }}" class="text-blue-600 hover:text-blue-800">
-                                        {{ $representative->email }}
+                        <h1 class="text-3xl font-bold text-gray-900">Representative Details</h1>
+                        <p class="text-gray-600 mt-2">{{ $representative->company->name }}</p>
+                    </div>
+                    <div class="flex space-x-3">
+                        @if(Auth::user()->role === 'superadmin')
+                            <a href="{{ route('representatives.clone-form', $representative) }}"
+                               class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">
+                                <i class="fas fa-copy mr-2"></i>Clone
+                            </a>
+                        @endif
+                        <a href="{{ route('representatives.edit', $representative) }}"
+                           class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+                            Edit
+                        </a>
+                        <a href="{{ route('representatives.index') }}"
+                           class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded">
+                            Back to List
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Clone Status Alert -->
+            @if($representative->isClone())
+                <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
+                    <div class="flex">
+                        <div class="flex-shrink-0">
+                            <svg class="h-5 w-5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
+                            </svg>
+                        </div>
+                        <div class="ml-3">
+                            <h3 class="text-sm font-medium text-yellow-800">Cloned Representative</h3>
+                            <div class="mt-2 text-sm text-yellow-700">
+                                <p>This representative was cloned from
+                                    <a href="{{ route('representatives.show', $representative->original) }}"
+                                       class="font-medium underline hover:text-yellow-600">
+                                        {{ $representative->original->full_name }}
                                     </a>
-                                </dd>
+                                    at {{ $representative->original->company->name }}
+                                </p>
                             </div>
-                            @if($representative->phone)
+                        </div>
+                    </div>
+                </div>
+            @endif
+
+            <!-- Main Content -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <!-- Representative Info -->
+                <div class="lg:col-span-2">
+                    <div class="bg-white rounded-lg shadow">
+                        <div class="p-6">
+                            <div class="flex items-start space-x-6">
+                                <!-- Logo/Avatar -->
+                                <div class="flex-shrink-0">
+                                    <img src="{{ $representative->logo_url }}"
+                                         alt="{{ $representative->full_name }}"
+                                         class="w-24 h-24 rounded-full object-cover border-4 border-gray-200">
+                                </div>
+
+                                <!-- Basic Info -->
+                                <div class="flex-1">
+                                    <h2 class="text-2xl font-bold text-gray-900">{{ $representative->full_name }}</h2>
+                                    @if($representative->position)
+                                        <p class="text-lg text-gray-600">{{ $representative->position }}</p>
+                                    @endif
+                                    @if($representative->department)
+                                        <p class="text-gray-500">{{ $representative->department }}</p>
+                                    @endif
+
+                                    <!-- Status Badge -->
+                                    <div class="mt-3">
+                                        <span class="inline-flex px-3 py-1 text-sm font-semibold rounded-full
+                                            {{ $representative->is_active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800' }}">
+                                            {{ $representative->is_active ? 'Active' : 'Inactive' }}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Contact Information -->
+                            <div class="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div>
-                                    <dt class="text-sm font-medium text-gray-500">Phone</dt>
-                                    <dd class="text-sm text-gray-900">
-                                        <a href="tel:{{ $representative->phone }}" class="text-blue-600 hover:text-blue-800">
-                                            {{ $representative->phone }}
+                                    <h3 class="text-lg font-medium text-gray-900 mb-4">Contact Information</h3>
+                                    <dl class="space-y-3">
+                                        <div>
+                                            <dt class="text-sm font-medium text-gray-500">Email</dt>
+                                            <dd class="text-sm text-gray-900">
+                                                <a href="mailto:{{ $representative->email }}" class="text-blue-600 hover:text-blue-800">
+                                                    {{ $representative->email }}
+                                                </a>
+                                            </dd>
+                                        </div>
+                                        @if($representative->phone)
+                                            <div>
+                                                <dt class="text-sm font-medium text-gray-500">Phone</dt>
+                                                <dd class="text-sm text-gray-900">
+                                                    <a href="tel:{{ $representative->phone }}" class="text-blue-600 hover:text-blue-800">
+                                                        {{ $representative->phone }}
+                                                    </a>
+                                                </dd>
+                                            </div>
+                                        @endif
+                                        @if($representative->position)
+                                            <div>
+                                                <dt class="text-sm font-medium text-gray-500">Position</dt>
+                                                <dd class="text-sm text-gray-900">{{ $representative->position }}</dd>
+                                            </div>
+                                        @endif
+                                        @if($representative->department)
+                                            <div>
+                                                <dt class="text-sm font-medium text-gray-500">Department</dt>
+                                                <dd class="text-sm text-gray-900">{{ $representative->department }}</dd>
+                                            </div>
+                                        @endif
+                                        <div>
+                                            <dt class="text-sm font-medium text-gray-500">Company</dt>
+                                            <dd class="text-sm text-gray-900">{{ $representative->company->name }}</dd>
+                                        </div>
+                                    </dl>
+                                </div>
+
+                                <!-- Contact Preferences -->
+                                <div>
+                                    <h3 class="text-lg font-medium text-gray-900 mb-4">Contact Preferences</h3>
+                                    <dl class="space-y-3">
+                                        <div>
+                                            <dt class="text-sm font-medium text-gray-500">Preferred Contact Method</dt>
+                                            <dd class="text-sm text-gray-900">{{ ucfirst($representative->preferred_contact_method) }}</dd>
+                                        </div>
+                                        <div>
+                                            <dt class="text-sm font-medium text-gray-500">Email Notifications</dt>
+                                            <dd class="text-sm text-gray-900">
+                                                <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full
+                                                    {{ $representative->email_notifications ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800' }}">
+                                                    {{ $representative->email_notifications ? 'Enabled' : 'Disabled' }}
+                                                </span>
+                                            </dd>
+                                        </div>
+                                        <div>
+                                            <dt class="text-sm font-medium text-gray-500">SMS Notifications</dt>
+                                            <dd class="text-sm text-gray-900">
+                                                <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full
+                                                    {{ $representative->sms_notifications ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800' }}">
+                                                    {{ $representative->sms_notifications ? 'Enabled' : 'Disabled' }}
+                                                </span>
+                                            </dd>
+                                        </div>
+                                    </dl>
+                                </div>
+                            </div>
+
+                            <!-- Notes -->
+                            @if($representative->notes)
+                                <div class="mt-8">
+                                    <h3 class="text-lg font-medium text-gray-900 mb-4">Notes</h3>
+                                    <div class="bg-gray-50 rounded-lg p-4">
+                                        <p class="text-sm text-gray-700">{{ $representative->notes }}</p>
+                                    </div>
+                                </div>
+                            @endif
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sidebar -->
+                <div class="space-y-6">
+                    <!-- Disclosure Subscriptions -->
+                    <div class="bg-white rounded-lg shadow">
+                        <div class="p-6">
+                            <h3 class="text-lg font-medium text-gray-900 mb-4">Disclosure Subscriptions</h3>
+
+                            @if(!empty($representative->disclosure_subscriptions))
+                                <div class="space-y-2">
+                                    @foreach($representative->disclosure_subscriptions as $subscription)
+                                        <div class="flex items-center">
+                                            <svg class="h-4 w-4 text-green-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                                            </svg>
+                                            <span class="text-sm text-gray-700">{{ ucwords(str_replace('_', ' ', $subscription)) }}</span>
+                                        </div>
+                                    @endforeach
+                                </div>
+
+                                @if($representative->last_disclosure_date)
+                                    <div class="mt-4 pt-4 border-t border-gray-200">
+                                        <p class="text-sm text-gray-500">
+                                            Last disclosure: {{ $representative->last_disclosure_date->format('M d, Y H:i') }}
+                                        </p>
+                                    </div>
+                                @endif
+                            @else
+                                <p class="text-sm text-gray-500">No disclosure subscriptions</p>
+                            @endif
+                        </div>
+                    </div>
+
+                    <!-- Related Representatives -->
+                    @if($representative->hasClones() || $representative->isClone())
+                        <div class="bg-white rounded-lg shadow">
+                            <div class="p-6">
+                                <h3 class="text-lg font-medium text-gray-900 mb-4">Related Representatives</h3>
+
+                                @if($representative->isClone())
+                                    <div class="mb-4">
+                                        <p class="text-sm text-gray-600 mb-2">Original Representative:</p>
+                                        <a href="{{ route('representatives.show', $representative->original) }}"
+                                           class="block p-3 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors">
+                                            <div class="flex items-center">
+                                                <img src="{{ $representative->original->logo_url }}"
+                                                     alt="{{ $representative->original->full_name }}"
+                                                     class="w-8 h-8 rounded-full object-cover mr-3">
+                                                <div>
+                                                    <p class="text-sm font-medium text-gray-900">{{ $representative->original->full_name }}</p>
+                                                    <p class="text-xs text-gray-500">{{ $representative->original->company->name }}</p>
+                                                </div>
+                                            </div>
                                         </a>
-                                    </dd>
-                                </div>
-                            @endif
-                            @if($representative->position)
-                                <div>
-                                    <dt class="text-sm font-medium text-gray-500">Position</dt>
-                                    <dd class="text-sm text-gray-900">{{ $representative->position }}</dd>
-                                </div>
-                            @endif
-                            @if($representative->department)
-                                <div>
-                                    <dt class="text-sm font-medium text-gray-500">Department</dt>
-                                    <dd class="text-sm text-gray-900">{{ $representative->department }}</dd>
-                                </div>
-                            @endif
-                            <div>
-                                <dt class="text-sm font-medium text-gray-500">Company</dt>
-                                <dd class="text-sm text-gray-900">{{ $representative->company->name }}</dd>
-                            </div>
-                        </dl>
-                    </div>
+                                    </div>
+                                @endif
 
-                    <!-- Contact Preferences -->
-                    <div>
-                        <h3 class="text-lg font-medium text-gray-900 mb-4">Contact Preferences</h3>
-                        <dl class="space-y-3">
-                            <div>
-                                <dt class="text-sm font-medium text-gray-500">Preferred Contact Method</dt>
-                                <dd class="text-sm text-gray-900 capitalize">{{ $representative->preferred_contact_method }}</dd>
+                                @if($representative->hasClones())
+                                    <div>
+                                        <p class="text-sm text-gray-600 mb-2">Clones ({{ $representative->clones->count() }}):</p>
+                                        <div class="space-y-2">
+                                            @foreach($representative->clones as $clone)
+                                                <a href="{{ route('representatives.show', $clone) }}"
+                                                   class="block p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                                                    <div class="flex items-center">
+                                                        <img src="{{ $clone->logo_url }}"
+                                                             alt="{{ $clone->full_name }}"
+                                                             class="w-8 h-8 rounded-full object-cover mr-3">
+                                                        <div>
+                                                            <p class="text-sm font-medium text-gray-900">{{ $clone->full_name }}</p>
+                                                            <p class="text-xs text-gray-500">{{ $clone->company->name }}</p>
+                                                        </div>
+                                                    </div>
+                                                </a>
+                                            @endforeach
+                                        </div>
+                                    </div>
+                                @endif
                             </div>
-                            <div>
-                                <dt class="text-sm font-medium text-gray-500">Email Notifications</dt>
-                                <dd class="text-sm text-gray-900">
-                                    @if($representative->email_notifications)
-                                        <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                            <i class="fas fa-check mr-1"></i>Enabled
-                                        </span>
-                                    @else
-                                        <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                                            <i class="fas fa-times mr-1"></i>Disabled
-                                        </span>
-                                    @endif
-                                </dd>
-                            </div>
-                            <div>
-                                <dt class="text-sm font-medium text-gray-500">SMS Notifications</dt>
-                                <dd class="text-sm text-gray-900">
-                                    @if($representative->sms_notifications)
-                                        <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                            <i class="fas fa-check mr-1"></i>Enabled
-                                        </span>
-                                    @else
-                                        <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                                            <i class="fas fa-times mr-1"></i>Disabled
-                                        </span>
-                                    @endif
-                                </dd>
-                            </div>
-                        </dl>
-                    </div>
-                </div>
-
-                <!-- Disclosure Subscriptions -->
-                <div class="mt-8">
-                    <h3 class="text-lg font-medium text-gray-900 mb-4">Disclosure Subscriptions</h3>
-                    @if($representative->disclosure_subscriptions && count($representative->disclosure_subscriptions) > 0)
-                        <div class="flex flex-wrap gap-2">
-                            @foreach($representative->disclosure_subscriptions as $subscription)
-                                <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
-                                    <i class="fas fa-bell mr-2"></i>
-                                    {{ ucwords(str_replace('_', ' ', $subscription)) }}
-                                </span>
-                            @endforeach
                         </div>
-                    @else
-                        <p class="text-gray-500">No disclosure subscriptions configured</p>
                     @endif
-                </div>
 
-                <!-- Disclosure Summary -->
-                <div class="mt-8">
-                    <h3 class="text-lg font-medium text-gray-900 mb-4">Disclosure Summary</h3>
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <div class="bg-gray-50 rounded-lg p-4">
-                            <div class="text-2xl font-bold text-blue-600">
-                                {{ count($representative->disclosure_subscriptions ?? []) }}
+                    <!-- Quick Actions -->
+                    <div class="bg-white rounded-lg shadow">
+                        <div class="p-6">
+                            <h3 class="text-lg font-medium text-gray-900 mb-4">Quick Actions</h3>
+                            <div class="space-y-3">
+                                <a href="{{ route('representatives.edit', $representative) }}"
+                                   class="block w-full text-center bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded">
+                                    Edit Representative
+                                </a>
+                                @if(Auth::user()->role === 'superadmin')
+                                    <a href="{{ route('representatives.clone-form', $representative) }}"
+                                       class="block w-full text-center bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-4 rounded">
+                                        Clone to Another Company
+                                    </a>
+                                @endif
+                                <a href="{{ route('representatives.index') }}"
+                                   class="block w-full text-center bg-gray-500 hover:bg-gray-600 text-white font-medium py-2 px-4 rounded">
+                                    Back to List
+                                </a>
                             </div>
-                            <div class="text-sm text-gray-600">Total Subscriptions</div>
-                        </div>
-                        <div class="bg-gray-50 rounded-lg p-4">
-                            <div class="text-2xl font-bold text-green-600">
-                                {{ $representative->last_disclosure_date ? 'Yes' : 'No' }}
-                            </div>
-                            <div class="text-sm text-gray-600">Last Disclosure Sent</div>
-                        </div>
-                        <div class="bg-gray-50 rounded-lg p-4">
-                            <div class="text-2xl font-bold text-purple-600">
-                                {{ $representative->last_disclosure_date ? $representative->last_disclosure_date->diffInDays(now()) : 'N/A' }}
-                            </div>
-                            <div class="text-sm text-gray-600">Days Since Last Disclosure</div>
                         </div>
                     </div>
-                </div>
-
-                <!-- Notes -->
-                @if($representative->notes)
-                    <div class="mt-8">
-                        <h3 class="text-lg font-medium text-gray-900 mb-4">Notes</h3>
-                        <div class="bg-gray-50 rounded-lg p-4">
-                            <p class="text-gray-700">{{ $representative->notes }}</p>
-                        </div>
-                    </div>
-                @endif
-
-                <!-- Timestamps -->
-                <div class="mt-8 pt-6 border-t border-gray-200">
-                    <h3 class="text-lg font-medium text-gray-900 mb-4">Timestamps</h3>
-                    <dl class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                        <div>
-                            <dt class="text-gray-500">Created</dt>
-                            <dd class="text-gray-900">{{ $representative->created_at->format('M j, Y \a\t g:i A') }}</dd>
-                        </div>
-                        <div>
-                            <dt class="text-gray-500">Last Updated</dt>
-                            <dd class="text-gray-900">{{ $representative->updated_at->format('M j, Y \a\t g:i A') }}</dd>
-                        </div>
-                        @if($representative->last_disclosure_date)
-                            <div>
-                                <dt class="text-gray-500">Last Disclosure Date</dt>
-                                <dd class="text-gray-900">{{ $representative->last_disclosure_date->format('M j, Y \a\t g:i A') }}</dd>
-                            </div>
-                        @endif
-                    </dl>
                 </div>
             </div>
         </div>

@@ -306,6 +306,27 @@ class EmailIntegrationService
         $emails = [];
 
         for ($i = 0; $i < min($maxResults, 10); $i++) {
+            $hasAttachments = rand(0, 3) > 0;
+            $attachments = null;
+
+            if ($hasAttachments) {
+                $attachmentCount = rand(1, 3);
+                $attachments = [];
+
+                for ($j = 0; $j < $attachmentCount; $j++) {
+                    $attachmentTypes = [
+                        ['name' => 'document.pdf', 'mime_type' => 'application/pdf', 'size' => rand(50000, 500000)],
+                        ['name' => 'contract.docx', 'mime_type' => 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'size' => rand(30000, 200000)],
+                        ['name' => 'data_request.xlsx', 'mime_type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'size' => rand(20000, 150000)],
+                        ['name' => 'consent_form.pdf', 'mime_type' => 'application/pdf', 'size' => rand(40000, 300000)],
+                        ['name' => 'privacy_policy.html', 'mime_type' => 'text/html', 'size' => rand(5000, 50000)],
+                        ['name' => 'gdpr_compliance.txt', 'mime_type' => 'text/plain', 'size' => rand(1000, 10000)],
+                    ];
+
+                    $attachments[] = $attachmentTypes[array_rand($attachmentTypes)];
+                }
+            }
+
             $emails[] = [
                 'email_id' => 'email_' . $company->id . '_' . time() . '_' . $i,
                 'thread_id' => 'thread_' . $company->id . '_' . $i,
@@ -315,7 +336,7 @@ class EmailIntegrationService
                 'body' => $this->generateSampleBody($i),
                 'body_plain' => $this->generateSampleBody($i),
                 'received_at' => now()->subHours(rand(1, 168)),
-                'attachments' => rand(0, 3) > 0 ? [['name' => 'document.pdf', 'size' => rand(100, 5000)]] : null,
+                'attachments' => $attachments,
                 'headers' => ['X-Mailer' => 'Sample Mailer'],
                 'labels' => ['INBOX'],
             ];

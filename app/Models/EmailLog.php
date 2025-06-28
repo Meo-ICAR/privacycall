@@ -62,4 +62,12 @@ class EmailLog extends Model
     {
         return $query->where('company_id', $companyId);
     }
+
+    /**
+     * Get reply attachments for this email.
+     */
+    public function replyAttachments()
+    {
+        return $this->hasMany(EmailReplyAttachment::class);
+    }
 }

@@ -8,6 +8,8 @@ use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Auth;
 
 class RepresentativeController extends Controller
 {
@@ -26,6 +28,15 @@ class RepresentativeController extends Controller
         // Filter by active status
         if ($request->has('is_active')) {
             $query->where('is_active', $request->boolean('is_active'));
+        }
+
+        // Filter by clone status
+        if ($request->has('is_clone')) {
+            if ($request->boolean('is_clone')) {
+                $query->clones();
+            } else {
+                $query->originals();
+            }
         }
 
         // Search by name or email
@@ -80,6 +91,7 @@ class RepresentativeController extends Controller
             'phone' => 'nullable|string|max:20',
             'position' => 'nullable|string|max:255',
             'department' => 'nullable|string|max:255',
+            'logo' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
             'disclosure_subscriptions' => 'nullable|array',
             'disclosure_subscriptions.*' => 'string|max:255',
             'is_active' => 'boolean',
@@ -101,7 +113,17 @@ class RepresentativeController extends Controller
             return back()->withErrors($validator)->withInput();
         }
 
-        $representative = Representative::create($validator->validated());
+        $data = $validator->validated();
+
+        // Handle logo upload
+        if ($request->hasFile('logo')) {
+            $logo = $request->file('logo');
+            $filename = 'representative_logos/' . uniqid('logo_') . '.' . $logo->getClientOriginalExtension();
+            Storage::disk('public')->put($filename, file_get_contents($logo));
+            $data['logo_url'] = Storage::url($filename);
+        }
+
+        $representative = Representative::create($data);
 
         if ($request->expectsJson()) {
             return response()->json([
@@ -120,13 +142,12 @@ class RepresentativeController extends Controller
      */
     public function show(Representative $representative, Request $request)
     {
-        $representative->load('company');
+        $representative->load(['company', 'original', 'clones.company']);
 
         if ($request->expectsJson()) {
             return response()->json([
                 'success' => true,
                 'data' => $representative,
-                'disclosure_summary' => $representative->disclosure_summary,
                 'message' => 'Representative retrieved successfully'
             ]);
         }
@@ -161,6 +182,7 @@ class RepresentativeController extends Controller
             'phone' => 'nullable|string|max:20',
             'position' => 'nullable|string|max:255',
             'department' => 'nullable|string|max:255',
+            'logo' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
             'disclosure_subscriptions' => 'nullable|array',
             'disclosure_subscriptions.*' => 'string|max:255',
             'is_active' => 'boolean',
@@ -182,7 +204,23 @@ class RepresentativeController extends Controller
             return back()->withErrors($validator)->withInput();
         }
 
-        $representative->update($validator->validated());
+        $data = $validator->validated();
+
+        // Handle logo upload
+        if ($request->hasFile('logo')) {
+            // Delete old logo if exists
+            if ($representative->logo_url && !str_contains($representative->logo_url, 'ui-avatars.com')) {
+                $oldLogoPath = str_replace('/storage/', '', $representative->logo_url);
+                Storage::disk('public')->delete($oldLogoPath);
+            }
+
+            $logo = $request->file('logo');
+            $filename = 'representative_logos/' . uniqid('logo_') . '.' . $logo->getClientOriginalExtension();
+            Storage::disk('public')->put($filename, file_get_contents($logo));
+            $data['logo_url'] = Storage::url($filename);
+        }
+
+        $representative->update($data);
 
         if ($request->expectsJson()) {
             return response()->json([
@@ -201,6 +239,12 @@ class RepresentativeController extends Controller
      */
     public function destroy(Representative $representative, Request $request)
     {
+        // Delete logo file if exists
+        if ($representative->logo_url && !str_contains($representative->logo_url, 'ui-avatars.com')) {
+            $logoPath = str_replace('/storage/', '', $representative->logo_url);
+            Storage::disk('public')->delete($logoPath);
+        }
+
         $representative->delete();
 
         if ($request->expectsJson()) {
@@ -215,12 +259,153 @@ class RepresentativeController extends Controller
     }
 
     /**
-     * Add disclosure subscription to representative.
+     * Show the form for cloning a representative to another company.
+     */
+    public function showCloneForm(Representative $representative)
+    {
+        // Check if user is superadmin
+        if (Auth::user()->role !== 'superadmin') {
+            abort(403, 'Only superadmins can clone representatives.');
+        }
+
+        $companies = Company::where('id', '!=', $representative->company_id)->active()->get();
+        return view('representatives.clone', compact('representative', 'companies'));
+    }
+
+    /**
+     * Clone a representative to another company.
+     */
+    public function clone(Request $request, Representative $representative)
+    {
+        // Check if user is superadmin
+        if (Auth::user()->role !== 'superadmin') {
+            abort(403, 'Only superadmins can clone representatives.');
+        }
+
+        $validator = Validator::make($request->all(), [
+            'target_company_id' => 'required|exists:companies,id',
+            'first_name' => 'nullable|string|max:255',
+            'last_name' => 'nullable|string|max:255',
+            'email' => 'nullable|email',
+            'phone' => 'nullable|string|max:20',
+            'position' => 'nullable|string|max:255',
+            'department' => 'nullable|string|max:255',
+            'is_active' => 'boolean',
+            'notes' => 'nullable|string',
+        ]);
+
+        if ($validator->fails()) {
+            return back()->withErrors($validator)->withInput();
+        }
+
+        try {
+            $overrides = $validator->validated();
+            unset($overrides['target_company_id']);
+
+            $clonedRepresentative = $representative->cloneToCompany(
+                $request->target_company_id,
+                $overrides
+            );
+
+            return redirect()->route('representatives.show', $clonedRepresentative)
+                ->with('success', 'Representative cloned successfully to ' . $clonedRepresentative->company->name);
+
+        } catch (\Exception $e) {
+            return back()->withErrors(['error' => 'Failed to clone representative: ' . $e->getMessage()]);
+        }
+    }
+
+    /**
+     * Clone a representative to multiple companies.
+     */
+    public function cloneToMultiple(Request $request, Representative $representative)
+    {
+        // Check if user is superadmin
+        if (Auth::user()->role !== 'superadmin') {
+            abort(403, 'Only superadmins can clone representatives.');
+        }
+
+        $validator = Validator::make($request->all(), [
+            'target_company_ids' => 'required|array|min:1',
+            'target_company_ids.*' => 'exists:companies,id',
+            'overrides' => 'nullable|array',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation failed',
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        try {
+            $clonedRepresentatives = [];
+            $overrides = $request->input('overrides', []);
+
+            foreach ($request->target_company_ids as $companyId) {
+                if ($companyId != $representative->company_id) {
+                    $clonedRepresentatives[] = $representative->cloneToCompany($companyId, $overrides);
+                }
+            }
+
+            return response()->json([
+                'success' => true,
+                'data' => $clonedRepresentatives,
+                'message' => 'Representative cloned to ' . count($clonedRepresentatives) . ' companies successfully'
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to clone representative: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Get all clones of a representative.
+     */
+    public function getClones(Representative $representative, Request $request)
+    {
+        $clones = $representative->clones()->with('company')->get();
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'data' => $clones,
+                'message' => 'Clones retrieved successfully'
+            ]);
+        }
+
+        return view('representatives.clones', compact('representative', 'clones'));
+    }
+
+    /**
+     * Get all related representatives (original + clones).
+     */
+    public function getRelated(Representative $representative, Request $request)
+    {
+        $related = $representative->getAllRelated()->load('company');
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'data' => $related,
+                'message' => 'Related representatives retrieved successfully'
+            ]);
+        }
+
+        return view('representatives.related', compact('representative', 'related'));
+    }
+
+    /**
+     * Add a disclosure subscription.
      */
     public function addDisclosureSubscription(Request $request, Representative $representative): JsonResponse
     {
         $validator = Validator::make($request->all(), [
-            'disclosure_type' => 'required|string|max:255'
+            'disclosure_type' => 'required|string|max:255',
         ]);
 
         if ($validator->fails()) {
@@ -244,19 +429,17 @@ class RepresentativeController extends Controller
 
         return response()->json([
             'success' => true,
-            'data' => $representative->load('company'),
-            'disclosure_summary' => $representative->disclosure_summary,
             'message' => 'Disclosure subscription added successfully'
         ]);
     }
 
     /**
-     * Remove disclosure subscription from representative.
+     * Remove a disclosure subscription.
      */
     public function removeDisclosureSubscription(Request $request, Representative $representative): JsonResponse
     {
         $validator = Validator::make($request->all(), [
-            'disclosure_type' => 'required|string|max:255'
+            'disclosure_type' => 'required|string|max:255',
         ]);
 
         if ($validator->fails()) {
@@ -280,50 +463,16 @@ class RepresentativeController extends Controller
 
         return response()->json([
             'success' => true,
-            'data' => $representative->load('company'),
-            'disclosure_summary' => $representative->disclosure_summary,
             'message' => 'Disclosure subscription removed successfully'
         ]);
     }
 
     /**
-     * Update last disclosure date.
-     */
-    public function updateLastDisclosureDate(Representative $representative): JsonResponse
-    {
-        $representative->updateLastDisclosureDate();
-
-        return response()->json([
-            'success' => true,
-            'data' => $representative->load('company'),
-            'disclosure_summary' => $representative->disclosure_summary,
-            'message' => 'Last disclosure date updated successfully'
-        ]);
-    }
-
-    /**
-     * Get representatives by company.
-     */
-    public function getByCompany(Company $company): JsonResponse
-    {
-        $representatives = $company->representatives()
-            ->active()
-            ->with('company')
-            ->get();
-
-        return response()->json([
-            'success' => true,
-            'data' => $representatives,
-            'message' => 'Company representatives retrieved successfully'
-        ]);
-    }
-
-    /**
-     * Get disclosure summary for all representatives.
+     * Get disclosure summary statistics.
      */
     public function getDisclosureSummary(Request $request): JsonResponse
     {
-        $query = Representative::with('company');
+        $query = Representative::query();
 
         if ($request->has('company_id')) {
             $query->where('company_id', $request->company_id);
