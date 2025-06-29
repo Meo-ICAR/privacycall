@@ -3,7 +3,7 @@
 namespace App\Models\Traits;
 
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use App\Models\ProcessingRegisterChange;
+use App\Models\ProcessingRegC;
 
 trait HasVersioning
 {
@@ -196,7 +196,7 @@ trait HasVersioning
     ): void {
         $entityType = $this->getEntityType();
 
-        ProcessingRegisterChange::create([
+        ProcessingRegC::create([
             'company_id' => $this->company_id,
             'change_type' => $changeType,
             'entity_type' => $entityType,

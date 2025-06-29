@@ -188,7 +188,7 @@
                                     </x-dropdown-link>
 
                                     <!-- DPIAs -->
-                                    <x-dropdown-link href="{{ route('data-protection-impact-assessments.index') }}" :active="request()->routeIs('data-protection-impact-assessments.*')">
+                                    <x-dropdown-link href="{{ route('data-protection-i-as.index') }}" :active="request()->routeIs('data-protection-i-as.*')">
                                         <i class="fas fa-clipboard-check mr-2"></i>{{ __('DPIAs') }}
                                     </x-dropdown-link>
 
@@ -468,7 +468,7 @@
                     </x-responsive-nav-link>
 
                     <!-- DPIAs -->
-                    <x-responsive-nav-link href="{{ route('data-protection-impact-assessments.index') }}" :active="request()->routeIs('data-protection-impact-assessments.*')">
+                    <x-responsive-nav-link href="{{ route('data-protection-i-as.index') }}" :active="request()->routeIs('data-protection-i-as.*')">
                         <i class="fas fa-clipboard-check mr-2"></i>{{ __('DPIAs') }}
                     </x-responsive-nav-link>
 

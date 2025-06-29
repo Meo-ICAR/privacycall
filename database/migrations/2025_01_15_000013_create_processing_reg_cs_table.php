@@ -51,6 +51,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('processing_register_changes');
+        Schema::dropIfExists('processing_reg_cs');
     }
 };

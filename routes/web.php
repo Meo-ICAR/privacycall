@@ -362,14 +362,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/data-breaches/export', [\App\Http\Controllers\DataBreachController::class, 'export'])->name('data-breaches.export');
 });
 
-// Data Protection Impact Assessment (DPIA) Management routes
-Route::middleware(['auth', 'verified'])->group(function () {
-    Route::resource('data-protection-impact-assessments', \App\Http\Controllers\DataProtectionImpactAssessmentController::class);
-    Route::get('/data-protection-impact-assessments/dashboard', [\App\Http\Controllers\DataProtectionImpactAssessmentController::class, 'dashboard'])->name('data-protection-impact-assessments.dashboard');
-    Route::post('/data-protection-impact-assessments/{dataProtectionImpactAssessment}/review', [\App\Http\Controllers\DataProtectionImpactAssessmentController::class, 'review'])->name('data-protection-impact-assessments.review');
-    Route::post('/data-protection-impact-assessments/{dataProtectionImpactAssessment}/approve', [\App\Http\Controllers\DataProtectionImpactAssessmentController::class, 'approve'])->name('data-protection-impact-assessments.approve');
-    Route::post('/data-protection-impact-assessments/export', [\App\Http\Controllers\DataProtectionImpactAssessmentController::class, 'export'])->name('data-protection-impact-assessments.export');
-});
+// Data Protection IAs (formerly Impact Assessments)
+Route::resource('data-protection-i-as', \App\Http\Controllers\DataProtectionIAController::class);
+Route::get('/data-protection-i-as/dashboard', [\App\Http\Controllers\DataProtectionIAController::class, 'dashboard'])->name('data-protection-i-as.dashboard');
+Route::post('/data-protection-i-as/{dataProtectionIA}/review', [\App\Http\Controllers\DataProtectionIAController::class, 'review'])->name('data-protection-i-as.review');
+Route::post('/data-protection-i-as/{dataProtectionIA}/approve', [\App\Http\Controllers\DataProtectionIAController::class, 'approve'])->name('data-protection-i-as.approve');
+Route::post('/data-protection-i-as/export', [\App\Http\Controllers\DataProtectionIAController::class, 'export'])->name('data-protection-i-as.export');
 
 // Third Country Transfer Management routes
 Route::middleware(['auth', 'verified'])->group(function () {

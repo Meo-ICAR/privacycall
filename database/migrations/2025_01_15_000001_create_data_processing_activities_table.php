@@ -29,8 +29,8 @@ return new class extends Migration
             $table->integer('retention_period')->nullable();
             $table->json('security_measures')->nullable();
             $table->string('risk_assessment_level')->nullable();
-            $table->boolean('data_protection_impact_assessment_required')->default(false);
-            $table->dateTime('data_protection_impact_assessment_date')->nullable();
+            $table->boolean('data_protection_ia_required')->default(false);
+            $table->dateTime('data_protection_ia_date')->nullable();
             $table->boolean('data_protection_officer_consulted')->default(false);
             $table->dateTime('data_protection_officer_consultation_date')->nullable();
             $table->date('start_date')->nullable();

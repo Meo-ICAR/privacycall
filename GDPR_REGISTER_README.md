@@ -30,7 +30,7 @@ php artisan gdpr:setup-register --fresh
 - **Campi**: Tipo violazione, severità, stato, notifiche DPA, misure di contenimento
 - **Funzionalità**: Calcolo scadenze 72 ore, notifiche automatiche
 
-#### 3. **data_protection_impact_assessments** (Nuova)
+#### 3. **data_protection_i_as** (Nuova)
 - **Valutazioni d'impatto sulla protezione dei dati (DPIA)**
 - **Campi**: Metodologia, rischi identificati, misure di mitigazione, consultazione autorità
 - **Funzionalità**: Workflow approvazione, scadenze revisione
@@ -143,7 +143,7 @@ public function getNotificationDeadlineAttribute(): Carbon
 public function isOverdueForNotification(): bool
 ```
 
-#### **DataProtectionImpactAssessment** (Nuovo)
+#### **DataProtectionIA** (Nuovo)
 ```php
 // Funzionalità principali
 public function requiresSupervisoryConsultation(): bool

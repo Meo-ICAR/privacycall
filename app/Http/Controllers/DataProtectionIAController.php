@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\DataProtectionImpactAssessment;
+use App\Models\DataProtectionIA;
 use App\Models\DataProcessingActivity;
 use App\Models\Company;
 use Illuminate\Http\Request;
@@ -11,7 +11,7 @@ use Illuminate\View\View;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
-class DataProtectionImpactAssessmentController extends Controller
+class DataProtectionIAController extends Controller
 {
     /**
      * Display a listing of DPIAs.
@@ -20,12 +20,12 @@ class DataProtectionImpactAssessmentController extends Controller
     {
         $company = Auth::user()->company;
 
-        $dpias = DataProtectionImpactAssessment::where('company_id', $company->id)
+        $dpias = DataProtectionIA::where('company_id', $company->id)
             ->with(['dataProcessingActivity', 'assessor', 'reviewer'])
             ->latest()
             ->paginate(15);
 
-        return view('data-protection-impact-assessments.index', compact('dpias'));
+        return view('data-protection-i-as.index', compact('dpias'));
     }
 
     /**
@@ -36,10 +36,10 @@ class DataProtectionImpactAssessmentController extends Controller
         $company = Auth::user()->company;
 
         $activities = DataProcessingActivity::where('company_id', $company->id)
-            ->where('data_protection_impact_assessment_required', true)
+            ->where('data_protection_ia_required', true)
             ->get();
 
-        return view('data-protection-impact-assessments.create', compact('company', 'activities'));
+        return view('data-protection-i-as.create', compact('company', 'activities'));
     }
 
     /**
@@ -75,7 +75,7 @@ class DataProtectionImpactAssessmentController extends Controller
         try {
             DB::beginTransaction();
 
-            $dpia = DataProtectionImpactAssessment::create(array_merge($request->all(), [
+            $dpia = DataProtectionIA::create(array_merge($request->all(), [
                 'company_id' => $company->id,
                 'assessor_id' => Auth::id(),
             ]));
@@ -101,42 +101,42 @@ class DataProtectionImpactAssessmentController extends Controller
     /**
      * Display the specified DPIA.
      */
-    public function show(DataProtectionImpactAssessment $dataProtectionImpactAssessment): View
+    public function show(DataProtectionIA $dataProtectionIA): View
     {
-        $this->authorize('view', $dataProtectionImpactAssessment);
+        $this->authorize('view', $dataProtectionIA);
 
-        $dataProtectionImpactAssessment->load([
+        $dataProtectionIA->load([
             'dataProcessingActivity',
             'assessor',
             'reviewer',
             'company'
         ]);
 
-        return view('data-protection-impact-assessments.show', compact('dataProtectionImpactAssessment'));
+        return view('data-protection-i-as.show', compact('dataProtectionIA'));
     }
 
     /**
      * Show the form for editing the specified DPIA.
      */
-    public function edit(DataProtectionImpactAssessment $dataProtectionImpactAssessment): View
+    public function edit(DataProtectionIA $dataProtectionIA): View
     {
-        $this->authorize('update', $dataProtectionImpactAssessment);
+        $this->authorize('update', $dataProtectionIA);
 
         $company = Auth::user()->company;
 
         $activities = DataProcessingActivity::where('company_id', $company->id)
-            ->where('data_protection_impact_assessment_required', true)
+            ->where('data_protection_ia_required', true)
             ->get();
 
-        return view('data-protection-impact-assessments.edit', compact('dataProtectionImpactAssessment', 'activities'));
+        return view('data-protection-i-as.edit', compact('dataProtectionIA', 'activities'));
     }
 
     /**
      * Update the specified DPIA.
      */
-    public function update(Request $request, DataProtectionImpactAssessment $dataProtectionImpactAssessment): JsonResponse
+    public function update(Request $request, DataProtectionIA $dataProtectionIA): JsonResponse
     {
-        $this->authorize('update', $dataProtectionImpactAssessment);
+        $this->authorize('update', $dataProtectionIA);
 
         $request->validate([
             'data_processing_activity_id' => 'required|exists:data_processing_activities,id',
@@ -161,23 +161,23 @@ class DataProtectionImpactAssessmentController extends Controller
             'notes' => 'nullable|string',
         ]);
 
-        $dataProtectionImpactAssessment->update($request->all());
+        $dataProtectionIA->update($request->all());
 
         return response()->json([
             'success' => true,
             'message' => 'DPIA aggiornata con successo',
-            'dpia' => $dataProtectionImpactAssessment,
+            'dpia' => $dataProtectionIA,
         ]);
     }
 
     /**
      * Remove the specified DPIA.
      */
-    public function destroy(DataProtectionImpactAssessment $dataProtectionImpactAssessment): JsonResponse
+    public function destroy(DataProtectionIA $dataProtectionIA): JsonResponse
     {
-        $this->authorize('delete', $dataProtectionImpactAssessment);
+        $this->authorize('delete', $dataProtectionIA);
 
-        $dataProtectionImpactAssessment->delete();
+        $dataProtectionIA->delete();
 
         return response()->json([
             'success' => true,
@@ -188,9 +188,9 @@ class DataProtectionImpactAssessmentController extends Controller
     /**
      * Review DPIA.
      */
-    public function review(Request $request, DataProtectionImpactAssessment $dataProtectionImpactAssessment): JsonResponse
+    public function review(Request $request, DataProtectionIA $dataProtectionIA): JsonResponse
     {
-        $this->authorize('review', $dataProtectionImpactAssessment);
+        $this->authorize('review', $dataProtectionIA);
 
         $request->validate([
             'review_notes' => 'required|string',
@@ -198,7 +198,7 @@ class DataProtectionImpactAssessmentController extends Controller
             'required_changes' => 'nullable|string',
         ]);
 
-        $dataProtectionImpactAssessment->update([
+        $dataProtectionIA->update([
             'reviewer_id' => Auth::id(),
             'review_date' => now(),
             'review_notes' => $request->review_notes,
@@ -210,22 +210,22 @@ class DataProtectionImpactAssessmentController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'DPIA revisionata con successo',
-            'dpia' => $dataProtectionImpactAssessment,
+            'dpia' => $dataProtectionIA,
         ]);
     }
 
     /**
      * Approve DPIA.
      */
-    public function approve(Request $request, DataProtectionImpactAssessment $dataProtectionImpactAssessment): JsonResponse
+    public function approve(Request $request, DataProtectionIA $dataProtectionIA): JsonResponse
     {
-        $this->authorize('approve', $dataProtectionImpactAssessment);
+        $this->authorize('approve', $dataProtectionIA);
 
         $request->validate([
             'approval_notes' => 'nullable|string',
         ]);
 
-        $dataProtectionImpactAssessment->update([
+        $dataProtectionIA->update([
             'status' => 'approved',
             'approval_date' => now(),
             'approval_notes' => $request->approval_notes,
@@ -234,7 +234,7 @@ class DataProtectionImpactAssessmentController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'DPIA approvata con successo',
-            'dpia' => $dataProtectionImpactAssessment,
+            'dpia' => $dataProtectionIA,
         ]);
     }
 
@@ -245,7 +245,7 @@ class DataProtectionImpactAssessmentController extends Controller
     {
         $company = Auth::user()->company;
 
-        $dpias = DataProtectionImpactAssessment::where('company_id', $company->id)
+        $dpias = DataProtectionIA::where('company_id', $company->id)
             ->with(['dataProcessingActivity', 'assessor', 'reviewer'])
             ->get();
 
@@ -290,7 +290,7 @@ class DataProtectionImpactAssessmentController extends Controller
     {
         $company = Auth::user()->company;
 
-        $dpias = DataProtectionImpactAssessment::where('company_id', $company->id);
+        $dpias = DataProtectionIA::where('company_id', $company->id);
 
         $stats = [
             'total_dpias' => $dpias->count(),
@@ -308,6 +308,6 @@ class DataProtectionImpactAssessmentController extends Controller
             ->limit(5)
             ->get();
 
-        return view('data-protection-impact-assessments.dashboard', compact('stats', 'recentDpias'));
+        return view('data-protection-i-as.dashboard', compact('stats', 'recentDpias'));
     }
 }

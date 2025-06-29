@@ -61,8 +61,8 @@ class DataProcessingActivity extends Model
         'retention_period',
         'security_measures',
         'risk_assessment_level', // low, medium, high
-        'data_protection_impact_assessment_required',
-        'data_protection_impact_assessment_date',
+        'data_protection_ia_required',
+        'data_protection_ia_date',
         'data_protection_officer_consulted',
         'data_protection_officer_consultation_date',
         'start_date',
@@ -91,7 +91,7 @@ class DataProcessingActivity extends Model
         'data_storage_locations' => 'array',
         'supporting_documents' => 'array',
         'related_activities' => 'array',
-        'data_protection_impact_assessment_date' => 'datetime',
+        'data_protection_ia_date' => 'datetime',
         'data_protection_officer_consultation_date' => 'datetime',
         'risk_assessment_date' => 'date',
         'last_compliance_review_date' => 'date',
@@ -100,7 +100,7 @@ class DataProcessingActivity extends Model
         'last_activity_review_date' => 'date',
         'start_date' => 'date',
         'end_date' => 'date',
-        'data_protection_impact_assessment_required' => 'boolean',
+        'data_protection_ia_required' => 'boolean',
         'data_protection_officer_consulted' => 'boolean',
         'is_active' => 'boolean',
         'retention_period' => 'integer',
@@ -154,9 +154,9 @@ class DataProcessingActivity extends Model
     /**
      * Get the DPIAs associated with this activity.
      */
-    public function dpias()
+    public function dataProtectionIAs()
     {
-        return $this->hasMany(DataProtectionImpactAssessment::class);
+        return $this->hasMany(DataProtectionIA::class);
     }
 
     /**
@@ -228,7 +228,7 @@ class DataProcessingActivity extends Model
      */
     public function requiresDpia(): bool
     {
-        return $this->data_protection_impact_assessment_required;
+        return $this->data_protection_ia_required;
     }
 
     /**

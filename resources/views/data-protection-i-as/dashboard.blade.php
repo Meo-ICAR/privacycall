@@ -87,7 +87,7 @@
                                         </div>
                                         <div class="ml-4">
                                             <div class="text-sm font-medium text-gray-900">
-                                                <a href="{{ route('data-protection-impact-assessments.show', $assessment->id) }}" class="hover:text-indigo-600">
+                                                <a href="{{ route('data-protection-i-as.index') }}" class="hover:text-indigo-600">
                                                     {{ $assessment->title ?? 'DPIA #' . $assessment->id }}
                                                 </a>
                                             </div>

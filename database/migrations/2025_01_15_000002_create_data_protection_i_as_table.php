@@ -56,6 +56,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('data_protection_impact_assessments');
+        Schema::dropIfExists('data_protection_i_as');
     }
 };

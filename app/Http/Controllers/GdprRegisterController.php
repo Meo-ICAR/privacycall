@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\DataProcessingActivity;
 use App\Models\DataBreach;
-use App\Models\DataProtectionImpactAssessment;
+use App\Models\DataProtectionIA;
 use App\Models\ThirdCountryTransfer;
 use App\Models\DataProcessingAgreement;
 use App\Models\DataSubjectRightsRequest;
@@ -134,7 +134,7 @@ class GdprRegisterController extends Controller
             ->orderBy('detection_date', 'desc')
             ->get();
 
-        $dpias = DataProtectionImpactAssessment::where('company_id', $company->id)
+        $dpias = DataProtectionIA::where('company_id', $company->id)
             ->orderBy('assessment_date', 'desc')
             ->get();
 
@@ -180,8 +180,8 @@ class GdprRegisterController extends Controller
             'non_compliant_activities' => DataProcessingActivity::where('company_id', $companyId)->where('compliance_status', 'non_compliant')->count(),
             'total_breaches' => DataBreach::where('company_id', $companyId)->count(),
             'open_breaches' => DataBreach::where('company_id', $companyId)->whereIn('status', ['detected', 'investigating'])->count(),
-            'total_dpias' => DataProtectionImpactAssessment::where('company_id', $companyId)->count(),
-            'pending_dpias' => DataProtectionImpactAssessment::where('company_id', $companyId)->whereIn('assessment_status', ['draft', 'in_progress'])->count(),
+            'total_dpias' => DataProtectionIA::where('company_id', $companyId)->count(),
+            'pending_dpias' => DataProtectionIA::where('company_id', $companyId)->whereIn('assessment_status', ['draft', 'in_progress'])->count(),
             'total_transfers' => ThirdCountryTransfer::where('company_id', $companyId)->count(),
             'active_transfers' => ThirdCountryTransfer::where('company_id', $companyId)->where('is_active', true)->count(),
             'total_agreements' => DataProcessingAgreement::where('company_id', $companyId)->count(),
@@ -200,7 +200,7 @@ class GdprRegisterController extends Controller
             'compliance_reviews' => DataProcessingActivity::where('company_id', $companyId)
                 ->where('next_compliance_review_date', '<', now())
                 ->count(),
-            'dpia_reviews' => DataProtectionImpactAssessment::where('company_id', $companyId)
+            'dpia_reviews' => DataProtectionIA::where('company_id', $companyId)
                 ->where('next_review_date', '<', now())
                 ->count(),
             'breach_notifications' => DataBreach::where('company_id', $companyId)
@@ -326,7 +326,7 @@ class GdprRegisterController extends Controller
             ->get();
 
         // Get recent DPIAs
-        $recentDpias = DataProtectionImpactAssessment::where('company_id', $company->id)
+        $recentDpias = DataProtectionIA::where('company_id', $company->id)
             ->orderBy('assessment_date', 'desc')
             ->limit(10)
             ->get();

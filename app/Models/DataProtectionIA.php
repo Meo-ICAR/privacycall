@@ -9,9 +9,11 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Carbon\Carbon;
 
-class DataProtectionImpactAssessment extends Model
+class DataProtectionIA extends Model
 {
     use HasFactory, SoftDeletes;
+
+    protected $table = 'data_protection_i_as';
 
     /**
      * The attributes that are mass assignable.

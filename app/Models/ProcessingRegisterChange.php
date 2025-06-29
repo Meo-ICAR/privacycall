@@ -6,9 +6,11 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-class ProcessingRegisterChange extends Model
+class ProcessingRegC extends Model
 {
     use HasFactory;
+
+    protected $table = 'processing_reg_cs';
 
     protected $fillable = [
         'company_id',

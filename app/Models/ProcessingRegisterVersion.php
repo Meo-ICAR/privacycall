@@ -71,7 +71,7 @@ class ProcessingRegisterVersion extends Model
      */
     public function changes(): HasMany
     {
-        return $this->hasMany(ProcessingRegisterChange::class);
+        return $this->hasMany(ProcessingRegC::class);
     }
 
     /**

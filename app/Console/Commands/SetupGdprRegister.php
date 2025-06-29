@@ -49,7 +49,7 @@ class SetupGdprRegister extends Command
 
         $migrations = [
             '2025_01_15_000001_create_data_breaches_table',
-            '2025_01_15_000002_create_data_protection_impact_assessments_table',
+            '2025_01_15_000002_create_data_protection_i_as_table',
             '2025_01_15_000003_create_third_country_transfers_table',
             '2025_01_15_000004_create_data_processing_agreements_table',
             '2025_01_15_000005_create_data_subject_rights_requests_table',
@@ -60,7 +60,7 @@ class SetupGdprRegister extends Command
             '2025_01_15_000010_enhance_data_processing_activities_table',
             '2025_01_15_000011_enhance_companies_table_for_gdpr',
             '2025_01_15_000012_create_processing_register_versions_table',
-            '2025_01_15_000013_create_processing_register_changes_table',
+            '2025_01_15_000013_create_processing_reg_cs_table',
             '2025_01_15_000014_add_versioning_to_gdpr_tables',
         ];
 
@@ -97,7 +97,7 @@ class SetupGdprRegister extends Command
         $tables = [
             'data_processing_activities',
             'data_breaches',
-            'data_protection_impact_assessments',
+            'data_protection_i_as',
             'third_country_transfers',
             'data_processing_agreements',
             'data_subject_rights_requests',
@@ -106,7 +106,7 @@ class SetupGdprRegister extends Command
             'security_measures',
             'third_countries',
             'processing_register_versions',
-            'processing_register_changes',
+            'processing_reg_cs',
         ];
 
         $missingTables = [];

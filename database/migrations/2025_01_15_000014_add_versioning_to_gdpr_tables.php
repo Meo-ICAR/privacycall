@@ -39,8 +39,8 @@ return new class extends Migration
             $table->index(['version_created_at']);
         });
 
-        // Aggiungi campi di versioning a data_protection_impact_assessments
-        Schema::table('data_protection_impact_assessments', function (Blueprint $table) {
+        // Aggiungi campi di versioning a data_protection_i_as
+        Schema::table('data_protection_i_as', function (Blueprint $table) {
             $table->string('version')->default('1.0.0')->after('notes');
             $table->unsignedBigInteger('version_id')->nullable()->after('version');
             $table->boolean('is_latest_version')->default(true)->after('version_id');
@@ -136,8 +136,8 @@ return new class extends Migration
             ]);
         });
 
-        // Rimuovi campi di versioning da data_protection_impact_assessments
-        Schema::table('data_protection_impact_assessments', function (Blueprint $table) {
+        // Rimuovi campi di versioning da data_protection_i_as
+        Schema::table('data_protection_i_as', function (Blueprint $table) {
             $table->dropIndex(['version']);
             $table->dropIndex(['is_latest_version']);
             $table->dropIndex(['version_created_at']);

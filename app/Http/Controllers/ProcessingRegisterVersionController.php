@@ -3,10 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Models\ProcessingRegisterVersion;
-use App\Models\ProcessingRegisterChange;
+use App\Models\ProcessingRegC;
 use App\Models\DataProcessingActivity;
 use App\Models\DataBreach;
-use App\Models\DataProtectionImpactAssessment;
+use App\Models\DataProtectionIA;
 use App\Models\Company;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
@@ -233,7 +233,7 @@ class ProcessingRegisterVersionController extends Controller
             'entity_id' => 'required|integer',
         ]);
 
-        $changes = ProcessingRegisterChange::where('entity_type', $request->entity_type)
+        $changes = ProcessingRegC::where('entity_type', $request->entity_type)
             ->where('entity_id', $request->entity_id)
             ->with(['changedBy', 'reviewedBy', 'approvedBy'])
             ->orderBy('created_at', 'desc')
@@ -254,7 +254,7 @@ class ProcessingRegisterVersionController extends Controller
             'company_info' => $company->toArray(),
             'activities_count' => DataProcessingActivity::where('company_id', $company->id)->count(),
             'breaches_count' => DataBreach::where('company_id', $company->id)->count(),
-            'dpias_count' => DataProtectionImpactAssessment::where('company_id', $company->id)->count(),
+            'dpias_count' => DataProtectionIA::where('company_id', $company->id)->count(),
             'generated_at' => now()->toISOString(),
         ];
     }
@@ -298,14 +298,14 @@ class ProcessingRegisterVersionController extends Controller
             ->get();
 
         $breaches = DataBreach::where('company_id', $company->id)->get();
-        $dpias = DataProtectionImpactAssessment::where('company_id', $company->id)->get();
+        $dpias = DataProtectionIA::where('company_id', $company->id)->get();
 
         return [
             'compliance_score' => $this->calculateComplianceScore($activities),
             'overdue_reviews' => $activities->where('next_compliance_review_date', '<', now())->count(),
             'upcoming_reviews' => $activities->whereBetween('next_compliance_review_date', [now(), now()->addDays(30)])->count(),
             'breaches_this_year' => $breaches->where('breach_date', '>=', now()->startOfYear())->count(),
-            'dpias_required' => $activities->where('data_protection_impact_assessment_required', true)->count(),
+            'dpias_required' => $activities->where('data_protection_ia_required', true)->count(),
             'dpias_completed' => $dpias->where('status', 'completed')->count(),
             'risk_distribution' => [
                 'low' => $activities->where('risk_assessment_level', 'low')->count(),
