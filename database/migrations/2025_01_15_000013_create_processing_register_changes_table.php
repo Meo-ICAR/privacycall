@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('processing_register_changes', function (Blueprint $table) {
+        Schema::create('processing_reg_cs', function (Blueprint $table) {
             $table->id();
             $table->foreignId('company_id')->constrained('companies')->onDelete('cascade');
             $table->foreignId('processing_register_version_id')->nullable()->constrained('processing_register_versions')->nullOnDelete();

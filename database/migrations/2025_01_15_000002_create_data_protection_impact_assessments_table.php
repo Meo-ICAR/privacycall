@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('data_protection_impact_assessments', function (Blueprint $table) {
+        Schema::create('data_protection_i_as', function (Blueprint $table) {
             $table->id();
             $table->foreignId('company_id')->constrained('companies')->onDelete('cascade');
             $table->foreignId('data_processing_activity_id')->nullable()->constrained('data_processing_activities')->nullOnDelete();
