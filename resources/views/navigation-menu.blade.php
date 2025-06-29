@@ -100,12 +100,14 @@
                                 </x-slot>
 
                                 <x-slot name="content">
-                                    <x-dropdown-link href="{{ route('companies.show', Auth::user()->company_id) }}" :active="request()->routeIs('companies.show')">
-                                        <i class="fas fa-building mr-2"></i>{{ __('My Company') }}
-                                    </x-dropdown-link>
-                                    <x-dropdown-link href="{{ route('companies.edit', Auth::user()->company_id) }}" :active="request()->routeIs('companies.edit')">
-                                        <i class="fas fa-edit mr-2"></i>{{ __('Edit Company') }}
-                                    </x-dropdown-link>
+                                    @if(Auth::user()->company)
+                                        <x-dropdown-link href="{{ route('companies.show', Auth::user()->company) }}" :active="request()->routeIs('companies.show')">
+                                            <i class="fas fa-building mr-2"></i>{{ __('My Company') }}
+                                        </x-dropdown-link>
+                                        <x-dropdown-link href="{{ route('companies.edit', Auth::user()->company) }}" :active="request()->routeIs('companies.edit')">
+                                            <i class="fas fa-edit mr-2"></i>{{ __('Edit Company') }}
+                                        </x-dropdown-link>
+                                    @endif
                                     <x-dropdown-link href="{{ route('employees.index') }}" :active="request()->routeIs('employees.index')">
                                         <i class="fas fa-users mr-2"></i>{{ __('Employees') }}
                                     </x-dropdown-link>

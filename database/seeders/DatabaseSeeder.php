@@ -170,6 +170,13 @@ class DatabaseSeeder extends Seeder
             EmailDocumentSeeder::class,
             SubsupplierSeeder::class,
             AuthorizationRequestSeeder::class,
+            DataProcessingAgreementSeeder::class,
+            DataBreachSeeder::class,
+            DataSubjectRightsRequestSeeder::class,
+            LegalBasisTypeSeeder::class,
+            DataCategorySeeder::class,
+            SecurityMeasureSeeder::class,
+            ThirdCountrySeeder::class,
         ]);
     }
 }

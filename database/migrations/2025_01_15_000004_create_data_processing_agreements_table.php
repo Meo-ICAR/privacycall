@@ -42,6 +42,7 @@ return new class extends Migration
             $table->text('jurisdiction')->nullable();
             $table->boolean('is_active')->default(true);
             $table->text('notes')->nullable();
+            $table->string('name')->nullable();
             $table->softDeletes();
             $table->timestamps();
 

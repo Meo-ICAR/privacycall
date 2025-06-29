@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use App\Models\Traits\HasVersioning;
 use Carbon\Carbon;
+use App\Models\ThirdCountryTransfer;
 
 class DataProcessingActivity extends Model
 {

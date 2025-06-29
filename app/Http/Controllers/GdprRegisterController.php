@@ -72,7 +72,7 @@ class GdprRegisterController extends Controller
         }
 
         $query = DataProcessingActivity::where('company_id', $company->id)
-            ->with(['company', 'dpias', 'thirdCountryTransfers', 'dataProcessingAgreements']);
+            ->with(['company', 'dataProtectionIAs', 'thirdCountryTransfers', 'dataProcessingAgreements']);
 
         // Apply filters
         if ($request->filled('status')) {
@@ -126,7 +126,7 @@ class GdprRegisterController extends Controller
         $format = $request->get('format', 'pdf');
 
         $activities = DataProcessingActivity::where('company_id', $company->id)
-            ->with(['company', 'dpias', 'thirdCountryTransfers', 'dataProcessingAgreements'])
+            ->with(['company', 'dataProtectionIAs', 'thirdCountryTransfers', 'dataProcessingAgreements'])
             ->orderBy('created_at', 'desc')
             ->get();
 
