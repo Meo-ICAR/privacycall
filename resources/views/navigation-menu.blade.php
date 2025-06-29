@@ -86,10 +86,6 @@
 
                     {{-- Admin Navigation --}}
                     @role('admin')
-                        <x-nav-link href="{{ route('companies.show', Auth::user()->company_id) }}" :active="request()->routeIs('companies.show')">
-                            {{ __('My Company') }}
-                        </x-nav-link>
-
                         <!-- Company Management Dropdown -->
                         <div class="hidden sm:flex sm:items-center sm:ms-6">
                             <x-dropdown align="left" width="48">
@@ -104,6 +100,9 @@
                                 </x-slot>
 
                                 <x-slot name="content">
+                                    <x-dropdown-link href="{{ route('companies.show', Auth::user()->company_id) }}" :active="request()->routeIs('companies.show')">
+                                        <i class="fas fa-building mr-2"></i>{{ __('My Company') }}
+                                    </x-dropdown-link>
                                     <x-dropdown-link href="{{ route('companies.edit', Auth::user()->company_id) }}" :active="request()->routeIs('companies.edit')">
                                         <i class="fas fa-edit mr-2"></i>{{ __('Edit Company') }}
                                     </x-dropdown-link>
@@ -155,18 +154,77 @@
                                 </x-slot>
 
                                 <x-slot name="content">
+                                    <!-- GDPR Register -->
+                                    <x-dropdown-link href="{{ route('gdpr.register.index') }}" :active="request()->routeIs('gdpr.register.index')">
+                                        <i class="fas fa-book mr-2"></i>{{ __('Register') }}
+                                    </x-dropdown-link>
+                                    <x-dropdown-link href="{{ route('gdpr.register.dashboard') }}" :active="request()->routeIs('gdpr.register.dashboard')">
+                                        <i class="fas fa-chart-bar mr-2"></i>{{ __('Dashboard') }}
+                                    </x-dropdown-link>
+                                    <x-dropdown-link href="{{ route('gdpr.register.report') }}" :active="request()->routeIs('gdpr.register.report')">
+                                        <i class="fas fa-file-alt mr-2"></i>{{ __('Report') }}
+                                    </x-dropdown-link>
+
+                                    <div class="border-t border-gray-200 my-1"></div>
+
+                                    <!-- Register Versions -->
+                                    <x-dropdown-link href="{{ route('gdpr.register.versions.index') }}" :active="request()->routeIs('gdpr.register.versions.*')">
+                                        <i class="fas fa-code-branch mr-2"></i>{{ __('Versions') }}
+                                    </x-dropdown-link>
+                                    <x-dropdown-link href="{{ route('gdpr.register.versions.create') }}" :active="request()->routeIs('gdpr.register.versions.create')">
+                                        <i class="fas fa-plus mr-2"></i>{{ __('New Version') }}
+                                    </x-dropdown-link>
+
+                                    <div class="border-t border-gray-200 my-1"></div>
+
+                                    <!-- Data Processing Activities -->
+                                    <x-dropdown-link href="{{ route('data-processing-activities.index') }}" :active="request()->routeIs('data-processing-activities.*')">
+                                        <i class="fas fa-database mr-2"></i>{{ __('Processing Activities') }}
+                                    </x-dropdown-link>
+
+                                    <!-- Data Breaches -->
+                                    <x-dropdown-link href="{{ route('data-breaches.index') }}" :active="request()->routeIs('data-breaches.*')">
+                                        <i class="fas fa-exclamation-triangle mr-2"></i>{{ __('Data Breaches') }}
+                                    </x-dropdown-link>
+
+                                    <!-- DPIAs -->
+                                    <x-dropdown-link href="{{ route('data-protection-impact-assessments.index') }}" :active="request()->routeIs('data-protection-impact-assessments.*')">
+                                        <i class="fas fa-clipboard-check mr-2"></i>{{ __('DPIAs') }}
+                                    </x-dropdown-link>
+
+                                    <!-- Third Country Transfers -->
+                                    <x-dropdown-link href="{{ route('third-country-transfers.index') }}" :active="request()->routeIs('third-country-transfers.*')">
+                                        <i class="fas fa-globe mr-2"></i>{{ __('Third Country Transfers') }}
+                                    </x-dropdown-link>
+
+                                    <!-- Data Processing Agreements -->
+                                    <x-dropdown-link href="{{ route('data-processing-agreements.index') }}" :active="request()->routeIs('data-processing-agreements.*')">
+                                        <i class="fas fa-file-contract mr-2"></i>{{ __('Processing Agreements') }}
+                                    </x-dropdown-link>
+
+                                    <!-- Data Subject Rights -->
+                                    <x-dropdown-link href="{{ route('data-subject-rights-requests.index') }}" :active="request()->routeIs('data-subject-rights-requests.*')">
+                                        <i class="fas fa-user-shield mr-2"></i>{{ __('Subject Rights') }}
+                                    </x-dropdown-link>
+
+                                    <div class="border-t border-gray-200 my-1"></div>
+
+                                    <!-- Consent Records -->
                                     <x-dropdown-link href="{{ route('consent-records.index') }}" :active="request()->routeIs('consent-records.index')">
                                         <i class="fas fa-clipboard-check mr-2"></i>{{ __('Consent Records') }}
                                     </x-dropdown-link>
-                                    <x-dropdown-link href="{{ route('data-processing-activities.index') }}" :active="request()->routeIs('data-processing-activities.index')">
-                                        <i class="fas fa-database mr-2"></i>{{ __('Processing Activities') }}
-                                    </x-dropdown-link>
+
+                                    <!-- Audit Requests -->
                                     <x-dropdown-link href="{{ route('audit-requests.index') }}" :active="request()->routeIs('audit-requests.*')">
                                         <i class="fas fa-search mr-2"></i>{{ __('Audit Requests') }}
                                     </x-dropdown-link>
+
+                                    <!-- Compliance Requests -->
                                     <x-dropdown-link href="{{ route('compliance-requests.index') }}" :active="request()->routeIs('compliance-requests.*')">
                                         <i class="fas fa-clipboard-list mr-2"></i>{{ __('Compliance Requests') }}
                                     </x-dropdown-link>
+
+                                    <!-- Data Removal Requests -->
                                     <x-dropdown-link href="{{ route('data-removal-requests.index') }}" :active="request()->routeIs('data-removal-requests.*')">
                                         <i class="fas fa-user-times mr-2"></i>{{ __('Data Removal Requests') }}
                                     </x-dropdown-link>
@@ -379,17 +437,74 @@
                     <div class="block px-4 py-2 text-xs text-gray-400">
                         {{ __('GDPR Compliance') }}
                     </div>
+
+                    <!-- GDPR Register -->
+                    <x-responsive-nav-link href="{{ route('gdpr.register.index') }}" :active="request()->routeIs('gdpr.register.index')">
+                        <i class="fas fa-book mr-2"></i>{{ __('Register') }}
+                    </x-responsive-nav-link>
+                    <x-responsive-nav-link href="{{ route('gdpr.register.dashboard') }}" :active="request()->routeIs('gdpr.register.dashboard')">
+                        <i class="fas fa-chart-bar mr-2"></i>{{ __('Dashboard') }}
+                    </x-responsive-nav-link>
+                    <x-responsive-nav-link href="{{ route('gdpr.register.report') }}" :active="request()->routeIs('gdpr.register.report')">
+                        <i class="fas fa-file-alt mr-2"></i>{{ __('Report') }}
+                    </x-responsive-nav-link>
+
+                    <!-- Register Versions -->
+                    <x-responsive-nav-link href="{{ route('gdpr.register.versions.index') }}" :active="request()->routeIs('gdpr.register.versions.*')">
+                        <i class="fas fa-code-branch mr-2"></i>{{ __('Versions') }}
+                    </x-responsive-nav-link>
+                    <x-responsive-nav-link href="{{ route('gdpr.register.versions.create') }}" :active="request()->routeIs('gdpr.register.versions.create')">
+                        <i class="fas fa-plus mr-2"></i>{{ __('New Version') }}
+                    </x-responsive-nav-link>
+
+                    <!-- Data Processing Activities -->
+                    <x-responsive-nav-link href="{{ route('data-processing-activities.index') }}" :active="request()->routeIs('data-processing-activities.*')">
+                        <i class="fas fa-database mr-2"></i>{{ __('Processing Activities') }}
+                    </x-responsive-nav-link>
+
+                    <!-- Data Breaches -->
+                    <x-responsive-nav-link href="{{ route('data-breaches.index') }}" :active="request()->routeIs('data-breaches.*')">
+                        <i class="fas fa-exclamation-triangle mr-2"></i>{{ __('Data Breaches') }}
+                    </x-responsive-nav-link>
+
+                    <!-- DPIAs -->
+                    <x-responsive-nav-link href="{{ route('data-protection-impact-assessments.index') }}" :active="request()->routeIs('data-protection-impact-assessments.*')">
+                        <i class="fas fa-clipboard-check mr-2"></i>{{ __('DPIAs') }}
+                    </x-responsive-nav-link>
+
+                    <!-- Third Country Transfers -->
+                    <x-responsive-nav-link href="{{ route('third-country-transfers.index') }}" :active="request()->routeIs('third-country-transfers.*')">
+                        <i class="fas fa-globe mr-2"></i>{{ __('Third Country Transfers') }}
+                    </x-responsive-nav-link>
+
+                    <!-- Data Processing Agreements -->
+                    <x-responsive-nav-link href="{{ route('data-processing-agreements.index') }}" :active="request()->routeIs('data-processing-agreements.*')">
+                        <i class="fas fa-file-contract mr-2"></i>{{ __('Processing Agreements') }}
+                    </x-responsive-nav-link>
+
+                    <!-- Data Subject Rights -->
+                    <x-responsive-nav-link href="{{ route('data-subject-rights-requests.index') }}" :active="request()->routeIs('data-subject-rights-requests.*')">
+                        <i class="fas fa-user-shield mr-2"></i>{{ __('Subject Rights') }}
+                    </x-responsive-nav-link>
+
+                    <!-- Consent Records -->
                     <x-responsive-nav-link href="{{ route('consent-records.index') }}" :active="request()->routeIs('consent-records.index')">
                         <i class="fas fa-clipboard-check mr-2"></i>{{ __('Consent Records') }}
                     </x-responsive-nav-link>
-                    <x-responsive-nav-link href="{{ route('data-processing-activities.index') }}" :active="request()->routeIs('data-processing-activities.index')">
-                        <i class="fas fa-database mr-2"></i>{{ __('Processing Activities') }}
-                    </x-responsive-nav-link>
+
+                    <!-- Audit Requests -->
                     <x-responsive-nav-link href="{{ route('audit-requests.index') }}" :active="request()->routeIs('audit-requests.*')">
                         <i class="fas fa-search mr-2"></i>{{ __('Audit Requests') }}
                     </x-responsive-nav-link>
+
+                    <!-- Compliance Requests -->
                     <x-responsive-nav-link href="{{ route('compliance-requests.index') }}" :active="request()->routeIs('compliance-requests.*')">
                         <i class="fas fa-clipboard-list mr-2"></i>{{ __('Compliance Requests') }}
+                    </x-responsive-nav-link>
+
+                    <!-- Data Removal Requests -->
+                    <x-responsive-nav-link href="{{ route('data-removal-requests.index') }}" :active="request()->routeIs('data-removal-requests.*')">
+                        <i class="fas fa-user-times mr-2"></i>{{ __('Data Removal Requests') }}
                     </x-responsive-nav-link>
 
                     <!-- Training & Inspections -->

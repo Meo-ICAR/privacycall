@@ -8,10 +8,12 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
+use App\Models\Traits\HasVersioning;
+use Carbon\Carbon;
 
 class DataProcessingActivity extends Model
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory, SoftDeletes, HasVersioning;
 
     /**
      * The attributes that are mass assignable.
@@ -20,6 +22,32 @@ class DataProcessingActivity extends Model
      */
     protected $fillable = [
         'company_id',
+        'data_controller_name',
+        'data_controller_contact_email',
+        'data_controller_contact_phone',
+        'dpo_name',
+        'dpo_email',
+        'dpo_phone',
+        'processing_method',
+        'data_sources',
+        'data_flows',
+        'data_storage_locations',
+        'risk_assessment_date',
+        'risk_assessment_methodology',
+        'risk_mitigation_measures',
+        'supervisory_authority',
+        'supervisory_authority_contact',
+        'compliance_status',
+        'last_compliance_review_date',
+        'next_compliance_review_date',
+        'supporting_documents',
+        'privacy_notice_version',
+        'privacy_notice_date',
+        'processing_volume',
+        'processing_frequency',
+        'last_activity_review_date',
+        'parent_activity_id',
+        'related_activities',
         'processable_type', // Company, Employee, Customer, Supplier
         'processable_id',
         'activity_name',
@@ -40,7 +68,13 @@ class DataProcessingActivity extends Model
         'start_date',
         'end_date',
         'is_active',
-        'notes'
+        'notes',
+        'version',
+        'version_id',
+        'is_latest_version',
+        'version_created_at',
+        'version_created_by',
+        'version_notes'
     ];
 
     /**
@@ -54,14 +88,24 @@ class DataProcessingActivity extends Model
         'data_recipients' => 'array',
         'third_country_transfers' => 'array',
         'security_measures' => 'array',
+        'data_storage_locations' => 'array',
+        'supporting_documents' => 'array',
+        'related_activities' => 'array',
         'data_protection_impact_assessment_date' => 'datetime',
         'data_protection_officer_consultation_date' => 'datetime',
+        'risk_assessment_date' => 'date',
+        'last_compliance_review_date' => 'date',
+        'next_compliance_review_date' => 'date',
+        'privacy_notice_date' => 'date',
+        'last_activity_review_date' => 'date',
         'start_date' => 'date',
         'end_date' => 'date',
         'data_protection_impact_assessment_required' => 'boolean',
         'data_protection_officer_consulted' => 'boolean',
         'is_active' => 'boolean',
         'retention_period' => 'integer',
+        'is_latest_version' => 'boolean',
+        'version_created_at' => 'datetime',
     ];
 
     /**
@@ -89,6 +133,46 @@ class DataProcessingActivity extends Model
     public function processable(): MorphTo
     {
         return $this->morphTo();
+    }
+
+    /**
+     * Get the parent activity if this is a sub-activity.
+     */
+    public function parentActivity(): BelongsTo
+    {
+        return $this->belongsTo(DataProcessingActivity::class, 'parent_activity_id');
+    }
+
+    /**
+     * Get the related activities.
+     */
+    public function relatedActivities()
+    {
+        return $this->belongsToMany(DataProcessingActivity::class, 'related_activities');
+    }
+
+    /**
+     * Get the DPIAs associated with this activity.
+     */
+    public function dpias()
+    {
+        return $this->hasMany(DataProtectionImpactAssessment::class);
+    }
+
+    /**
+     * Get the third country transfers associated with this activity.
+     */
+    public function thirdCountryTransfers()
+    {
+        return $this->hasMany(ThirdCountryTransfer::class);
+    }
+
+    /**
+     * Get the data processing agreements associated with this activity.
+     */
+    public function dataProcessingAgreements()
+    {
+        return $this->hasMany(DataProcessingAgreement::class);
     }
 
     /**
@@ -124,6 +208,22 @@ class DataProcessingActivity extends Model
     }
 
     /**
+     * Scope a query to filter by compliance status.
+     */
+    public function scopeWithComplianceStatus($query, $status)
+    {
+        return $query->where('compliance_status', $status);
+    }
+
+    /**
+     * Scope a query to filter by overdue compliance reviews.
+     */
+    public function scopeOverdueForComplianceReview($query)
+    {
+        return $query->where('next_compliance_review_date', '<', now());
+    }
+
+    /**
      * Check if activity requires Data Protection Impact Assessment (DPIA).
      */
     public function requiresDpia(): bool
@@ -145,6 +245,22 @@ class DataProcessingActivity extends Model
     public function involvesSensitiveData(): bool
     {
         return in_array('sensitive_data', $this->data_categories ?? []);
+    }
+
+    /**
+     * Check if activity is compliant.
+     */
+    public function isCompliant(): bool
+    {
+        return $this->compliance_status === 'compliant';
+    }
+
+    /**
+     * Check if activity is overdue for compliance review.
+     */
+    public function isOverdueForComplianceReview(): bool
+    {
+        return $this->next_compliance_review_date && $this->next_compliance_review_date->isPast();
     }
 
     /**
@@ -181,8 +297,162 @@ class DataProcessingActivity extends Model
         return true;
     }
 
+    /**
+     * Get the compliance status color for UI.
+     */
+    public function getComplianceStatusColorAttribute(): string
+    {
+        $colors = [
+            'compliant' => 'green',
+            'non_compliant' => 'red',
+            'under_review' => 'yellow',
+        ];
+
+        return $colors[$this->compliance_status] ?? 'gray';
+    }
+
+    /**
+     * Get the risk level color for UI.
+     */
+    public function getRiskLevelColorAttribute(): string
+    {
+        $colors = [
+            'low' => 'green',
+            'medium' => 'yellow',
+            'high' => 'orange',
+            'very_high' => 'red',
+        ];
+
+        return $colors[$this->risk_assessment_level] ?? 'gray';
+    }
+
+    /**
+     * Get the days until next compliance review.
+     */
+    public function getDaysUntilComplianceReviewAttribute(): ?int
+    {
+        if (!$this->next_compliance_review_date) {
+            return null;
+        }
+
+        return now()->diffInDays($this->next_compliance_review_date, false);
+    }
+
+    /**
+     * Get the documents associated with this activity.
+     */
     public function documents(): MorphMany
     {
-        return $this->morphMany(\App\Models\Document::class, 'documentable');
+        return $this->morphMany(Document::class, 'documentable');
+    }
+
+    /**
+     * Get the version that created this activity.
+     */
+    public function versionCreatedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'version_created_by');
+    }
+
+    /**
+     * Scope a query to only include latest versions.
+     */
+    public function scopeLatestVersion($query)
+    {
+        return $query->where('is_latest_version', true);
+    }
+
+    /**
+     * Scope a query to only include specific version.
+     */
+    public function scopeByVersion($query, string $version)
+    {
+        return $query->where('version', $version);
+    }
+
+    /**
+     * Create a new version of this activity.
+     */
+    public function createNewVersion(array $data = []): self
+    {
+        // Marca la versione corrente come non più recente
+        $this->update(['is_latest_version' => false]);
+
+        // Crea una nuova versione
+        $newVersion = $this->replicate();
+        $newVersion->fill(array_merge([
+            'version' => $this->incrementVersion(),
+            'is_latest_version' => true,
+            'version_created_at' => now(),
+            'version_created_by' => auth()->id(),
+        ], $data));
+
+        $newVersion->save();
+
+        return $newVersion;
+    }
+
+    /**
+     * Increment the version number.
+     */
+    private function incrementVersion(): string
+    {
+        $parts = explode('.', $this->version);
+        $major = (int) $parts[0];
+        $minor = (int) $parts[1];
+        $patch = (int) $parts[2];
+
+        return ($major + 1) . '.0.0';
+    }
+
+    /**
+     * Get the version history for this activity.
+     */
+    public function getVersionHistory()
+    {
+        return self::where('activity_name', $this->activity_name)
+            ->where('company_id', $this->company_id)
+            ->orderBy('version', 'desc')
+            ->get();
+    }
+
+    /**
+     * Check if this is the latest version.
+     */
+    public function isLatestVersion(): bool
+    {
+        return $this->is_latest_version;
+    }
+
+    /**
+     * Get the version display name.
+     */
+    public function getVersionDisplayAttribute(): string
+    {
+        return "v{$this->version}";
+    }
+
+    /**
+     * Override the entity type for change logging.
+     */
+    protected function getEntityType(): string
+    {
+        return 'data_processing_activity';
+    }
+
+    /**
+     * Override the entity name for change logging.
+     */
+    protected function getEntityName(): string
+    {
+        return $this->activity_name;
+    }
+
+    /**
+     * Override the version identifier field.
+     */
+    protected function getVersionIdentifierField(): string
+    {
+        return 'activity_name';
     }
 }

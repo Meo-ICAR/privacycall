@@ -70,6 +70,29 @@ Route::prefix('gdpr')->middleware(['auth', 'verified'])->group(function () {
     Route::get('/data-subject-rights', function () {
         return view('gdpr.rights');
     })->name('gdpr.rights');
+
+    // GDPR Register routes
+    Route::prefix('register')->group(function () {
+        Route::get('/', [\App\Http\Controllers\GdprRegisterController::class, 'index'])->name('gdpr.register.index');
+        Route::get('/dashboard', [\App\Http\Controllers\GdprRegisterController::class, 'dashboard'])->name('gdpr.register.dashboard');
+        Route::get('/export', [\App\Http\Controllers\GdprRegisterController::class, 'export'])->name('gdpr.register.export');
+        Route::get('/report', [\App\Http\Controllers\GdprRegisterController::class, 'report'])->name('gdpr.register.report');
+
+        // Versioning routes
+        Route::prefix('versions')->group(function () {
+            Route::get('/', [\App\Http\Controllers\ProcessingRegisterVersionController::class, 'index'])->name('gdpr.register.versions.index');
+            Route::get('/create', [\App\Http\Controllers\ProcessingRegisterVersionController::class, 'create'])->name('gdpr.register.versions.create');
+            Route::post('/', [\App\Http\Controllers\ProcessingRegisterVersionController::class, 'store'])->name('gdpr.register.versions.store');
+            Route::get('/{version}', [\App\Http\Controllers\ProcessingRegisterVersionController::class, 'show'])->name('gdpr.register.versions.show');
+            Route::get('/{version}/edit', [\App\Http\Controllers\ProcessingRegisterVersionController::class, 'edit'])->name('gdpr.register.versions.edit');
+            Route::put('/{version}', [\App\Http\Controllers\ProcessingRegisterVersionController::class, 'update'])->name('gdpr.register.versions.update');
+            Route::post('/{version}/approve', [\App\Http\Controllers\ProcessingRegisterVersionController::class, 'approve'])->name('gdpr.register.versions.approve');
+            Route::post('/{version}/archive', [\App\Http\Controllers\ProcessingRegisterVersionController::class, 'archive'])->name('gdpr.register.versions.archive');
+            Route::get('/{version}/export', [\App\Http\Controllers\ProcessingRegisterVersionController::class, 'export'])->name('gdpr.register.versions.export');
+            Route::get('/compare', [\App\Http\Controllers\ProcessingRegisterVersionController::class, 'compare'])->name('gdpr.register.versions.compare');
+            Route::get('/entity-history', [\App\Http\Controllers\ProcessingRegisterVersionController::class, 'entityHistory'])->name('gdpr.register.versions.entity-history');
+        });
+    });
 });
 
 // API documentation route
@@ -328,6 +351,52 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/data-removal-requests/{dataRemovalRequest}/complete', [\App\Http\Controllers\DataRemovalRequestController::class, 'complete'])->name('data-removal-requests.complete');
     Route::post('/data-removal-requests/{dataRemovalRequest}/cancel', [\App\Http\Controllers\DataRemovalRequestController::class, 'cancel'])->name('data-removal-requests.cancel');
     Route::post('/data-removal-requests/{dataRemovalRequest}/upload-document', [\App\Http\Controllers\DataRemovalRequestController::class, 'uploadDocument'])->name('data-removal-requests.upload-document');
+});
+
+// Data Breach Management routes (GDPR breach notification)
+Route::middleware(['auth', 'verified'])->group(function () {
+    Route::resource('data-breaches', \App\Http\Controllers\DataBreachController::class);
+    Route::get('/data-breaches/dashboard', [\App\Http\Controllers\DataBreachController::class, 'dashboard'])->name('data-breaches.dashboard');
+    Route::post('/data-breaches/{dataBreach}/mark-investigated', [\App\Http\Controllers\DataBreachController::class, 'markInvestigated'])->name('data-breaches.mark-investigated');
+    Route::post('/data-breaches/{dataBreach}/mark-resolved', [\App\Http\Controllers\DataBreachController::class, 'markResolved'])->name('data-breaches.mark-resolved');
+    Route::post('/data-breaches/export', [\App\Http\Controllers\DataBreachController::class, 'export'])->name('data-breaches.export');
+});
+
+// Data Protection Impact Assessment (DPIA) Management routes
+Route::middleware(['auth', 'verified'])->group(function () {
+    Route::resource('data-protection-impact-assessments', \App\Http\Controllers\DataProtectionImpactAssessmentController::class);
+    Route::get('/data-protection-impact-assessments/dashboard', [\App\Http\Controllers\DataProtectionImpactAssessmentController::class, 'dashboard'])->name('data-protection-impact-assessments.dashboard');
+    Route::post('/data-protection-impact-assessments/{dataProtectionImpactAssessment}/review', [\App\Http\Controllers\DataProtectionImpactAssessmentController::class, 'review'])->name('data-protection-impact-assessments.review');
+    Route::post('/data-protection-impact-assessments/{dataProtectionImpactAssessment}/approve', [\App\Http\Controllers\DataProtectionImpactAssessmentController::class, 'approve'])->name('data-protection-impact-assessments.approve');
+    Route::post('/data-protection-impact-assessments/export', [\App\Http\Controllers\DataProtectionImpactAssessmentController::class, 'export'])->name('data-protection-impact-assessments.export');
+});
+
+// Third Country Transfer Management routes
+Route::middleware(['auth', 'verified'])->group(function () {
+    Route::resource('third-country-transfers', \App\Http\Controllers\ThirdCountryTransferController::class);
+    Route::get('/third-country-transfers/dashboard', [\App\Http\Controllers\ThirdCountryTransferController::class, 'dashboard'])->name('third-country-transfers.dashboard');
+    Route::post('/third-country-transfers/{thirdCountryTransfer}/suspend', [\App\Http\Controllers\ThirdCountryTransferController::class, 'suspend'])->name('third-country-transfers.suspend');
+    Route::post('/third-country-transfers/{thirdCountryTransfer}/terminate', [\App\Http\Controllers\ThirdCountryTransferController::class, 'terminate'])->name('third-country-transfers.terminate');
+    Route::post('/third-country-transfers/export', [\App\Http\Controllers\ThirdCountryTransferController::class, 'export'])->name('third-country-transfers.export');
+});
+
+// Data Processing Agreement Management routes
+Route::middleware(['auth', 'verified'])->group(function () {
+    Route::resource('data-processing-agreements', \App\Http\Controllers\DataProcessingAgreementController::class);
+    Route::get('/data-processing-agreements/dashboard', [\App\Http\Controllers\DataProcessingAgreementController::class, 'dashboard'])->name('data-processing-agreements.dashboard');
+    Route::post('/data-processing-agreements/{dataProcessingAgreement}/activate', [\App\Http\Controllers\DataProcessingAgreementController::class, 'activate'])->name('data-processing-agreements.activate');
+    Route::post('/data-processing-agreements/{dataProcessingAgreement}/terminate', [\App\Http\Controllers\DataProcessingAgreementController::class, 'terminate'])->name('data-processing-agreements.terminate');
+    Route::post('/data-processing-agreements/export', [\App\Http\Controllers\DataProcessingAgreementController::class, 'export'])->name('data-processing-agreements.export');
+});
+
+// Data Subject Rights Request Management routes
+Route::middleware(['auth', 'verified'])->group(function () {
+    Route::resource('data-subject-rights-requests', \App\Http\Controllers\DataSubjectRightsRequestController::class);
+    Route::get('/data-subject-rights-requests/dashboard', [\App\Http\Controllers\DataSubjectRightsRequestController::class, 'dashboard'])->name('data-subject-rights-requests.dashboard');
+    Route::post('/data-subject-rights-requests/{dataSubjectRightsRequest}/assign', [\App\Http\Controllers\DataSubjectRightsRequestController::class, 'assign'])->name('data-subject-rights-requests.assign');
+    Route::post('/data-subject-rights-requests/{dataSubjectRightsRequest}/update-status', [\App\Http\Controllers\DataSubjectRightsRequestController::class, 'updateStatus'])->name('data-subject-rights-requests.update-status');
+    Route::post('/data-subject-rights-requests/{dataSubjectRightsRequest}/complete', [\App\Http\Controllers\DataSubjectRightsRequestController::class, 'complete'])->name('data-subject-rights-requests.complete');
+    Route::post('/data-subject-rights-requests/export', [\App\Http\Controllers\DataSubjectRightsRequestController::class, 'export'])->name('data-subject-rights-requests.export');
 });
 
 // Load Fortify routes for authentication and profile management
