@@ -23,6 +23,7 @@ use App\Http\Controllers\AuditRequestController;
 use App\Http\Controllers\MandatorController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Mail;
+use App\Http\Controllers\AuthorizationRequestController;
 
 Route::get('/', function () {
     return view('welcome');
@@ -396,6 +397,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/data-subject-rights-requests/{dataSubjectRightsRequest}/complete', [\App\Http\Controllers\DataSubjectRightsRequestController::class, 'complete'])->name('data-subject-rights-requests.complete');
     Route::post('/data-subject-rights-requests/export', [\App\Http\Controllers\DataSubjectRightsRequestController::class, 'export'])->name('data-subject-rights-requests.export');
 });
+
+// Authorization Request Management routes
+Route::resource('authorization-requests', AuthorizationRequestController::class);
+Route::post('authorization-requests/{authorizationRequest}/approve', [AuthorizationRequestController::class, 'approve'])->name('authorization-requests.approve');
+Route::post('authorization-requests/{authorizationRequest}/deny', [AuthorizationRequestController::class, 'deny'])->name('authorization-requests.deny');
 
 // Load Fortify routes for authentication and profile management
 require __DIR__.'/../vendor/laravel/fortify/routes/routes.php';

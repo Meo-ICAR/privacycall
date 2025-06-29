@@ -168,6 +168,8 @@ class DatabaseSeeder extends Seeder
             EmailLogSeeder::class,
             EmailReplyAttachmentSeeder::class,
             EmailDocumentSeeder::class,
+            SubsupplierSeeder::class,
+            AuthorizationRequestSeeder::class,
         ]);
     }
 }
