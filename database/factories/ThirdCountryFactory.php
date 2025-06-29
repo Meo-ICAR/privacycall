@@ -12,8 +12,8 @@ class ThirdCountryFactory extends Factory
     public function definition(): array
     {
         return [
-            'name' => $this->faker->country(),
-            'code' => $this->faker->countryCode(),
+            'country_name' => $this->faker->country(),
+            'country_code' => $this->faker->unique()->countryCode(),
         ];
     }
 }

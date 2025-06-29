@@ -13,6 +13,8 @@ class LegalBasisTypeFactory extends Factory
     {
         return [
             'name' => $this->faker->randomElement(['consent', 'contract', 'legal_obligation', 'vital_interests', 'public_task', 'legitimate_interests']),
+            'description' => $this->faker->sentence(8),
+            'gdpr_article' => 'Art. ' . $this->faker->numberBetween(6, 11),
             'is_active' => $this->faker->boolean(90),
         ];
     }
