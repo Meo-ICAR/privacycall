@@ -13,10 +13,10 @@ class EmployeeFactory extends Factory
     public function definition(): array
     {
         return [
-            'employee_number' => $this->faker->unique()->numerify('EMP###'),
+            'employee_number' => 'EMP' . $this->faker->numerify('###') . '_' . uniqid(),
             'first_name' => $this->faker->firstName(),
             'last_name' => $this->faker->lastName(),
-            'email' => $this->faker->unique()->safeEmail(),
+            'email' => $this->faker->firstName() . '.' . $this->faker->lastName() . '_' . uniqid() . '@example.com',
             'phone' => $this->faker->phoneNumber(),
             'position' => $this->faker->jobTitle(),
             'department' => $this->faker->word(),

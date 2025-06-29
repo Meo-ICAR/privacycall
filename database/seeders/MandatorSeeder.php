@@ -6,6 +6,7 @@ use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use App\Models\Mandator;
 use App\Models\Company;
+use Faker\Factory as FakerFactory;
 
 class MandatorSeeder extends Seeder
 {
@@ -35,7 +36,7 @@ class MandatorSeeder extends Seeder
                 'company_id' => $company->id,
                 'first_name' => 'John',
                 'last_name' => 'Doe',
-                'email' => 'john.doe_' . uniqid() . '@samplecompany.com',
+                'email' => fake()->unique()->safeEmail,
                 'phone' => '+1234567891',
                 'position' => 'Data Protection Officer',
                 'department' => 'Legal',
@@ -50,7 +51,7 @@ class MandatorSeeder extends Seeder
                 'company_id' => $company->id,
                 'first_name' => 'Jane',
                 'last_name' => 'Smith',
-                'email' => 'jane.smith@samplecompany.com',
+                'email' => fake()->unique()->safeEmail,
                 'phone' => '+1234567892',
                 'position' => 'Privacy Manager',
                 'department' => 'Compliance',
@@ -65,7 +66,7 @@ class MandatorSeeder extends Seeder
                 'company_id' => $company->id,
                 'first_name' => 'Mike',
                 'last_name' => 'Johnson',
-                'email' => 'mike.johnson@samplecompany.com',
+                'email' => fake()->unique()->safeEmail,
                 'phone' => '+1234567893',
                 'position' => 'IT Security Manager',
                 'department' => 'IT',
@@ -80,7 +81,7 @@ class MandatorSeeder extends Seeder
                 'company_id' => $company->id,
                 'first_name' => 'Sarah',
                 'last_name' => 'Wilson',
-                'email' => 'sarah.wilson@samplecompany.com',
+                'email' => fake()->unique()->safeEmail,
                 'phone' => '+1234567894',
                 'position' => 'HR Manager',
                 'department' => 'Human Resources',

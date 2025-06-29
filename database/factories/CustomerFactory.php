@@ -15,10 +15,10 @@ class CustomerFactory extends Factory
         return [
             'first_name' => $this->faker->firstName(),
             'last_name' => $this->faker->lastName(),
-            'email' => $this->faker->unique()->safeEmail(),
+            'email' => $this->faker->firstName() . '.' . $this->faker->lastName() . '_' . uniqid() . '@example.com',
             'phone' => $this->faker->phoneNumber(),
             'company_id' => Company::inRandomOrder()->first()?->id ?? Company::factory(),
-            'customer_number' => $this->faker->unique()->numerify('CUST###'),
+            'customer_number' => 'CUST' . $this->faker->numerify('###') . '_' . uniqid(),
             'address_line_1' => $this->faker->streetAddress(),
         ];
     }
