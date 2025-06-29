@@ -87,7 +87,7 @@ class DatabaseSeeder extends Seeder
             // Seed users for each company
             $admin = \App\Models\User::factory()->create([
                 'company_id' => $company->id,
-                'email' => 'admin_' . $company->id . '@demo.com',
+                'email' => 'admin_' . $company->id . '_' . uniqid() . '@demo.com',
             ]);
             $admin->assignRole('admin');
 
@@ -99,7 +99,7 @@ class DatabaseSeeder extends Seeder
             foreach ($employees as $employee) {
                 $user = \App\Models\User::factory()->create([
                     'company_id' => $company->id,
-                    'email' => 'employee_' . $employee->id . '@demo.com',
+                    'email' => 'employee_' . $employee->id . '_' . uniqid() . '@demo.com',
                 ]);
                 $user->assignRole('user');
             }
@@ -108,7 +108,7 @@ class DatabaseSeeder extends Seeder
             foreach ($customers as $customer) {
                 $user = \App\Models\User::factory()->create([
                     'company_id' => $company->id,
-                    'email' => 'customer_' . $customer->id . '@demo.com',
+                    'email' => 'customer_' . $customer->id . '_' . uniqid() . '@demo.com',
                 ]);
                 $user->assignRole('user');
             }
@@ -160,6 +160,14 @@ class DatabaseSeeder extends Seeder
             UserSeeder::class,
             EmailTemplateSeeder::class,
             SupplierInspectionSeeder::class,
+            EmailProviderSeeder::class,
+            DataRemovalRequestAuditLogSeeder::class,
+            ProcessingRegisterVersionSeeder::class,
+            ProcessingRegCSeeder::class,
+            AuditRequestSeeder::class,
+            EmailLogSeeder::class,
+            EmailReplyAttachmentSeeder::class,
+            EmailDocumentSeeder::class,
         ]);
     }
 }

@@ -35,7 +35,7 @@ class MandatorSeeder extends Seeder
                 'company_id' => $company->id,
                 'first_name' => 'John',
                 'last_name' => 'Doe',
-                'email' => 'john.doe@samplecompany.com',
+                'email' => 'john.doe_' . uniqid() . '@samplecompany.com',
                 'phone' => '+1234567891',
                 'position' => 'Data Protection Officer',
                 'department' => 'Legal',
