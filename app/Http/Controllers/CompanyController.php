@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Company;
+use App\Models\ThirdCountry;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Validator;
@@ -193,7 +194,9 @@ class CompanyController extends Controller
             $holdings = \App\Models\Holding::orderBy('name')->get();
         }
 
-        return view('companies.edit', compact('company', 'holdings'));
+        $thirdCountries = ThirdCountry::all();
+
+        return view('companies.edit', compact('company', 'holdings', 'thirdCountries'));
     }
 
     /**
@@ -240,6 +243,9 @@ class CompanyController extends Controller
                 'logo' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
                 'signature' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
                 'holding_id' => 'nullable|exists:holdings,id',
+                'third_countries' => 'nullable|array',
+                'third_countries.*' => 'exists:third_countries,id',
+                'reasons' => 'nullable|array',
             ]);
 
             if ($validator->fails()) {
@@ -280,6 +286,16 @@ class CompanyController extends Controller
             }
 
             $company->update($data);
+
+            if ($request->has('third_countries')) {
+                $syncData = [];
+                foreach ($request->input('third_countries') as $countryId) {
+                    $syncData[$countryId] = ['reason' => $request->input("reasons.{$countryId}", null)];
+                }
+                $company->thirdCountries()->sync($syncData);
+            } else {
+                $company->thirdCountries()->sync([]);
+            }
 
             DB::commit();
 

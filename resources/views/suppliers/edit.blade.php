@@ -438,6 +438,29 @@
                     </div>
                 </div>
 
+                <!-- Third Country Associations -->
+                <div class="border-b border-gray-200 pb-6">
+                    <h3 class="text-lg font-medium text-gray-900 mb-4">Third Country Associations</h3>
+                    <div>
+                        <label for="third_countries" class="block text-sm font-medium text-gray-700">Associated Third Countries</label>
+                        <select name="third_countries[]" id="third_countries" multiple class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                            @foreach($thirdCountries as $country)
+                                <option value="{{ $country->id }}" {{ in_array($country->id, $supplier->thirdCountries->pluck('id')->toArray()) ? 'selected' : '' }}>
+                                    {{ $country->country_name }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div id="reasons-container" class="mt-4 space-y-4">
+                        @foreach($supplier->thirdCountries as $country)
+                            <div id="reason-for-{{$country->id}}">
+                                <label for="reasons[{{$country->id}}]" class="block text-sm font-medium text-gray-700">Reason for {{ $country->country_name }}</label>
+                                <textarea name="reasons[{{$country->id}}]" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">{{ $country->pivot->reason }}</textarea>
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
+
                 <!-- Status and Notes Section -->
                 <div class="pb-6">
                     <h3 class="text-lg font-medium text-gray-900 mb-4">Status and Notes</h3>
@@ -491,6 +514,38 @@
             logoPreview.src = '#';
             logoPreview.classList.add('hidden');
         }
+    });
+
+    document.addEventListener('DOMContentLoaded', function () {
+        const thirdCountriesSelect = document.getElementById('third_countries');
+        const reasonsContainer = document.getElementById('reasons-container');
+        const allCountries = @json($thirdCountries->keyBy('id'));
+
+        thirdCountriesSelect.addEventListener('change', function() {
+            const selectedIds = Array.from(thirdCountriesSelect.selectedOptions).map(option => option.value);
+
+            // Remove reason fields for unselected countries
+            Array.from(reasonsContainer.children).forEach(child => {
+                const countryId = child.id.replace('reason-for-', '');
+                if (!selectedIds.includes(countryId)) {
+                    child.remove();
+                }
+            });
+
+            // Add reason fields for newly selected countries
+            selectedIds.forEach(countryId => {
+                if (!document.getElementById(`reason-for-${countryId}`)) {
+                    const country = allCountries[countryId];
+                    const reasonDiv = document.createElement('div');
+                    reasonDiv.id = `reason-for-${countryId}`;
+                    reasonDiv.innerHTML = `
+                        <label for="reasons[${countryId}]" class="block text-sm font-medium text-gray-700">Reason for ${country.country_name}</label>
+                        <textarea name="reasons[${countryId}]" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"></textarea>
+                    `;
+                    reasonsContainer.appendChild(reasonDiv);
+                }
+            });
+        });
     });
 </script>
 @endsection

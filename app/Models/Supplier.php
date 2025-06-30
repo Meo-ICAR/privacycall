@@ -65,7 +65,8 @@ class Supplier extends Model
         'data_processing_agreement_date',
 
         'is_active',
-        'notes'
+        'notes',
+        'status',
     ];
 
     /**
@@ -238,5 +239,10 @@ class Supplier extends Model
     public function documents(): MorphMany
     {
         return $this->morphMany(\App\Models\Document::class, 'documentable');
+    }
+
+    public function thirdCountries()
+    {
+        return $this->belongsToMany(ThirdCountry::class, 'supplier_third_country')->withPivot('reason')->withTimestamps();
     }
 }

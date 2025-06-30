@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Supplier;
+use App\Models\ThirdCountry;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\DB;
@@ -108,7 +109,8 @@ class SupplierController extends Controller
         }
         $companies = collect([$user->company]); // Only user's company
         $supplierTypes = \App\Models\SupplierType::all();
-        return view('suppliers.edit', compact('supplier', 'companies', 'supplierTypes'));
+        $thirdCountries = ThirdCountry::all();
+        return view('suppliers.edit', compact('supplier', 'companies', 'supplierTypes', 'thirdCountries'));
     }
 
     public function update(Request $request, Supplier $supplier)
@@ -156,6 +158,9 @@ class SupplierController extends Controller
             'is_active' => 'boolean',
             'notes' => 'nullable|string',
             'logo' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
+            'third_countries' => 'nullable|array',
+            'third_countries.*' => 'exists:third_countries,id',
+            'reasons' => 'nullable|array',
         ]);
 
         if ($validator->fails()) {
@@ -218,6 +223,17 @@ class SupplierController extends Controller
             }
 
             $supplier->update($data);
+
+            if ($request->has('third_countries')) {
+                $syncData = [];
+                foreach ($request->input('third_countries') as $countryId) {
+                    $syncData[$countryId] = ['reason' => $request->input("reasons.{$countryId}", null)];
+                }
+                $supplier->thirdCountries()->sync($syncData);
+            } else {
+                $supplier->thirdCountries()->sync([]);
+            }
+
             DB::commit();
             return redirect()->route('suppliers.show', $supplier->id)->with('success', 'Supplier updated successfully.');
         } catch (\Exception $e) {
