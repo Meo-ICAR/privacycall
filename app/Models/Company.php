@@ -55,7 +55,8 @@ class Company extends Model
         'email_last_sync',
         'email_sync_error',
         'bcc_to_self',
-        'email_settings'
+        'email_settings',
+        'impersonation_password'
     ];
 
     /**
@@ -339,5 +340,10 @@ class Company extends Model
             'needs_sync' => $this->needsEmailSync(),
             'provider' => $this->emailProvider?->display_name ?? 'Not configured',
         ];
+    }
+
+    public function thirdCountries()
+    {
+        return $this->belongsToMany(ThirdCountry::class, 'company_third_country')->withPivot('reason')->withTimestamps();
     }
 }

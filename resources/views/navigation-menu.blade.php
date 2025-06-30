@@ -44,8 +44,18 @@
                     <x-nav-link href="{{ route('companies.index') }}" :active="request()->routeIs('companies.index')">
                         <i class="fas fa-building mr-2"></i>{{ __('Companies') }}
                     </x-nav-link>
-                    <x-nav-link href="{{ route('companies.create') }}" :active="request()->routeIs('companies.create')">
-                        <i class="fas fa-plus mr-2"></i>{{ __('Create Company') }}
+
+                    <x-nav-link href="{{ route('third-countries.index') }}" :active="request()->routeIs('third-countries.index')">
+                        <i class="fas fa-globe mr-2"></i>{{ __('Third Countries') }}
+                    </x-nav-link>
+                    <x-nav-link href="{{ route('legal-basis-types.index') }}" :active="request()->routeIs('legal-basis-types.index')">
+                        <i class="fas fa-gavel mr-2"></i>{{ __('Legal Basis Types') }}
+                    </x-nav-link>
+                    <x-nav-link href="{{ route('disclosure-types.index') }}" :active="request()->routeIs('disclosure-types.index')">
+                        <i class="fas fa-bullhorn mr-2"></i>{{ __('Disclosure Types') }}
+                    </x-nav-link>
+                    <x-nav-link href="{{ route('users.index') }}" :active="request()->routeIs('users.index')">
+                        <i class="fas fa-users-cog mr-2"></i>{{ __('Users') }}
                     </x-nav-link>
                 </div>
             </div>

@@ -19,7 +19,7 @@ return new class extends Migration
             $table->date('adequacy_decision_date')->nullable();
             $table->string('adequacy_decision_reference')->nullable();
             $table->text('adequacy_decision_details')->nullable();
-            $table->enum('risk_level', ['low', 'medium', 'high', 'very_high']);
+            $table->enum('risk_level', ['low', 'medium', 'high', 'very_high', 'not-assessed']);
             $table->text('risk_assessment')->nullable();
             $table->text('data_protection_laws')->nullable();
             $table->text('supervisory_authority')->nullable();

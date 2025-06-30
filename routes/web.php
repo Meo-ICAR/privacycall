@@ -24,6 +24,8 @@ use App\Http\Controllers\MandatorController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Mail;
 use App\Http\Controllers\AuthorizationRequestController;
+use App\Http\Controllers\DataCategoryController;
+use App\Http\Controllers\SecurityMeasureController;
 
 Route::get('/', function () {
     return view('welcome');
@@ -139,6 +141,15 @@ Route::middleware(['auth', 'verified'])->group(function () {
 // Customer type management routes (admin/superadmin)
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::resource('customer-types', CustomerTypeController::class)->except(['show']);
+});
+
+// Data Category and Security Measure management routes (superadmin)
+Route::middleware(['auth', 'verified', 'role:superadmin'])->group(function () {
+    Route::resource('data-categories', \App\Http\Controllers\DataCategoryController::class);
+    Route::resource('security-measures', \App\Http\Controllers\SecurityMeasureController::class);
+    Route::resource('third-countries', \App\Http\Controllers\ThirdCountryController::class);
+    Route::resource('legal-basis-types', \App\Http\Controllers\LegalBasisTypeController::class);
+    Route::resource('users', \App\Http\Controllers\UserController::class);
 });
 
 // Holding management routes (admin/superadmin)
