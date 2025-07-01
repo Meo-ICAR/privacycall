@@ -26,6 +26,7 @@ use Illuminate\Support\Facades\Mail;
 use App\Http\Controllers\AuthorizationRequestController;
 use App\Http\Controllers\DataCategoryController;
 use App\Http\Controllers\SecurityMeasureController;
+use App\Http\Controllers\EmailLogController;
 
 Route::get('/', function () {
     return view('welcome');
@@ -440,4 +441,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
 // Temporary debug route for impersonate stop
 Route::get('/impersonate/stop', function () {
     return 'Impersonate stop GET route hit';
+});
+
+// Email Logs (admin)
+Route::middleware(['auth', 'verified'])->group(function () {
+    Route::get('email-logs', [\App\Http\Controllers\EmailLogController::class, 'index'])->name('email-logs.index');
 });

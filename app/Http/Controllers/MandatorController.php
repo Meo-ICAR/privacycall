@@ -18,10 +18,13 @@ class MandatorController extends Controller
      */
     public function index(Request $request)
     {
+        $user = auth()->user();
         $query = Mandator::with('company');
 
-        // Filter by company
-        if ($request->has('company_id')) {
+        // Multitenancy: restrict to own company for non-superadmin
+        if (!$user->hasRole('superadmin')) {
+            $query->where('company_id', $user->company_id);
+        } elseif ($request->has('company_id')) {
             $query->where('company_id', $request->company_id);
         }
 

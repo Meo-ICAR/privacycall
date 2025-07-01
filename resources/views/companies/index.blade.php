@@ -29,6 +29,33 @@
         </div>
     @endif
 
+    <!-- Filter & Sort Form -->
+    <form method="GET" class="mb-6 flex flex-wrap gap-4 items-end">
+        <div>
+            <label for="name" class="block text-sm font-medium text-gray-700">Name</label>
+            <input type="text" name="name" id="name" value="{{ request('name') }}" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+        </div>
+        <div>
+            <label for="holding_id" class="block text-sm font-medium text-gray-700">Holding</label>
+            <select name="holding_id" id="holding_id" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                <option value="">All Holdings</option>
+                @foreach($holdings as $holding)
+                    <option value="{{ $holding->id }}" @if(request('holding_id') == $holding->id) selected @endif>{{ $holding->name }}</option>
+                @endforeach
+            </select>
+        </div>
+        <div>
+            <label for="sort" class="block text-sm font-medium text-gray-700">Sort By</label>
+            <select name="sort" id="sort" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                <option value="name" @if(request('sort', 'name') == 'name') selected @endif>Name</option>
+                <option value="holding" @if(request('sort') == 'holding') selected @endif>Holding</option>
+            </select>
+        </div>
+        <div>
+            <button type="submit" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 mt-6">Filter</button>
+        </div>
+    </form>
+
     <!-- Companies List -->
     <div class="bg-white shadow overflow-hidden sm:rounded-md">
         <div class="px-4 py-5 sm:px-6">
@@ -52,7 +79,25 @@
                             <tbody class="bg-white divide-y divide-gray-200">
                                 @foreach($companies as $company)
                                     <tr>
-                                        <td class="px-6 py-4 whitespace-nowrap">{{ $company->name }}</td>
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            @if(auth()->user()->hasRole('superadmin'))
+                                                @php
+                                                    $admin = $company->users->first(fn($u) => $u->hasRole('admin'));
+                                                @endphp
+                                                @if($admin)
+                                                    <form method="POST" action="{{ route('impersonate.start', $admin) }}" class="inline">
+                                                        @csrf
+                                                        <button type="submit" class="text-blue-600 hover:text-blue-900 font-medium bg-transparent border-none p-0 cursor-pointer" title="Impersonate admin of this company" onclick="return confirm('Impersonate {{ $admin->name }}?');">
+                                                            {{ $company->name }}
+                                                        </button>
+                                                    </form>
+                                                @else
+                                                    <span class="text-gray-500" title="No admin found">{{ $company->name }}</span>
+                                                @endif
+                                            @else
+                                                {{ $company->name }}
+                                            @endif
+                                        </td>
                                         <td class="px-6 py-4 whitespace-nowrap">{{ $company->email }}</td>
                                         <td class="px-6 py-4 whitespace-nowrap">{{ ucfirst($company->company_type) }}</td>
                                         <td class="px-6 py-4 whitespace-nowrap">{{ $company->holding ? $company->holding->name : '-' }}</td>

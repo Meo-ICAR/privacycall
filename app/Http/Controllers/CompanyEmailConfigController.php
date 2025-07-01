@@ -12,13 +12,6 @@ use Illuminate\Validation\Rule;
 
 class CompanyEmailConfigController extends Controller
 {
-    protected $emailService;
-
-    public function __construct(EmailIntegrationService $emailService)
-    {
-        $this->emailService = $emailService;
-    }
-
     /**
      * Show the email configuration form for a company.
      */

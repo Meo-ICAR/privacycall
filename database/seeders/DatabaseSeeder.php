@@ -177,6 +177,7 @@ class DatabaseSeeder extends Seeder
             DataCategorySeeder::class,
             SecurityMeasureSeeder::class,
             ThirdCountrySeeder::class,
+            DisclosureTypeSeeder::class,
         ]);
     }
 }

@@ -11,10 +11,11 @@ use Illuminate\Database\Eloquent\Relations\MorphMany;
 use App\Models\Traits\HasVersioning;
 use Carbon\Carbon;
 use App\Models\ThirdCountryTransfer;
+use App\Models\TenantScoped;
 
 class DataProcessingActivity extends Model
 {
-    use HasFactory, SoftDeletes, HasVersioning;
+    use HasFactory, SoftDeletes, HasVersioning, TenantScoped;
 
     /**
      * The attributes that are mass assignable.

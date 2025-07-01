@@ -19,8 +19,35 @@ class CompanyController extends Controller
      */
     public function index(Request $request)
     {
-        $companies = \App\Models\Company::with('holding')->orderBy('name')->get();
-        return view('companies.index', compact('companies'));
+        $user = auth()->user();
+        $query = \App\Models\Company::with('holding');
+
+        // Multitenancy: restrict to own company for non-superadmin
+        if (!$user->hasRole('superadmin')) {
+            $query->where('id', $user->company_id);
+        }
+
+        // Filtering
+        if ($request->filled('name')) {
+            $query->where('name', 'like', '%' . $request->input('name') . '%');
+        }
+        if ($request->filled('holding_id')) {
+            $query->where('holding_id', $request->input('holding_id'));
+        }
+
+        // Sorting
+        $sort = $request->input('sort', 'name');
+        if ($sort === 'holding') {
+            $query->leftJoin('holdings', 'companies.holding_id', '=', 'holdings.id')
+                  ->orderBy('holdings.name')
+                  ->select('companies.*');
+        } else {
+            $query->orderBy('name');
+        }
+
+        $companies = $query->get();
+        $holdings = \App\Models\Holding::orderBy('name')->get();
+        return view('companies.index', compact('companies', 'holdings'));
     }
 
     /**

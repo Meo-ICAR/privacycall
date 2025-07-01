@@ -9,19 +9,6 @@ use Illuminate\Support\Facades\Gate;
 class DisclosureTypeController extends Controller
 {
     /**
-     * Create a new controller instance.
-     */
-    public function __construct()
-    {
-        $this->middleware(function ($request, $next) {
-            if (!auth()->check() || auth()->user()->role !== 'superadmin') {
-                abort(403, 'Unauthorized action. Only superadmins can manage disclosure types.');
-            }
-            return $next($request);
-        });
-    }
-
-    /**
      * Display a listing of the resource.
      */
     public function index()

@@ -16,13 +16,6 @@ use App\Models\User;
 
 class UnifiedEmailController extends Controller
 {
-    protected $emailService;
-
-    public function __construct(EmailIntegrationService $emailService)
-    {
-        $this->emailService = $emailService;
-    }
-
     /**
      * Display the unified email dashboard.
      */
