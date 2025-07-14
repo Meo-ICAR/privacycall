@@ -452,3 +452,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
 Route::get('google/redirect', [GoogleController::class, 'redirectToGoogle'])->name('google.redirect');
 Route::get('google/callback', [GoogleController::class, 'handleGoogleCallback'])->name('google.callback');
 Route::get('google/files', [GoogleController::class, 'listDriveFiles'])->name('google.files');
+
+Route::middleware(['auth', 'role:superadmin'])->group(function () {
+    Route::get('/admin/test-email', [TestEmailController::class, 'form'])->name('admin.test-email.form');
+    Route::post('/admin/test-email', [TestEmailController::class, 'send'])->name('admin.test-email.send');
+});
