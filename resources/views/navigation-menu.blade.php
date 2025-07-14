@@ -108,18 +108,38 @@
                     <x-nav-link href="{{ route('dashboard') }}" :active="request()->routeIs('dashboard')">
                         {{ __('Dashboard') }}
                     </x-nav-link>
-                    <x-nav-link href="{{ route('holdings.index') }}" :active="request()->routeIs('holdings.index')">
-                        <i class="fas fa-sitemap mr-2"></i>{{ __('Holdings') }}
-                    </x-nav-link>
+
                         <x-nav-link href="{{ route('companies.index') }}" :active="request()->routeIs('companies.index')">
                             <i class="fas fa-building mr-2"></i>{{ __('Companies') }}
                         </x-nav-link>
-                        <x-nav-link href="{{ route('roles.permissions.index') }}" :active="request()->routeIs('roles.permissions.index')">
-                            <i class="fas fa-user-shield mr-2"></i>{{ __('Roles & Permissions') }}
-                        </x-nav-link>
-                        <x-nav-link href="{{ route('email-templates.index') }}" :active="request()->routeIs('email-templates.index')">
+
+
+                         <!-- Settings Dropdown -->
+                        <div x-data="{ open: false }" class="relative">
+                            <button @click="open = !open" class="inline-flex items-center px-3 py-2 text-gray-700 hover:text-gray-900 focus:outline-none">
+                                <i class="fas fa-gears mr-2"></i>{{ __('Settings') }}
+                                <svg class="ml-1 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
+                            </button>
+                            <div x-show="open" @click.away="open = false" class="absolute left-0 mt-2 w-56 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-50">
+                                <div class="py-1">
+                                       <x-nav-link href="{{ route('holdings.index') }}" :active="request()->routeIs('holdings.index')">
+                        <i class="fas fa-sitemap mr-2"></i>{{ __('Holdings') }}
+                    </x-nav-link>
+                     <x-nav-link href="{{ route('email-templates.index') }}" :active="request()->routeIs('email-templates.index')">
                             <i class="fas fa-envelope mr-2"></i>{{ __('Email Templates') }}
                         </x-nav-link>
+                         <x-nav-link href="{{ route('roles.permissions.index') }}" :active="request()->routeIs('roles.permissions.index')">
+                            <i class="fas fa-user-shield mr-2"></i>{{ __('Roles & Permissions') }}
+                        </x-nav-link>
+                         <x-nav-link href="{{ route('email-providers.index') }}" :active="request()->routeIs('email-providers.index')">
+                        <i class="fas fa-envelope-open-text mr-2"></i>{{ __('Email Providers') }}
+                    </x-nav-link>
+                     <x-nav-link href="{{ route('admin.test-email.form') }}" :active="request()->routeIs('admin.test-email.form')">
+                        <i class="fas fa-envelope mr-2"></i>{{ __('Test email') }}
+                    </x-nav-link>
+                                </div>
+                            </div>
+                        </div>
                         <!-- GDPR Types Dropdown -->
                         <div x-data="{ open: false }" class="relative">
                             <button @click="open = !open" class="inline-flex items-center px-3 py-2 text-gray-700 hover:text-gray-900 focus:outline-none">
@@ -169,9 +189,7 @@
                                 </div>
                             </div>
                         </div>
-                    <x-nav-link href="{{ route('email-providers.index') }}" :active="request()->routeIs('email-providers.index')">
-                        <i class="fas fa-envelope-open-text mr-2"></i>{{ __('Email Providers') }}
-                    </x-nav-link>
+
                         <!-- Logout -->
                         <form method="POST" action="{{ route('logout') }}" class="inline">
                             @csrf
