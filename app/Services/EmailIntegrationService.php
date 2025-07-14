@@ -108,13 +108,12 @@ class EmailIntegrationService
             }
 
             // Determine if email is GDPR-related
-            $isGdprRelated = $this->isGdprRelatedEmail($emailData['subject'], $emailData['body']);
+            // TODO: Implement GDPR detection logic if needed
+            $isGdprRelated = false; // Default to false for now
 
-            // Determine priority
-            $priority = $this->determinePriority($emailData['subject'], $emailData['body']);
-
-            // Determine category
-            $category = $this->determineCategory($emailData['subject'], $emailData['body']);
+            // Quick fix: set default values for priority and category
+            $priority = 'normal'; // Default to normal priority
+            $category = 'general'; // Default to general category
 
             // Create email record
             $email = CompanyEmail::create([

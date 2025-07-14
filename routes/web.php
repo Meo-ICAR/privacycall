@@ -27,6 +27,7 @@ use App\Http\Controllers\AuthorizationRequestController;
 use App\Http\Controllers\DataCategoryController;
 use App\Http\Controllers\SecurityMeasureController;
 use App\Http\Controllers\EmailLogController;
+use App\Http\Controllers\GoogleController;
 
 Route::get('/', function () {
     return view('welcome');
@@ -447,3 +448,7 @@ Route::get('/impersonate/stop', function () {
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('email-logs', [\App\Http\Controllers\EmailLogController::class, 'index'])->name('email-logs.index');
 });
+// google drive routes
+Route::get('google/redirect', [GoogleController::class, 'redirectToGoogle'])->name('google.redirect');
+Route::get('google/callback', [GoogleController::class, 'handleGoogleCallback'])->name('google.callback');
+Route::get('google/files', [GoogleController::class, 'listDriveFiles'])->name('google.files');

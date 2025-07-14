@@ -115,7 +115,7 @@
                     </div>
 
                     <!-- Password Authentication -->
-                    <div id="passwordAuth" class="{{ $company->hasEmailConfigured() ? '' : 'hidden' }}">
+                    <div id="passwordAuth">
                         <label for="password" class="block text-sm font-medium text-gray-700 mb-2">
                             Password
                         </label>
@@ -332,10 +332,6 @@ document.addEventListener('DOMContentLoaded', function() {
         const selectedOption = providerSelect.options[providerSelect.selectedIndex];
         if (!selectedOption.value) {
             providerInfo.classList.add('hidden');
-            // Don't hide password auth if company has email configured
-            if (!{{ $company->hasEmailConfigured() ? 'true' : 'false' }}) {
-                passwordAuth.classList.add('hidden');
-            }
             oauthAuth.classList.add('hidden');
             customSettings.classList.add('hidden');
             setupInstructions.classList.add('hidden');
@@ -350,10 +346,6 @@ document.addEventListener('DOMContentLoaded', function() {
         // Show authentication method immediately based on data attributes
         if (isOAuth) {
             oauthAuth.classList.remove('hidden');
-            // Don't hide password auth if company has email configured
-            if (!{{ $company->hasEmailConfigured() ? 'true' : 'false' }}) {
-                passwordAuth.classList.add('hidden');
-            }
         } else {
             passwordAuth.classList.remove('hidden');
             oauthAuth.classList.add('hidden');
@@ -420,17 +412,9 @@ document.addEventListener('DOMContentLoaded', function() {
     // Initialize on page load
     updateProviderInfo();
 
-    // Also check if there's a pre-selected provider and show password field if needed
-    const selectedOption = providerSelect.options[providerSelect.selectedIndex];
-    if (selectedOption && selectedOption.value) {
-        const isOAuth = selectedOption.dataset.oauth === '1';
-        if (!isOAuth) {
-            passwordAuth.classList.remove('hidden');
-        }
-    }
-
     // Test connection
     testConnectionBtn.addEventListener('click', function() {
+        console.log('Test Connection button clicked');
         const formData = new FormData();
         formData.append('email_provider_id', providerSelect.value);
         formData.append('username', document.getElementById('username').value);

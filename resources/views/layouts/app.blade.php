@@ -19,6 +19,10 @@
 
         <!-- Styles -->
         @livewireStyles
+
+        @stack('modals')
+        @stack('scripts')
+        @livewireScripts
     </head>
     <body class="font-sans antialiased">
         @if(session('impersonate_original_id'))
@@ -56,8 +60,6 @@
             </main>
         </div>
 
-        @stack('modals')
 
-        @livewireScripts
     </body>
 </html>
