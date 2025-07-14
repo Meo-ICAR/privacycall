@@ -28,6 +28,7 @@ use App\Http\Controllers\DataCategoryController;
 use App\Http\Controllers\SecurityMeasureController;
 use App\Http\Controllers\EmailLogController;
 use App\Http\Controllers\GoogleController;
+use App\Http\Controllers\TestEmailController;
 
 Route::get('/', function () {
     return view('welcome');
