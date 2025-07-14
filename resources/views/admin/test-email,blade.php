@@ -14,6 +14,7 @@
         </div>
     @endif
     <form method="POST" action="{{ route('admin.test-email.send') }}">
+
         @csrf
         <label class="block mb-2">Destination Email</label>
         <input type="email" name="to" class="border p-2 w-full mb-4" required>

@@ -4,13 +4,14 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
-
+// modified by me
 class TestEmailController extends Controller
 {
     public function form()
     {
         return view('admin.test-email');
     }
+
 
     public function send(Request $request)
     {
