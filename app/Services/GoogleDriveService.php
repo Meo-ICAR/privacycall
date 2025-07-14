@@ -9,52 +9,60 @@ use App\Models\Company;
 
 class GoogleDriveService
 {
-    protected $client;
-    protected $drive;
-
-    public function __construct($user = null)
+    protected function getClientAndDrive()
     {
-        $user = $user ?: Auth::user();
-        $this->client = new GoogleClient();
-        $this->client->setClientId(env('GOOGLE_CLIENT_ID'));
-        $this->client->setClientSecret(env('GOOGLE_CLIENT_SECRET'));
-        $this->client->setRedirectUri(env('GOOGLE_REDIRECT_URI'));
-        $this->client->setAccessType('offline');
-        $this->client->setPrompt('consent');
-        $token = json_decode($user->google_token, true);
-        $this->client->setAccessToken($token);
-        if ($this->client->isAccessTokenExpired() && isset($token['refresh_token'])) {
-            $this->client->fetchAccessTokenWithRefreshToken($token['refresh_token']);
-            $user->google_token = json_encode($this->client->getAccessToken());
-            $user->save();
+        $client = new GoogleClient();
+        $client->setClientId(env('GOOGLE_CLIENT_ID'));
+        $client->setClientSecret(env('GOOGLE_CLIENT_SECRET'));
+        $client->setRedirectUri(env('GOOGLE_REDIRECT_URI'));
+        $client->setAccessType('offline');
+        $client->setPrompt('consent');
+
+        $tokenPath = storage_path('app/google_drive_token.json');
+        if (file_exists($tokenPath)) {
+            $token = json_decode(file_get_contents($tokenPath), true);
+            $client->setAccessToken($token);
+            if ($client->isAccessTokenExpired() && isset($token['refresh_token'])) {
+                $client->fetchAccessTokenWithRefreshToken($token['refresh_token']);
+                file_put_contents($tokenPath, json_encode($client->getAccessToken()));
+            }
+        } else {
+            throw new \Exception('Google Drive token file not found. Please authenticate assistendoci@gmail.com.');
         }
-        $this->drive = new Drive($this->client);
+        $drive = new Drive($client);
+        return [$client, $drive];
     }
 
     public function uploadFileToCompanyFolder($localPath, $fileName, Company $company)
     {
-        // 1. Recupera nome holding
-        $holdingName = $company->holding ? $company->holding->name : 'NONE';
-        // 2. Trova o crea cartella holding
-        $holdingFolderId = $this->findOrCreateFolder($holdingName, null);
-        // 3. Trova o crea cartella company dentro holding
-        $companyFolderId = $this->findOrCreateFolder($company->name, $holdingFolderId);
-        // 4. Carica file nella cartella company
-        $fileMetadata = new \Google\Service\Drive\DriveFile([
-            'name' => $fileName,
-            'parents' => [$companyFolderId]
-        ]);
-        $content = file_get_contents($localPath);
-        $file = $this->drive->files->create($fileMetadata, [
-            'data' => $content,
-            'mimeType' => mime_content_type($localPath),
-            'uploadType' => 'multipart',
-            'fields' => 'id,webViewLink,webContentLink'
-        ]);
-        return $file->webViewLink ?? null;
+        try {
+            list($client, $drive) = $this->getClientAndDrive();
+            // 1. Recupera nome holding
+            $holdingName = $company->holding ? $company->holding->name : 'NONE';
+            // 2. Trova o crea cartella holding
+            $holdingFolderId = $this->findOrCreateFolder($drive, $holdingName, null);
+            // 3. Trova o crea cartella company dentro holding
+            $companyFolderId = $this->findOrCreateFolder($drive, $company->name, $holdingFolderId);
+            // 4. Carica file nella cartella company
+            $fileMetadata = new \Google\Service\Drive\DriveFile([
+                'name' => $fileName,
+                'parents' => [$companyFolderId]
+            ]);
+            $content = file_get_contents($localPath);
+            $file = $drive->files->create($fileMetadata, [
+                'data' => $content,
+                'mimeType' => mime_content_type($localPath),
+                'uploadType' => 'multipart',
+                'fields' => 'id,webViewLink,webContentLink'
+            ]);
+            return $file->webViewLink ?? null;
+        } catch (\Exception $e) {
+            \Log::error('Errore upload su Google Drive: ' . $e->getMessage());
+            return null;
+        }
     }
 
-    protected function findOrCreateFolder($folderName, $parentId = null)
+    protected function findOrCreateFolder($drive, $folderName, $parentId = null)
     {
         $query = sprintf(
             "name = '%s' and mimeType = 'application/vnd.google-apps.folder' and trashed = false",
@@ -63,7 +71,7 @@ class GoogleDriveService
         if ($parentId) {
             $query .= " and '$parentId' in parents";
         }
-        $results = $this->drive->files->listFiles([
+        $results = $drive->files->listFiles([
             'q' => $query,
             'fields' => 'files(id, name)',
             'spaces' => 'drive',
@@ -79,7 +87,7 @@ class GoogleDriveService
         if ($parentId) {
             $fileMetadata->setParents([$parentId]);
         }
-        $folder = $this->drive->files->create($fileMetadata, [
+        $folder = $drive->files->create($fileMetadata, [
             'fields' => 'id'
         ]);
         return $folder->id;
