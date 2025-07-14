@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Storage;
 use App\Models\User;
+use App\Services\GoogleDriveService;
 
 class UnifiedEmailController extends Controller
 {
@@ -323,6 +324,7 @@ class UnifiedEmailController extends Controller
             // Handle file uploads
             $attachments = [];
             if ($request->hasFile('attachments')) {
+                $driveService = GoogleDriveService::isEnabled() ? new GoogleDriveService($user) : null;
                 foreach ($request->file('attachments') as $file) {
                     // Generate unique filename
                     $filename = uniqid() . '_' . $file->getClientOriginalName();
@@ -330,6 +332,14 @@ class UnifiedEmailController extends Controller
 
                     // Store the file
                     $file->storeAs('email-reply-attachments/' . $email->company_id, $filename);
+
+                    // Upload su Google Drive solo se abilitato
+                    $company = $email->company; // Assumendo relazione companyEmail->company
+                    $googleDriveUrl = null;
+                    if ($driveService && $company) {
+                        $localPath = storage_path('app/email-reply-attachments/' . $email->company_id . '/' . $filename);
+                        $googleDriveUrl = $driveService->uploadFileToCompanyFolder($localPath, $filename, $company);
+                    }
 
                     // Create EmailReplyAttachment record
                     $attachmentRecord = \App\Models\EmailReplyAttachment::create([
@@ -340,6 +350,7 @@ class UnifiedEmailController extends Controller
                         'mime_type' => $file->getMimeType(),
                         'size' => $file->getSize(),
                         'storage_path' => $storagePath,
+                        'google_drive_url' => $googleDriveUrl,
                     ]);
 
                     // Add to attachments array for email service

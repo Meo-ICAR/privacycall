@@ -54,4 +54,6 @@ return [
         'redirect_uri' => env('MICROSOFT_REDIRECT_URI'),
     ],
 
+    'enable_google_drive_upload' => env('ENABLE_GOOGLE_DRIVE_UPLOAD', false),
+
 ];
