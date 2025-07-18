@@ -127,21 +127,12 @@
                                                 @endif
                                                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium" style="border: 1px solid #e5e7eb; background-color: #f9fafb;">
                                                     <div class="flex space-x-2">
-                                                        <a href="{{ route('employees.show', $employee) }}" class="text-blue-600 hover:text-blue-900" title="View" style="display: inline-block; padding: 4px;">
-                                                            <i class="fas fa-eye"></i>
-                                                            <span class="sr-only">View</span>
-                                                        </a>
-                                                        <a href="{{ route('employees.edit', $employee) }}" class="text-yellow-600 hover:text-yellow-900" title="Edit" style="display: inline-block; padding: 4px;">
-                                                            <i class="fas fa-edit"></i>
-                                                            <span class="sr-only">Edit</span>
-                                                        </a>
+                                                        <x-button :href="route('employees.show', $employee)" color="blue" icon="fa-eye" title="View" />
+                                                        <x-button :href="route('employees.edit', $employee)" color="yellow" icon="fa-edit" title="Edit" />
                                                         <form action="{{ route('employees.destroy', $employee) }}" method="POST" class="inline" onsubmit="return confirm('Are you sure you want to delete this employee?')">
                                                             @csrf
                                                             @method('DELETE')
-                                                            <button type="submit" class="text-red-600 hover:text-red-900" title="Delete" style="display: inline-block; padding: 4px; background: none; border: none; cursor: pointer;">
-                                                                <i class="fas fa-trash"></i>
-                                                                <span class="sr-only">Delete</span>
-                                                            </button>
+                                                            <x-button type="submit" color="red" icon="fa-trash" title="Delete" />
                                                         </form>
                                                     </div>
                                                 </td>

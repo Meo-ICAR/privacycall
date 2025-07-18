@@ -41,11 +41,12 @@
                                             @endforeach
                                         </td>
                                         <td class="border px-4 py-2">
-                                            <a href="{{ route('users.edit', $user) }}" class="text-indigo-600 hover:text-indigo-900">{{ __('Edit') }}</a>
+                                            <x-button :href="route('users.show', $user)" color="blue" icon="fa-eye" title="View" />
+                                            <x-button :href="route('users.edit', $user)" color="green" icon="fa-edit" title="Edit" />
                                             <form action="{{ route('users.destroy', $user) }}" method="POST" class="inline">
                                                 @csrf
                                                 @method('DELETE')
-                                                <button type="submit" class="text-red-600 hover:text-red-900 ml-4">{{ __('Delete') }}</button>
+                                                <x-button type="submit" color="red" icon="fa-trash" title="Delete" onclick="return confirm('Are you sure?')" />
                                             </form>
                                         </td>
                                     </tr>

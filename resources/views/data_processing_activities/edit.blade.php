@@ -59,9 +59,8 @@
 
                     <!-- Retention Period -->
                     <div>
-                        <label for="retention_period" class="block text-sm font-medium text-gray-700">Retention Period *</label>
-                        <input type="text" name="retention_period" id="retention_period" value="{{ old('retention_period', $dataProcessingActivity->retention_period) }}" required
-                               placeholder="e.g., 7 years, 30 days, etc."
+                        <label for="retention_period" class="block text-sm font-medium text-gray-700">Retention Period (in days) *</label>
+                        <input type="number" name="retention_period" id="retention_period" value="{{ old('retention_period', $dataProcessingActivity->retention_period) }}" min="1" required
                                class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
                         @error('retention_period')
                             <p class="mt-1 text-sm text-red-600">{{ $message }}</p>

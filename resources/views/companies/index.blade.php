@@ -102,7 +102,7 @@
                                         <td class="px-6 py-4 whitespace-nowrap">{{ ucfirst($company->company_type) }}</td>
                                         <td class="px-6 py-4 whitespace-nowrap">{{ $company->holding ? $company->holding->name : '-' }}</td>
                                         <td class="px-6 py-4 whitespace-nowrap">
-                                            <a href="{{ route('companies.show', $company->id) }}" class="text-blue-600 hover:text-blue-900">View</a>
+                                            <x-button :href="route('companies.show', $company->id)" color="blue" icon="fa-eye" title="View" />
                                         </td>
                                     </tr>
                                 @endforeach

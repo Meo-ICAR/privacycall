@@ -191,30 +191,25 @@
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                 <div class="flex space-x-2">
-                                    <a href="{{ route('compliance-requests.show', $request) }}"
-                                       class="text-blue-600 hover:text-blue-900" title="View">
-                                        <i class="fas fa-eye"></i>
-                                    </a>
-                                    <a href="{{ route('compliance-requests.edit', $request) }}"
-                                       class="text-indigo-600 hover:text-indigo-900" title="Edit">
-                                        <i class="fas fa-edit"></i>
-                                    </a>
+                                    <x-button :href="route('compliance-requests.show', $request)" color="blue" icon="fa-eye" title="View" />
+                                    <x-button :href="route('compliance-requests.edit', $request)" color="indigo" icon="fa-edit" title="Edit" />
                                     @if($request->status === 'pending')
                                         <form action="{{ route('compliance-requests.mark-in-progress', $request) }}" method="POST" class="inline">
                                             @csrf
-                                            <button type="submit" class="text-yellow-600 hover:text-yellow-900" title="Mark In Progress">
-                                                <i class="fas fa-play"></i>
-                                            </button>
+                                            <x-button type="submit" color="yellow" icon="fa-play" title="Mark In Progress" />
                                         </form>
                                     @endif
                                     @if($request->status === 'in_progress')
                                         <form action="{{ route('compliance-requests.mark-completed', $request) }}" method="POST" class="inline">
                                             @csrf
-                                            <button type="submit" class="text-green-600 hover:text-green-900" title="Mark Completed">
-                                                <i class="fas fa-check"></i>
-                                            </button>
+                                            <x-button type="submit" color="green" icon="fa-check" title="Mark Completed" />
                                         </form>
                                     @endif
+                                    <form action="{{ route('compliance-requests.destroy', $request) }}" method="POST" class="inline">
+                                        @csrf
+                                        @method('DELETE')
+                                        <x-button type="submit" color="red" icon="fa-trash" title="Delete" onclick="return confirm('Are you sure?')" />
+                                    </form>
                                 </div>
                             </td>
                         </tr>

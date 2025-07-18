@@ -170,18 +170,12 @@
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                     <div class="flex items-center justify-end space-x-2">
-                                        <a href="{{ route('customers.show', $customer) }}" class="text-blue-600 hover:text-blue-900">
-                                            <i class="fas fa-eye"></i>
-                                        </a>
-                                        <a href="{{ route('customers.edit', $customer) }}" class="text-yellow-600 hover:text-yellow-900">
-                                            <i class="fas fa-edit"></i>
-                                        </a>
-                                        <form action="{{ route('customers.destroy', $customer) }}" method="POST" class="inline" onsubmit="return confirm('Are you sure you want to delete this customer?')">
+                                        <x-button :href="route('customers.show', $customer)" color="blue" icon="fa-eye" title="View" />
+                                        <x-button :href="route('customers.edit', $customer)" color="yellow" icon="fa-edit" title="Edit" />
+                                        <form action="{{ route('customers.destroy', $customer) }}" method="POST" class="inline">
                                             @csrf
                                             @method('DELETE')
-                                            <button type="submit" class="text-red-600 hover:text-red-900">
-                                                <i class="fas fa-trash"></i>
-                                            </button>
+                                            <x-button type="submit" color="red" icon="fa-trash" title="Delete" onclick="return confirm('Are you sure?')" />
                                         </form>
                                     </div>
                                 </td>

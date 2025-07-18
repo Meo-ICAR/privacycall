@@ -269,10 +269,7 @@
                     <h3 class="text-lg font-medium text-gray-900 mb-4">Actions</h3>
                     <div class="space-y-3">
                         @if(auth()->check() && (auth()->user()->hasRole('admin') || auth()->user()->hasRole('superadmin')))
-                        <a href="{{ route('companies.edit', $company) }}" class="w-full inline-flex items-center justify-center px-4 py-2 border border-yellow-300 text-sm font-medium rounded-md text-yellow-700 bg-white hover:bg-yellow-50">
-                            <i class="fas fa-edit mr-2"></i>
-                            Edit Company
-                        </a>
+                        <x-button :href="route('companies.edit', $company)" color="yellow" icon="fa-edit" title="Edit Company" class="w-full justify-center" />
                         @endif
 
                         <!-- GDPR Register -->

@@ -54,7 +54,7 @@ class DataProcessingActivityController extends Controller
             'data_categories' => 'required|string|max:255',
             'data_subjects' => 'nullable|string|max:255',
             'data_recipients' => 'nullable|string|max:255',
-            'retention_period' => 'required|string|max:255',
+            'retention_period' => 'required|integer|min:1',
             'security_measures' => 'nullable|string',
             'notes' => 'nullable|string',
             'is_active' => 'boolean',
@@ -124,7 +124,7 @@ class DataProcessingActivityController extends Controller
             'legal_basis' => 'required|string|max:255',
             'data_categories' => 'required|string',
             'data_recipients' => 'nullable|string',
-            'retention_period' => 'required|string|max:255',
+            'retention_period' => 'required|integer|min:1',
             'security_measures' => 'nullable|string',
             'is_active' => 'boolean',
         ]);

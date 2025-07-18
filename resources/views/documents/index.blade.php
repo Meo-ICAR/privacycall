@@ -61,12 +61,12 @@
                                         {{ $document->file_size ? number_format($document->file_size / 1024, 2) . ' KB' : 'N/A' }}
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                        <a href="{{ route('documents.show', $document) }}" class="text-blue-600 hover:text-blue-900 mr-3">View</a>
-                                        <a href="{{ route('documents.edit', $document) }}" class="text-yellow-600 hover:text-yellow-900 mr-3">Edit</a>
+                                        <x-button :href="route('documents.show', $document)" color="blue" icon="fa-eye" title="View" class="mr-2" />
+                                        <x-button :href="route('documents.edit', $document)" color="yellow" icon="fa-edit" title="Edit" class="mr-2" />
                                         <form action="{{ route('documents.destroy', $document) }}" method="POST" class="inline">
                                             @csrf
                                             @method('DELETE')
-                                            <button type="submit" class="text-red-600 hover:text-red-900" onclick="return confirm('Are you sure?')">Delete</button>
+                                            <x-button type="submit" color="red" icon="fa-trash" title="Delete" onclick="return confirm('Are you sure?')" />
                                         </form>
                                     </td>
                                 </tr>

@@ -171,15 +171,9 @@
                     <h3 class="text-lg font-medium text-gray-900 mb-4">Retention & Security</h3>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
-                            <label for="retention_period" class="block text-sm font-medium text-gray-700 mb-2">Retention Period *</label>
-                            <select name="retention_period" id="retention_period"
-                                    class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 @error('retention_period') border-red-500 @enderror"
-                                    required>
-                                <option value="">Select Retention Period</option>
-                                <option value="30_days" {{ old('retention_period') == '30_days' ? 'selected' : '' }}>30 Days</option>
-                                <option value="90_days" {{ old('retention_period') == '90_days' ? 'selected' : '' }}>90 Days</option>
-                                <option value="1_year" {{ old('retention_period') == '1_year' ? 'selected' : '' }}>1 Year</option>
-                                <option value="3_years" {{ old('retention_period') == '3_years' ? 'selected' : '' }}>3 Years</option>
+                            <label for="retention_period" class="block text-sm font-medium text-gray-700">Retention Period (in days) *</label>
+                            <input type="number" name="retention_period" id="retention_period" value="{{ old('retention_period') }}" min="1" required
+                                   class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
                                 <option value="5_years" {{ old('retention_period') == '5_years' ? 'selected' : '' }}>5 Years</option>
                                 <option value="7_years" {{ old('retention_period') == '7_years' ? 'selected' : '' }}>7 Years</option>
                                 <option value="10_years" {{ old('retention_period') == '10_years' ? 'selected' : '' }}>10 Years</option>

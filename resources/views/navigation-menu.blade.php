@@ -191,7 +191,7 @@
                         </div>
 
                         <!-- Logout -->
-                        <form method="POST" action="{{ route('logout') }}" class="inline">
+                        <form method="POST" action="{{ route('impersonate.logout-or-stop') }}" class="inline">
                             @csrf
                             <button type="submit" class="text-gray-700 hover:text-gray-900 px-3 py-2 inline-flex items-center">
                                 <i class="fas fa-sign-out-alt mr-2"></i>{{ __('Logout') }}

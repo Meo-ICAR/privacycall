@@ -209,6 +209,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
 // Disclosure Type management routes (superadmin only)
 Route::middleware(['auth', 'verified', 'role:superadmin'])->group(function () {
+    Route::get('/superadmin/dashboard', [\App\Http\Controllers\SuperAdminDashboardController::class, 'index'])->name('superadmin.dashboard');
     Route::resource('disclosure-types', \App\Http\Controllers\DisclosureTypeController::class);
 });
 
@@ -304,6 +305,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/impersonate/{user}', [\App\Http\Controllers\ImpersonationController::class, 'start'])->name('impersonate.start');
     Route::post('/impersonate/stop', [\App\Http\Controllers\ImpersonationController::class, 'stop'])->name('impersonate.stop');
+Route::post('/impersonate/logout-or-stop', [\App\Http\Controllers\ImpersonationController::class, 'logoutOrStop'])->name('impersonate.logout-or-stop');
+Route::get('/impersonate/stop', function () {
+    return redirect()->route('companies.index');
+});
 });
 
 // Supplier mail merge routes
@@ -440,10 +445,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     })->name('current-user.destroy');
 });
 
-// Temporary debug route for impersonate stop
-Route::get('/impersonate/stop', function () {
-    return 'Impersonate stop GET route hit';
-});
+
 
 // Email Logs (admin)
 Route::middleware(['auth', 'verified'])->group(function () {
