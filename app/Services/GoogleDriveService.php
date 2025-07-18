@@ -62,6 +62,19 @@ class GoogleDriveService
         }
     }
 
+    /**
+     * Finds or creates a holding folder (or 'NONE') and a company folder inside it, returning the company folder ID.
+     */
+    public function findOrCreateFolderByNames($holdingName, $companyName)
+    {
+        list($client, $drive) = $this->getClientAndDrive();
+        // Find or create holding folder
+        $holdingFolderId = $this->findOrCreateFolder($drive, $holdingName, null);
+        // Find or create company folder inside holding
+        $companyFolderId = $this->findOrCreateFolder($drive, $companyName, $holdingFolderId);
+        return $companyFolderId;
+    }
+
     protected function findOrCreateFolder($drive, $folderName, $parentId = null)
     {
         $query = sprintf(

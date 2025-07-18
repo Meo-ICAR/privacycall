@@ -38,16 +38,19 @@
                 @endif
 
                 <!-- Basic Information Section -->
-                <div class="border-b border-gray-200 pb-6">
-                    <h3 class="text-lg font-medium text-gray-900 mb-4">Basic Information</h3>
-                    <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
+                <div x-data="{ open: true }" class="border-b border-gray-200 pb-6 mb-4">
+                    <button type="button" @click="open = !open" class="w-full text-left flex items-center justify-between text-lg font-medium text-gray-900 mb-4 focus:outline-none">
+                        Basic Information
+                        <svg :class="{'rotate-180': open}" class="h-5 w-5 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
+                    </button>
+                    <div x-show="open" class="grid grid-cols-1 gap-6 sm:grid-cols-2">
                         <!-- Logo Upload -->
                         <div class="sm:col-span-2">
                             <label for="logo" class="block text-sm font-medium text-gray-700">Supplier Logo</label>
                             <input type="file" name="logo" id="logo" accept="image/*"
                                    class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
                             <div class="mt-2">
-                                <img id="logoPreview" src="{{ $supplier->logo_url ?? '#' }}" alt="Logo Preview" class="h-24 w-24 object-contain rounded border border-gray-200 @if(!$supplier->logo_url) hidden @endif" />
+                                <img id="logoPreview" src="{{ $supplier->logo_url ?? '#' }}" alt="Logo Preview" class="h-24 w-24 object-contain rounded border border-gray-200 {{ !$supplier->logo_url ? 'hidden' : '' }}" />
                             </div>
                         </div>
 
@@ -163,9 +166,12 @@
                 </div>
 
                 <!-- Contact Information Section -->
-                <div class="border-b border-gray-200 pb-6">
-                    <h3 class="text-lg font-medium text-gray-900 mb-4">Contact Information</h3>
-                    <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
+                <div x-data="{ open: false }" class="border-b border-gray-200 pb-6 mb-4">
+                    <button type="button" @click="open = !open" class="w-full text-left flex items-center justify-between text-lg font-medium text-gray-900 mb-4 focus:outline-none">
+                        Contact Information
+                        <svg :class="{'rotate-180': open}" class="h-5 w-5 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
+                    </button>
+                    <div x-show="open" class="grid grid-cols-1 gap-6 sm:grid-cols-2">
                         <!-- Contact Person Name -->
                         <div>
                             <label for="contact_person_name" class="block text-sm font-medium text-gray-700">Contact Person Name</label>
@@ -235,9 +241,13 @@
                 </div>
 
                 <!-- Address Section -->
-                <div class="border-b border-gray-200 pb-6">
-                    <h3 class="text-lg font-medium text-gray-900 mb-4">Address Information</h3>
-                    <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
+                <div x-data="{ open: false }" class="border-b border-gray-200 pb-6 mb-4">
+                    <button type="button" @click="open = !open" class="w-full text-left flex items-center justify-between text-lg font-medium text-gray-900 mb-4 focus:outline-none">
+                        Address Information
+                        <svg :class="{'rotate-180': open}" class="h-5 w-5 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
+                    </button>
+                    <div x-show="open">
+                        <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
                         <!-- Address Line 1 -->
                         <div class="sm:col-span-2">
                             <label for="address_line_1" class="block text-sm font-medium text-gray-700">Address Line 1</label>
@@ -307,9 +317,12 @@
                 </div>
 
                 <!-- Business Information Section -->
-                <div class="border-b border-gray-200 pb-6">
-                    <h3 class="text-lg font-medium text-gray-900 mb-4">Business Information</h3>
-                    <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
+                <div x-data="{ open: false }" class="border-b border-gray-200 pb-6 mb-4">
+                    <button type="button" @click="open = !open" class="w-full text-left flex items-center justify-between text-lg font-medium text-gray-900 mb-4 focus:outline-none">
+                        Business Information
+                        <svg :class="{'rotate-180': open}" class="h-5 w-5 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
+                    </button>
+                    <div x-show="open" class="grid grid-cols-1 gap-6 sm:grid-cols-2">
                         <!-- Payment Terms -->
                         <div>
                             <label for="payment_terms" class="block text-sm font-medium text-gray-700">Payment Terms</label>
@@ -352,24 +365,8 @@
                                 <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                             @enderror
                         </div>
-
-                        <!-- Total Spent -->
-                        <div>
-                            <label for="total_spent" class="block text-sm font-medium text-gray-700">Total Spent</label>
-                            <input type="number" step="0.01" name="total_spent" id="total_spent" value="{{ old('total_spent', $supplier->total_spent) }}"
-                                   class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                                   placeholder="Enter total spent">
-                            @error('total_spent')
-                                <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                            @enderror
-                        </div>
-                    </div>
-                </div>
-
-                <!-- GDPR Compliance Section -->
-                <div class="border-b border-gray-200 pb-6">
-                    <h3 class="text-lg font-medium text-gray-900 mb-4">GDPR Compliance</h3>
-                    <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
+                    </button>
+                    <div x-show="open" class="grid grid-cols-1 gap-6 sm:grid-cols-2">
                         <!-- GDPR Consent Date -->
                         <div>
                             <label for="gdpr_consent_date" class="block text-sm font-medium text-gray-700">GDPR Consent Date</label>
@@ -438,11 +435,38 @@
                     </div>
                 </div>
 
+                <!-- Data Protection Officer Section -->
+                <div x-data="{ open: false }" class="border-b border-gray-200 pb-6 mb-4">
+                    <button type="button" @click="open = !open" class="w-full text-left flex items-center justify-between text-lg font-medium text-gray-900 mb-4 focus:outline-none">
+                        Data Protection Officer
+                        <svg :class="{'rotate-180': open}" class="h-5 w-5 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
+                    </button>
+                    <div x-show="open" class="grid grid-cols-1 gap-6 sm:grid-cols-2">
+                        <div>
+                            <label for="data_protection_officer" class="block text-sm font-medium text-gray-700">Data Protection Officer</label>
+                            <input type="text" name="data_protection_officer" id="data_protection_officer" value="{{ old('data_protection_officer', $supplier->data_protection_officer) }}" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm" placeholder="Enter DPO name">
+                        </div>
+                        <div>
+                            <label for="dpo_contact_email" class="block text-sm font-medium text-gray-700">DPO Contact Email</label>
+                            <input type="email" name="dpo_contact_email" id="dpo_contact_email" value="{{ old('dpo_contact_email', $supplier->dpo_contact_email) }}" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm" placeholder="Enter DPO email">
+                        </div>
+                        <div>
+                            <label for="dpo_contact_phone" class="block text-sm font-medium text-gray-700">DPO Contact Phone</label>
+                            <input type="text" name="dpo_contact_phone" id="dpo_contact_phone" value="{{ old('dpo_contact_phone', $supplier->dpo_contact_phone) }}" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm" placeholder="Enter DPO phone">
+                        </div>
+                    </div>
+                    </div>
+                </div>
+
                 <!-- Third Country Associations -->
-                <div class="border-b border-gray-200 pb-6">
-                    <h3 class="text-lg font-medium text-gray-900 mb-4">Third Country Associations</h3>
-                    <div>
-                        <label for="third_countries" class="block text-sm font-medium text-gray-700">Associated Third Countries</label>
+                <div x-data="{ open: false }" class="border-b border-gray-200 pb-6 mb-4">
+                    <button type="button" @click="open = !open" class="w-full text-left flex items-center justify-between text-lg font-medium text-gray-900 mb-4 focus:outline-none">
+                        Third Country Associations
+                        <svg :class="{'rotate-180': open}" class="h-5 w-5 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
+                    </button>
+                    <div x-show="open">
+                        <div>
+                            <label for="third_countries" class="block text-sm font-medium text-gray-700">Associated Third Countries</label>
                         <select name="third_countries[]" id="third_countries" multiple class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
                             @foreach($thirdCountries as $country)
                                 <option value="{{ $country->id }}" {{ in_array($country->id, $supplier->thirdCountries->pluck('id')->toArray()) ? 'selected' : '' }}>

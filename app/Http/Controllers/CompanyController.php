@@ -160,6 +160,19 @@ class CompanyController extends Controller
 
             $company = Company::create($companyData);
 
+            // Google Drive directory creation if needed
+            if (empty($company->drive_directory)) {
+                $holdingName = $company->holding ? $company->holding->name : 'NONE';
+                $driveService = app(GoogleDriveService::class);
+                $companyFolderId = $driveService->findOrCreateFolderByNames($holdingName, $company->name);
+                if ($companyFolderId) {
+                    // Compose Google Drive folder URL
+                    $companyFolderUrl = 'https://drive.google.com/drive/folders/' . $companyFolderId;
+                    $company->drive_directory = $companyFolderUrl;
+                    $company->save();
+                }
+            }
+
             DB::commit();
 
             Log::info('Company created: ' . $company->id);
@@ -313,6 +326,18 @@ class CompanyController extends Controller
             }
 
             $company->update($data);
+
+            // Google Drive directory creation if needed
+            if (empty($company->drive_directory)) {
+                $holdingName = $company->holding ? $company->holding->name : 'NONE';
+                $driveService = app(\App\Services\GoogleDriveService::class);
+                $companyFolderId = $driveService->findOrCreateFolderByNames($holdingName, $company->name);
+                if ($companyFolderId) {
+                    $companyFolderUrl = 'https://drive.google.com/drive/folders/' . $companyFolderId;
+                    $company->drive_directory = $companyFolderUrl;
+                    $company->save();
+                }
+            }
 
             if ($request->has('third_countries')) {
                 $syncData = [];

@@ -14,6 +14,7 @@ class Document extends Model
         'file_path',
         'mime_type',
         'uploaded_by',
+        'company_id',
     ];
 
     public function documentable()

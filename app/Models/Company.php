@@ -56,7 +56,8 @@ class Company extends Model
         'email_sync_error',
         'bcc_to_self',
         'email_settings',
-        'impersonation_password'
+        'impersonation_password',
+        'drive_directory'
     ];
 
     /**

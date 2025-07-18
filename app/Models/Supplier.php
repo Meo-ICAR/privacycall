@@ -65,6 +65,11 @@ class Supplier extends Model
         'data_processing_agreement_signed',
         'data_processing_agreement_date',
 
+        // Data Protection Officer fields
+        'data_protection_officer',
+        'dpo_contact_email',
+        'dpo_contact_phone',
+
         'is_active',
         'notes',
         'status',

@@ -103,6 +103,9 @@
                                         <td class="px-6 py-4 whitespace-nowrap">{{ $company->holding ? $company->holding->name : '-' }}</td>
                                         <td class="px-6 py-4 whitespace-nowrap">
                                             <x-button :href="route('companies.show', $company->id)" color="blue" icon="fa-eye" title="View" />
+@if(auth()->user()->hasRole('superadmin'))
+    <x-button :href="route('companies.edit', $company->id)" color="green" icon="fa-edit" title="Edit" class="ml-2" />
+@endif
                                         </td>
                                     </tr>
                                 @endforeach

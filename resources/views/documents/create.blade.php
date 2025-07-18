@@ -21,6 +21,11 @@
 
     <div class="bg-white shadow rounded-lg">
         <div class="px-4 py-5 sm:p-6">
+            @if(session('impersonate_original_id') && auth()->user()->hasRole('admin'))
+                <div class="mb-4 bg-yellow-100 border border-yellow-400 text-yellow-800 px-4 py-3 rounded" role="alert">
+                    <strong>Superadmin Impersonation:</strong> You are uploading as <span class="font-semibold">{{ auth()->user()->name }}</span> (Company: {{ auth()->user()->company->name ?? 'N/A' }})
+                </div>
+            @endif
             <form method="POST" action="{{ route('documents.store') }}" enctype="multipart/form-data">
                 @csrf
 
@@ -56,6 +61,9 @@
                         @enderror
                     </div>
 
+                    @if(session('impersonate_original_id') && auth()->user()->hasRole('admin'))
+                        <input type="hidden" name="company_id" value="{{ auth()->user()->company_id }}">
+                    @endif
                     <div class="sm:col-span-2">
                         <label for="file" class="block text-sm font-medium text-gray-700">File</label>
                         <div class="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md">

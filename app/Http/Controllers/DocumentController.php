@@ -28,7 +28,26 @@ class DocumentController extends Controller
 
         $file = $request->file('file');
         $filename = Str::uuid() . '.' . $file->getClientOriginalExtension();
-        $path = $file->storeAs('documents', $filename, 'public');
+
+        // Determine company context for Drive upload
+        $companyId = $request->input('company_id');
+        $driveDirectory = null;
+        if ($companyId) {
+            $company = \App\Models\Company::find($companyId);
+            if ($company && $company->drive_directory) {
+                $driveDirectory = $company->drive_directory;
+            }
+        }
+
+        // Use existing Drive upload service
+        if ($driveDirectory) {
+            // Example: DriveUploadService::upload($file, $driveDirectory)
+            $drivePath = app('App\\Services\\DriveUploadService')->upload($file, $driveDirectory);
+            $path = $drivePath;
+        } else {
+            // fallback to local/public storage
+            $path = $file->storeAs('documents', $filename, 'public');
+        }
 
         $document = $model->documents()->create([
             'file_name' => $file->getClientOriginalName(),
@@ -36,6 +55,7 @@ class DocumentController extends Controller
             'mime_type' => $file->getClientMimeType(),
             'uploaded_by' => Auth::id(),
             'document_type_id' => $request->input('document_type_id'),
+            'company_id' => $companyId,
         ]);
 
         return back()->with('success', 'Document uploaded successfully.');
